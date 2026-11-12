@@ -11,8 +11,7 @@ permissions:
   contents: read
 
 env:
-  JAVA_OPTS: "-Xmx4g -XX:MaxMetaspaceSize=1g"
-  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.parallel=true"
+  JAVA_TOOL_OPTIONS: "-Dfile.encoding=UTF-8 -Djava.awt.headless=true"
 
 jobs:
   build-and-test:
@@ -98,10 +97,15 @@ jobs:
         run: |
           gradle help --stacktrace
 
-      # 9. Run Kotlin compilation
+      # 9. Run KSP & Kotlin compilation (with explicit compiler error diagnostics)
       - name: Compile Debug Kotlin Sources
         run: |
-          gradle :app:compileDebugKotlin --stacktrace
+          set -o pipefail
+          gradle :app:kspDebugKotlin :app:compileDebugKotlin --stacktrace 2>&1 | tee kotlin-compile.log || {
+            echo "=== FIRST KOTLIN / KSP COMPILER ERRORS ==="
+            grep -E "^e: |Unresolved reference|Type mismatch|Cannot find symbol|Exception in thread|OutOfMemoryError" kotlin-compile.log || true
+            exit 1
+          }
 
       # 10. Run Android Lint check
       - name: Run Android Lint

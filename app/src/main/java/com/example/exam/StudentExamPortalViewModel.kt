@@ -9,9 +9,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 /**
  * Student Exam Portal Gateway ViewModel (`StudentExamPortalViewModel.kt`).
@@ -120,11 +119,8 @@ class StudentExamPortalViewModel : ViewModel() {
         // Supports "YYYY-MM-DD HH:mm" or "YYYY-MM-DD"; if date is today or past, unlocks immediately
         return runCatching {
             if (clean.length > 10 && clean.contains(":")) {
-                val fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
-                LocalDateTime.parse(clean.take(16), fmt)
-                    .atZone(ZoneId.systemDefault())
-                    .toInstant()
-                    .toEpochMilli()
+                val fmt = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US)
+                fmt.parse(clean.take(16))?.time ?: (System.currentTimeMillis() - 1000L)
             } else {
                 System.currentTimeMillis() - 1000L
             }

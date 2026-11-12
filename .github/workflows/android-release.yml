@@ -10,8 +10,7 @@ permissions:
   contents: read
 
 env:
-  JAVA_OPTS: "-Xmx4g -XX:MaxMetaspaceSize=1g"
-  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.parallel=true"
+  JAVA_TOOL_OPTIONS: "-Dfile.encoding=UTF-8 -Djava.awt.headless=true"
 
 jobs:
   release:

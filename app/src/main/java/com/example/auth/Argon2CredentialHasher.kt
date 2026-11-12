@@ -5,16 +5,18 @@ import org.bouncycastle.crypto.params.Argon2Parameters
 import org.lsposed.lsparanoid.Obfuscate
 import java.security.MessageDigest
 import java.security.SecureRandom
-import java.util.Base64
 import java.util.concurrent.ConcurrentHashMap
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 /**
  * Memory-hard Argon2id credential hasher (RFC 9106) optimized for mobile ART execution
  * (4 MiB memory cost, 2 iterations, 1 lane, 16-byte CSPRNG salt, 32-byte output tag)
  * with O(1) in-memory verification digest caching and transparent legacy PBKDF2 support.
  */
+@OptIn(ExperimentalEncodingApi::class)
 @Obfuscate
 object Argon2CredentialHasher {
 
@@ -28,6 +30,7 @@ object Argon2CredentialHasher {
 
     private val secureRandom = SecureRandom()
     private val verifiedDigestCache = ConcurrentHashMap<String, Boolean>()
+    private val urlSafeBase64 = Base64.UrlSafe.withPadding(Base64.PaddingOption.ABSENT_OPTIONAL)
 
     data class Argon2Digest(
         val encodedHash: String,
@@ -64,8 +67,8 @@ object Argon2CredentialHasher {
         generator.generateBytes(passwordChars, output)
         params.clear()
 
-        val saltB64 = Base64.getUrlEncoder().withoutPadding().encodeToString(saltBytes)
-        val hashB64 = Base64.getUrlEncoder().withoutPadding().encodeToString(output)
+        val saltB64 = urlSafeBase64.encode(saltBytes)
+        val hashB64 = urlSafeBase64.encode(output)
         val formatted = "\$argon2id\$v=19\$m=$MEMORY_KB,t=$ITERATIONS,p=$PARALLELISM\$$saltB64\$$hashB64"
         verifiedDigestCache[computeCacheKey(passwordChars, formatted)] = true
         return Argon2Digest(encodedHash = formatted, saltBase64 = saltB64)
@@ -93,10 +96,10 @@ object Argon2CredentialHasher {
             val parallelism = paramMap["p"] ?: PARALLELISM
 
             val saltBytes = runCatching {
-                Base64.getUrlDecoder().decode(parts[3])
+                urlSafeBase64.decode(parts[3])
             }.getOrNull() ?: return false
             val expectedHashBytes = runCatching {
-                Base64.getUrlDecoder().decode(parts[4])
+                urlSafeBase64.decode(parts[4])
             }.getOrNull() ?: return false
 
             val params = Argon2Parameters.Builder(Argon2Parameters.ARGON2_id)

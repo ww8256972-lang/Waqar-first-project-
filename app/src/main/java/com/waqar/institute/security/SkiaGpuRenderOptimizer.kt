@@ -23,36 +23,34 @@ object SkiaGpuRenderOptimizer {
         // Enforce hardware-accelerated Skia/RenderThread drawing on the window surface
         window.addFlags(WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED)
 
-        // Select the highest refresh rate display mode matching the current resolution (Android M+)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            runCatching {
-                @Suppress("DEPRECATION")
-                val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    activity.display
-                } else {
-                    activity.windowManager.defaultDisplay
-                } ?: return@runCatching
+        // Select the highest refresh rate display mode matching the current resolution
+        runCatching {
+            @Suppress("DEPRECATION")
+            val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                activity.display
+            } else {
+                activity.windowManager.defaultDisplay
+            } ?: return@runCatching
 
-                val supportedModes = display.supportedModes
-                val activeMode = display.mode
-                val bestHighHzMode = supportedModes
-                    .filter {
-                        it.physicalWidth == activeMode.physicalWidth &&
-                            it.physicalHeight == activeMode.physicalHeight
-                    }
-                    .maxByOrNull { it.refreshRate }
-
-                if (bestHighHzMode != null && bestHighHzMode.refreshRate > 60f) {
-                    val params = window.attributes
-                    params.preferredDisplayModeId = bestHighHzMode.modeId
-                    params.preferredRefreshRate = bestHighHzMode.refreshRate
-                    window.attributes = params
+            val supportedModes = display.supportedModes
+            val activeMode = display.mode
+            val bestHighHzMode = supportedModes
+                .filter {
+                    it.physicalWidth == activeMode.physicalWidth &&
+                        it.physicalHeight == activeMode.physicalHeight
                 }
+                .maxByOrNull { it.refreshRate }
+
+            if (bestHighHzMode != null && bestHighHzMode.refreshRate > 60f) {
+                val params = window.attributes
+                params.preferredDisplayModeId = bestHighHzMode.modeId
+                params.preferredRefreshRate = bestHighHzMode.refreshRate
+                window.attributes = params
             }
         }
 
-        // Request 120fps frame rate hint on the underlying Surface (Android R / API 30+)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        // Request 120fps frame rate hint on the underlying Surface (Android S / API 31+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             runCatching {
                 window.decorView.post {
                     runCatching {
