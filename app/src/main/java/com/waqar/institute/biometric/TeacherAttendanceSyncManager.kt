@@ -63,7 +63,7 @@ object TeacherAttendanceSyncManager {
         )
 
         runCatching {
-            val db = FirebaseFirestore.getInstance()
+            val db = com.example.data.firestore.InstituteRepository.getConfiguredFirestore()
             db.collection("attendance").document(docId).set(payload, SetOptions.merge()).await()
             db.collection("teacherAttendance").document("${dateIso}_$cleanUid").set(payload, SetOptions.merge()).await()
         }
@@ -84,7 +84,7 @@ object TeacherAttendanceSyncManager {
         if (currentMinutes < cutoffMinutes || teachers.isEmpty()) return 0
 
         val dateIso = currentIsoDate()
-        val db = FirebaseFirestore.getInstance()
+        val db = com.example.data.firestore.InstituteRepository.getConfiguredFirestore()
         var autoMarkedAbsentCount = 0
 
         for (teacher in teachers) {

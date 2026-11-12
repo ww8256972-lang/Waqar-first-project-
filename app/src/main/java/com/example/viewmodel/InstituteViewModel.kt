@@ -126,28 +126,38 @@ class InstituteViewModel(
 
         // Observe local preferences
         viewModelScope.launch {
-            prefsManager.preferencesFlow.collect { prefs ->
-                val tier = prefsManager.resolveEffectiveUiTier(prefs)
-                _uiState.update { state ->
-                    state.copy(
-                        preferences = prefs,
-                        effectiveUiTier = tier,
-                        activePortalRole = PortalRole.fromKey(prefs.selectedPortalRole)
-                    )
+            prefsManager.preferencesFlow
+                .catch { emit(AppPreferences()) }
+                .collect { prefs ->
+                    val tier = prefsManager.resolveEffectiveUiTier(prefs)
+                    _uiState.update { state ->
+                        state.copy(
+                            preferences = prefs,
+                            effectiveUiTier = tier,
+                            activePortalRole = PortalRole.fromKey(prefs.selectedPortalRole)
+                        )
+                    }
+                    recomputeRoleScopedData()
                 }
-                recomputeRoleScopedData()
-            }
         }
 
-        // Observe Room offline queues
+        // Observe Room offline queues safely
         viewModelScope.launch {
-            localDb.offlineDao().observeQueuedAttendance().collect { queued ->
-                _uiState.update { it.copy(queuedOfflineAttendance = queued) }
+            runCatching {
+                localDb.offlineDao().observeQueuedAttendance()
+                    .catch { emit(emptyList()) }
+                    .collect { queued ->
+                        _uiState.update { it.copy(queuedOfflineAttendance = queued) }
+                    }
             }
         }
         viewModelScope.launch {
-            localDb.offlineDao().observeCachedTimetable().collect { slots ->
-                _uiState.update { it.copy(cachedTimetable = slots) }
+            runCatching {
+                localDb.offlineDao().observeCachedTimetable()
+                    .catch { emit(emptyList()) }
+                    .collect { slots ->
+                        _uiState.update { it.copy(cachedTimetable = slots) }
+                    }
             }
         }
 

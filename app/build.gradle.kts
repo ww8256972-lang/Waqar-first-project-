@@ -25,13 +25,12 @@ android {
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
     ndk {
-      abiFilters += listOf("arm64-v8a", "x86_64")
+      abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
     }
 
     externalNativeBuild {
       cmake {
-        // Strip symbols (-s), hide visibility, enable Link-Time Optimization (-flto)
-        cppFlags("-std=c++20 -fvisibility=hidden -fvisibility-inlines-hidden -ffunction-sections -fdata-sections -fstack-protector-strong -flto -O3")
+        cppFlags("-std=c++20 -fvisibility=hidden -fvisibility-inlines-hidden -ffunction-sections -fdata-sections -fstack-protector-strong -O2")
         arguments(
           "-DANDROID_STL=c++_shared",
           "-DWCI_EXPECTED_CERT_SHA256=\"2a92dc2ca40d67a8edbe6740e3ddcd288a0f7c3e5b7a62e0133a2ce986f111d5\""
@@ -40,9 +39,19 @@ android {
     }
   }
 
-  // Conditionally wire CMake native C++20 security module when NDK is present on host
+  packaging {
+    jniLibs {
+      useLegacyPackaging = true
+    }
+    resources {
+      excludes += "/META-INF/{AL2.0,LGPL2.1}"
+    }
+  }
+
+  // Conditionally wire CMake native C++20 security module when explicitly requested via -PenableNativeCxxBuild=true
   val sdkRoot = System.getenv("ANDROID_SDK_ROOT") ?: System.getenv("ANDROID_HOME") ?: ""
-  if (sdkRoot.isNotEmpty() && File(sdkRoot, "ndk").exists()) {
+  val enableNativeCxx = project.findProperty("enableNativeCxxBuild") == "true"
+  if (enableNativeCxx && sdkRoot.isNotEmpty() && File(sdkRoot, "ndk").exists()) {
     externalNativeBuild {
       cmake {
         path = file("src/main/cpp/CMakeLists.txt")

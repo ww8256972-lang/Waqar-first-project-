@@ -48,6 +48,20 @@ class InstituteRepository(
             return DEFAULT_FIRESTORE_DATABASE_ID
         }
 
+        fun getConfiguredFirestore(context: Context? = null): FirebaseFirestore {
+            val ctx = context?.applicationContext ?: appContext
+            if (ctx != null) {
+                com.example.security.ensureFirebaseInitialized(ctx)
+                val dbId = resolveFirestoreDatabaseId(ctx)
+                return FirebaseFirestore.getInstance(dbId)
+            }
+            return runCatching {
+                FirebaseFirestore.getInstance(DEFAULT_FIRESTORE_DATABASE_ID)
+            }.getOrElse {
+                FirebaseFirestore.getInstance()
+            }
+        }
+
         fun create(context: Context): InstituteRepository {
             appContext = context.applicationContext
             com.example.security.ensureFirebaseInitialized(context)

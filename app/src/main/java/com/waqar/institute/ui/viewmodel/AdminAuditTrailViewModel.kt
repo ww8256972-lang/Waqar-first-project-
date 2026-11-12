@@ -31,7 +31,7 @@ data class AdminAuditTrailUiState(
  * checksum chain and exposes an immutable `StateFlow<AdminAuditTrailUiState>`.
  */
 class AdminAuditTrailViewModel(
-    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
+    private val firestore: FirebaseFirestore = com.example.data.firestore.InstituteRepository.getConfiguredFirestore()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AdminAuditTrailUiState())

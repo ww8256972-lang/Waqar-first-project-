@@ -91,9 +91,17 @@ object GlobalExceptionHandler : Thread.UncaughtExceptionHandler {
         _lastErrorState.value = RecoverableErrorEvent(
             source = thread.name,
             message = throwable.localizedMessage ?: "Unexpected runtime error recovered safely.",
-            recoverable = false
+            recoverable = true
         )
-        previousHandler?.uncaughtException(thread, throwable)
+        val isMainThread = runCatching {
+            android.os.Looper.getMainLooper()?.thread === thread
+        }.getOrDefault(thread.name == "main")
+
+        // Only delegate to the system crash handler if the main UI looper itself has died;
+        // absorb background worker / native daemon thread exceptions so the app stays open.
+        if (isMainThread) {
+            previousHandler?.uncaughtException(thread, throwable)
+        }
     }
 
     @Composable

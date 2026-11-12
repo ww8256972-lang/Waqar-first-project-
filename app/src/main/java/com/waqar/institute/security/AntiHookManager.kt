@@ -104,11 +104,15 @@ object AntiHookManager {
     }
 
     private fun isLocalFridaPortListening(): Boolean {
+        // Avoid opening localhost TCP sockets on the UI thread (prevents NetworkOnMainThreadException and startup stalls)
+        if (android.os.Looper.myLooper() == android.os.Looper.getMainLooper()) {
+            return false
+        }
         val ports = intArrayOf(27042, 27043)
         for (port in ports) {
             val open = runCatching {
                 Socket().use { socket ->
-                    socket.connect(InetSocketAddress("127.0.0.1", port), 60)
+                    socket.connect(InetSocketAddress("127.0.0.1", port), 35)
                     true
                 }
             }.getOrDefault(false)

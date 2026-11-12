@@ -66,7 +66,7 @@ object IdempotentSyncManager {
     }
 
     suspend fun flushPendingMutations(
-        firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
+        firestore: FirebaseFirestore = com.example.data.firestore.InstituteRepository.getConfiguredFirestore()
     ): Int = withContext(Dispatchers.IO) {
         flushMutex.withLock {
             if (queue.isEmpty()) return@withLock 0

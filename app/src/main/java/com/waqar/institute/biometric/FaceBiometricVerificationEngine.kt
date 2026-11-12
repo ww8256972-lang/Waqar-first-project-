@@ -133,7 +133,7 @@ object FaceBiometricVerificationEngine {
         }
 
         val embeddingAsDoubles = embedding.map { it.toDouble() }
-        val firestore = FirebaseFirestore.getInstance()
+        val firestore = com.example.data.firestore.InstituteRepository.getConfiguredFirestore()
         cleanKeys.take(3).forEach { key ->
             runCatching {
                 kotlinx.coroutines.withTimeoutOrNull(2000L) {
@@ -333,7 +333,7 @@ object FaceBiometricVerificationEngine {
 
             // 2. Fetch Admin-Enrolled Reference Embedding from `teachers/{teacherUid}` with fast timeout
             val cleanId = teacherUid.trim().ifBlank { "teacher_default" }
-            val firestore = FirebaseFirestore.getInstance()
+            val firestore = com.example.data.firestore.InstituteRepository.getConfiguredFirestore()
             val teacherDoc = runCatching {
                 kotlinx.coroutines.withTimeoutOrNull(1500L) {
                     firestore.collection("teachers").document(cleanId).get().await()
@@ -396,7 +396,7 @@ object FaceBiometricVerificationEngine {
         return try {
             val liveEmbedding = extract128DFacialEmbedding(face)
             val cleanId = teacherUid.trim().ifBlank { "teacher_default" }
-            val firestore = FirebaseFirestore.getInstance()
+            val firestore = com.example.data.firestore.InstituteRepository.getConfiguredFirestore()
             val teacherDoc = runCatching {
                 kotlinx.coroutines.withTimeoutOrNull(1500L) {
                     firestore.collection("teachers").document(cleanId).get().await()

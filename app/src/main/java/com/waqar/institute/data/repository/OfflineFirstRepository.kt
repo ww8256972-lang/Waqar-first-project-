@@ -29,10 +29,10 @@ import java.security.MessageDigest
  */
 class OfflineFirstRepository(
     context: Context,
-    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance(),
+    private val firestore: FirebaseFirestore = com.example.data.firestore.InstituteRepository.getConfiguredFirestore(context),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
-    private val localDb = InstituteLocalDatabase.getDatabase(context.applicationContext)
+    private val localDb = InstituteLocalDatabase.getDatabase(context.applicationContext ?: context)
     private val offlineDao = localDb.offlineDao()
 
     fun observeQueuedOfflineAttendance(): Flow<List<QueuedAttendanceEntity>> =

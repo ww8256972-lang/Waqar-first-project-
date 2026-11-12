@@ -722,6 +722,14 @@ fun NeonWaveBackground(
         label = "bgWaveEndColor"
     )
 
+    val rememberedShader = remember {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            runCatching { RuntimeShader(NEON_AURORA_AGSL) }.getOrNull()
+        } else {
+            null
+        }
+    }
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -746,26 +754,26 @@ fun NeonWaveBackground(
         Canvas(modifier = Modifier.fillMaxSize()) {
             val w = size.width
             val h = size.height
+            if (w <= 1f || h <= 1f) return@Canvas
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && uiTier == UiTier.ULTRA && isDark) {
-                val shader = RuntimeShader(NEON_AURORA_AGSL).apply {
-                    setFloatUniform("uResolution", w, h)
-                    setFloatUniform("uTime", phase)
-                    setFloatUniform(
-                        "uColorStart",
-                        animStartColor.red,
-                        animStartColor.green,
-                        animStartColor.blue,
-                        1f
-                    )
-                    setFloatUniform(
-                        "uColorEnd",
-                        animEndColor.red,
-                        animEndColor.green,
-                        animEndColor.blue,
-                        1f
-                    )
-                }
+            val shader = rememberedShader
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && uiTier == UiTier.ULTRA && isDark && shader != null) {
+                shader.setFloatUniform("uResolution", w, h)
+                shader.setFloatUniform("uTime", phase)
+                shader.setFloatUniform(
+                    "uColorStart",
+                    animStartColor.red,
+                    animStartColor.green,
+                    animStartColor.blue,
+                    1f
+                )
+                shader.setFloatUniform(
+                    "uColorEnd",
+                    animEndColor.red,
+                    animEndColor.green,
+                    animEndColor.blue,
+                    1f
+                )
                 drawRect(brush = ShaderBrush(shader))
             } else {
                 // Multi-color radial aurora blooms + 4 flowing liquid sine waves

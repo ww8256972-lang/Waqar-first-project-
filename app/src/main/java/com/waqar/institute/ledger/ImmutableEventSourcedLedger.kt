@@ -63,7 +63,7 @@ object ImmutableEventSourcedLedger {
 
         // Sync immutable Merkle block to Cloud Firestore `/immutableLedger`
         runCatching {
-            FirebaseFirestore.getInstance()
+            com.example.data.firestore.InstituteRepository.getConfiguredFirestore()
                 .collection("immutableLedger")
                 .document("EVT_${seq}_${currentHash.take(12)}")
                 .set(

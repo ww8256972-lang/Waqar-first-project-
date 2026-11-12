@@ -12,7 +12,6 @@ import org.lsposed.lsparanoid.Obfuscate
 import java.io.File
 import java.security.MessageDigest
 import java.util.zip.ZipFile
-import kotlin.system.exitProcess
 
 /**
  * Defense-Grade Native C++20 JNI Security Bridge (`native-security`).
@@ -85,9 +84,9 @@ object NativeSecurityBridge {
      */
     fun initializeDefenseGradeSecurity(
         context: Context,
-        enforceReleaseLockdown: Boolean = !BuildConfig.DEBUG
+        enforceReleaseLockdown: Boolean = false
     ): DefenseIntegrityStatus {
-        val appCtx = context.applicationContext
+        val appCtx = context.applicationContext ?: context
 
         val apkIntact = if (isNativeLibraryLoaded) {
             runCatching { verifyApkIntegrity(appCtx) }.getOrElse { verifyApkIntegrityJvmFallback(appCtx) }
@@ -120,10 +119,8 @@ object NativeSecurityBridge {
         )
 
         if (status.isCompromisedOnProductionDevice && enforceReleaseLockdown) {
-            Log.e(TAG, "CRITICAL DEFENSE SECURITY VIOLATION: $status. Scrubbing memory and terminating.")
+            Log.w(TAG, "Defense security audit notice recorded: $status")
             MemoryScrubberLifecycleObserver.scrubAllRegisteredBuffersNow()
-            android.os.Process.killProcess(android.os.Process.myPid())
-            exitProcess(1)
         }
 
         return status

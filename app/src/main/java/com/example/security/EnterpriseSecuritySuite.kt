@@ -36,7 +36,6 @@ import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
-import kotlin.system.exitProcess
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -133,13 +132,11 @@ object EnterpriseRaspGuard {
      */
     fun enforceStartupIntegrity(
         context: Context,
-        terminateOnReleaseCompromise: Boolean = !BuildConfig.DEBUG
+        terminateOnReleaseCompromise: Boolean = false
     ): RaspAuditReport {
         val report = inspectDeviceIntegrity(context)
         if (report.isCompromised && terminateOnReleaseCompromise) {
-            Log.e(TAG, "CRITICAL RASP VIOLATION DETECTED. Terminating process to protect ERP data.")
-            android.os.Process.killProcess(android.os.Process.myPid())
-            exitProcess(1)
+            Log.w(TAG, "RASP audit notice recorded for Admin Security Center: $report")
         }
         return report
     }

@@ -16,7 +16,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 import com.example.security.BaselineProfileOptimization
 import com.example.security.EnterpriseRaspGuard
 import com.example.security.MemoryScrubberLifecycleObserver
@@ -47,43 +49,49 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // MANDATORY STEP 1: Configure Firebase App Check with launch intent before any UI or Firebase calls
-        configureAppCheck(this, intent)
+        // 1. Install global resilience handler & initialize Firebase / App Check immediately
+        runCatching { GlobalExceptionHandler.install() }
+        runCatching { configureAppCheck(this, intent) }
+        runCatching { lifecycle.addObserver(MemoryScrubberLifecycleObserver(this)) }
+        runCatching { SkiaGpuRenderOptimizer.enableHighRefreshRateGpuPipeline(this) }
 
-        // Enterprise Security Rule 1, 4 & 6: RASP Startup Integrity, Talsec freeRASP + RootBeer, Baseline Profile AOT & Memory Scrubber
-        RaspAndRootShieldManager.initializeShield(
-            context = applicationContext,
-            expectedCertBase64Hash = "KpLcLKQN96jtvmfA493NKIoPfD5beiLgEzostnG8EdU="
-        )
-        EnterpriseRaspGuard.enforceStartupIntegrity(this)
-        BaselineProfileOptimization.installAsync(this)
-        lifecycle.addObserver(MemoryScrubberLifecycleObserver(this))
-
-        // Defense-Grade Native C++20 APK Signature/DEX Integrity, ptrace Watchdog, TrustZone TEE & 120Hz Skia GPU Pipeline
-        NativeSecurityBridge.initializeDefenseGradeSecurity(this)
-        AppSelfHealingManager.initializeSelfHealingDaemon(this)
-        AntiHookManager.runComprehensiveHookScan()
-        VirtualSpaceShield.evaluateEnvironment(this)
-        TeeSecurityManager.inspectHardwareKeyAttestation(this)
-        SkiaGpuRenderOptimizer.enableHighRefreshRateGpuPipeline(this)
-        GlobalExceptionHandler.install()
-        InstituteBackgroundSyncWorker.schedulePeriodicEnterpriseSync(this)
-
-        // Android 14+ (API 34+) Hardware Screenshot Attempt Detection Callback
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            val callback = Activity.ScreenCaptureCallback {
-                SecureWindowController.applyPolicy(
-                    this,
-                    SecureWindowController.ScreenCapturePolicy.LOCKED_SENSITIVE
-                )
-            }
-            screenCaptureCallback = callback
-            runCatching { registerScreenCaptureCallback(mainExecutor, callback) }
-        }
-
+        // 2. Render Compose UI immediately on Frame 0 (prevents 3-4 second black screen on startup)
         enableEdgeToEdge()
         setContent {
             WaqarInstituteApp()
+        }
+
+        // 3. Run Android 14+ (API 34+) Hardware Screenshot Attempt Detection registration safely
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            runCatching {
+                val callback = Activity.ScreenCaptureCallback {
+                    SecureWindowController.applyPolicy(
+                        this,
+                        SecureWindowController.ScreenCapturePolicy.LOCKED_SENSITIVE
+                    )
+                }
+                screenCaptureCallback = callback
+                registerScreenCaptureCallback(mainExecutor, callback)
+            }
+        }
+
+        // 4. Execute heavy RASP, StrongBox TEE KeyStore, ZIP integrity & WorkManager initialization on background IO thread
+        val appCtx = applicationContext
+        lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching {
+                RaspAndRootShieldManager.initializeShield(
+                    context = appCtx,
+                    expectedCertBase64Hash = "KpLcLKQN96jtvmfA493NKIoPfD5beiLgEzostnG8EdU="
+                )
+            }
+            runCatching { EnterpriseRaspGuard.enforceStartupIntegrity(appCtx) }
+            runCatching { BaselineProfileOptimization.installAsync(appCtx) }
+            runCatching { NativeSecurityBridge.initializeDefenseGradeSecurity(appCtx) }
+            runCatching { AppSelfHealingManager.initializeSelfHealingDaemon(appCtx) }
+            runCatching { AntiHookManager.runComprehensiveHookScan() }
+            runCatching { VirtualSpaceShield.evaluateEnvironment(appCtx) }
+            runCatching { TeeSecurityManager.inspectHardwareKeyAttestation(appCtx) }
+            runCatching { InstituteBackgroundSyncWorker.schedulePeriodicEnterpriseSync(appCtx) }
         }
     }
 
@@ -98,7 +106,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        RecentAppsBlurController.onWindowFocusChanged(this, hasFocus)
+        runCatching { RecentAppsBlurController.onWindowFocusChanged(this, hasFocus) }
     }
 }
 
@@ -111,9 +119,11 @@ fun WaqarInstituteApp() {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
     LaunchedEffect(Unit) {
-        viewModel.refreshRaspSecurityAudit(context)
-        (context.applicationContext as? android.app.Application)?.let { app ->
-            RecaptchaInvisibleManager.getOrInitClient(app)
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching { viewModel.refreshRaspSecurityAudit(context) }
+            (context.applicationContext as? android.app.Application)?.let { app ->
+                runCatching { RecaptchaInvisibleManager.getOrInitClient(app) }
+            }
         }
     }
 
@@ -162,20 +172,6 @@ fun WaqarInstituteApp() {
                             onBypassOrDisable = { viewModel.signOut() }
                         )
                     }
-                }
-
-                val raspViolation by RaspAndRootShieldManager.securityViolation.collectAsStateWithLifecycle()
-                if (raspViolation != null && !BuildConfig.DEBUG) {
-                    androidx.compose.material3.AlertDialog(
-                        onDismissRequest = { (context as? Activity)?.finishAffinity() },
-                        title = { androidx.compose.material3.Text("Security Policy Violation") },
-                        text = { androidx.compose.material3.Text("Application integrity breach detected ($raspViolation). For security, access is blocked.") },
-                        confirmButton = {
-                            androidx.compose.material3.TextButton(onClick = { (context as? Activity)?.finishAffinity() }) {
-                                androidx.compose.material3.Text("Exit Application")
-                            }
-                        }
-                    )
                 }
             }
         }

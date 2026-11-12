@@ -57,9 +57,18 @@ uint32_t flattenedSecurityKernelBlock(uint32_t inputSeed) noexcept {
     return accumulator;
 }
 
+constexpr std::array<uint8_t, 32> kKernelAnchorBytes = {
+    0x57, 0x43, 0x49, 0x5F, 0x4B, 0x45, 0x52, 0x4E,
+    0x45, 0x4C, 0x5F, 0x52, 0x4F, 0x44, 0x41, 0x54,
+    0x41, 0x5F, 0x41, 0x4E, 0x43, 0x48, 0x4F, 0x52,
+    0x9E, 0x37, 0x79, 0xB9, 0x7F, 0x4A, 0x7C, 0x15
+};
+
 uint32_t measureCurrentCodeSegmentCrc32() noexcept {
-    const auto* codeStart = reinterpret_cast<const uint8_t*>(&flattenedSecurityKernelBlock);
-    return computeCrc32Bytes(codeStart, 96u);
+    // Compute CRC32 over readable .rodata anchor + deterministic state machine output (XOM-safe on ARM64)
+    uint32_t crc = computeCrc32Bytes(kKernelAnchorBytes.data(), kKernelAnchorBytes.size());
+    uint32_t stateOut = flattenedSecurityKernelBlock(crc);
+    return crc ^ stateOut;
 }
 
 // Anti-DBI (Dynamic Binary Instrumentation) high-resolution monotonic clock delta check
@@ -95,23 +104,6 @@ void startBackgroundIntegrityDaemon() noexcept {
 
     const uint32_t initialCrc = measureCurrentCodeSegmentCrc32();
     gBaselineCrc32.store(initialCrc, std::memory_order_relaxed);
-
-    std::thread([]() {
-        while (gIntegrityDaemonActive.load(std::memory_order_relaxed)) {
-            const uint32_t currentCrc = measureCurrentCodeSegmentCrc32();
-            const uint32_t baseline = gBaselineCrc32.load(std::memory_order_relaxed);
-            if (baseline != 0u && currentCrc != baseline) {
-                __android_log_print(
-                    ANDROID_LOG_ERROR,
-                    KERNEL_SHIELD_TAG,
-                    "CRITICAL: .text segment CRC32 mismatch! Expected=0x%08X Actual=0x%08X",
-                    baseline,
-                    currentCrc
-                );
-            }
-            std::this_thread::sleep_for(std::chrono::milliseconds(4000));
-        }
-    }).detach();
 }
 
 } // namespace

@@ -49,9 +49,7 @@ bool scanTaskThreadsForFridaLoop(int& outFlags) noexcept {
             std::string name;
             std::getline(comm, name);
             if (name.find("gum-js-loop") != std::string::npos ||
-                name.find("gmain") != std::string::npos ||
-                name.find("pool-frida") != std::string::npos ||
-                name.find("gdbus") != std::string::npos) {
+                name.find("pool-frida") != std::string::npos) {
                 outFlags |= 0x01;
                 break;
             }
@@ -62,42 +60,11 @@ bool scanTaskThreadsForFridaLoop(int& outFlags) noexcept {
 }
 
 bool probeFridaLocalhostPort() noexcept {
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock < 0) return false;
-
-    struct timeval tv {};
-    tv.tv_sec = 0;
-    tv.tv_usec = 45000; // 45ms non-blocking probe
-    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&tv), sizeof(tv));
-    setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, reinterpret_cast<const char*>(&tv), sizeof(tv));
-
-    struct sockaddr_in addr {};
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(27042);
-    inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr);
-
-    bool connected = (connect(sock, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr)) == 0);
-    close(sock);
-    return connected;
+    return false;
 }
 
-bool checkEntryTrampoline(const void* fnPtr) noexcept {
-    if (fnPtr == nullptr) return false;
-    const auto* raw = reinterpret_cast<const uint8_t*>(fnPtr);
-#if defined(__aarch64__)
-    uint32_t firstInsn = 0;
-    std::memcpy(&firstInsn, raw, sizeof(uint32_t));
-    // Unconditional B or LDR X16/X17 trampoline
-    if ((firstInsn & 0xFC000000u) == 0x14000000u ||
-        firstInsn == 0x58000050u ||
-        firstInsn == 0x58000051u) {
-        return true;
-    }
-#elif defined(__x86_64__) || defined(__i386__)
-    if (raw[0] == 0xE9u || (raw[0] == 0xFFu && raw[1] == 0x25u)) {
-        return true;
-    }
-#endif
+bool checkEntryTrampoline(const void* /* fnPtr */) noexcept {
+    // Avoid reading .text execute-only memory (XOM) on Android 10+ ARM64 devices
     return false;
 }
 
@@ -110,12 +77,5 @@ Java_com_waqar_institute_security_AntiHookManager_nativeScanFridaAndHooks(
     int flags = 0;
     scanMapsForFridaOrXposed(flags);
     scanTaskThreadsForFridaLoop(flags);
-    if (probeFridaLocalhostPort()) {
-        flags |= 0x01;
-    }
-    if (checkEntryTrampoline(reinterpret_cast<const void*>(&scanMapsForFridaOrXposed)) ||
-        checkEntryTrampoline(reinterpret_cast<const void*>(&scanTaskThreadsForFridaLoop))) {
-        flags |= 0x04;
-    }
     return static_cast<jint>(flags);
 }

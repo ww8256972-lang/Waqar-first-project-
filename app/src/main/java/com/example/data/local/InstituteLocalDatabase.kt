@@ -121,22 +121,39 @@ abstract class InstituteLocalDatabase : RoomDatabase() {
 
         fun getDatabase(context: Context): InstituteLocalDatabase {
             return INSTANCE ?: synchronized(this) {
-                val appCtx = context.applicationContext
-                val builder = Room.databaseBuilder(
-                    appCtx,
-                    InstituteLocalDatabase::class.java,
-                    "waqar_institute_encrypted.db"
-                ).fallbackToDestructiveMigration(dropAllTables = true)
+                INSTANCE?.let { return@synchronized it }
+                val appCtx = context.applicationContext ?: context
 
-                // Apply 256-Bit AES SQLCipher Encryption backed by AndroidKeyStore / StrongBox
-                runCatching {
+                // Attempt 256-Bit AES SQLCipher Encryption backed by AndroidKeyStore / StrongBox,
+                // with automatic fallback to standard Room SQLite if the device kernel (e.g. 16KB page size
+                // on Android 15/16) or OEM Keystore rejects libsqlcipher.so.
+                val instance = runCatching {
                     SQLiteDatabase.loadLibs(appCtx)
                     val passphraseBytes = HardwareKeystoreVault.getOrCreateSqlCipherPassphrase(appCtx)
-                    val supportFactory = SupportFactory(passphraseBytes)
-                    builder.openHelperFactory(supportFactory)
+                    val supportFactory = SupportFactory(passphraseBytes.copyOf(), null, false)
+                    val encryptedDb = Room.databaseBuilder(
+                        appCtx,
+                        InstituteLocalDatabase::class.java,
+                        "waqar_institute_encrypted.db"
+                    )
+                        .openHelperFactory(supportFactory)
+                        .fallbackToDestructiveMigration(dropAllTables = true)
+                        .allowMainThreadQueries()
+                        .build()
+                    // Verify that SQLCipher can actually open the writable database without throwing
+                    encryptedDb.openHelper.writableDatabase
+                    encryptedDb
+                }.getOrElse {
+                    Room.databaseBuilder(
+                        appCtx,
+                        InstituteLocalDatabase::class.java,
+                        "waqar_institute_local_v2.db"
+                    )
+                        .fallbackToDestructiveMigration(dropAllTables = true)
+                        .allowMainThreadQueries()
+                        .build()
                 }
 
-                val instance = builder.build()
                 INSTANCE = instance
                 instance
             }
