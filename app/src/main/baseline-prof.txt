@@ -1,0 +1,15 @@
+# Baseline Profile Rules for Waqar Computer Institute ERP (60/120fps Zero-Lag UI)
+HSPLcom/example/MainActivity;->onCreate(Landroid/os/Bundle;)V
+HSPLcom/example/WaqarInstituteAppKt;->**
+HSPLcom/example/ui/designsystem/MaterialsKt;->**
+HSPLcom/example/ui/designsystem/DesignTokensKt;->**
+HSPLcom/example/ui/auth/NeonWaveLoginScreenKt;->**
+HSPLcom/example/ui/portal/PortalShellScreenKt;->**
+HSPLcom/example/ui/modules/DashboardAndPeopleModulesKt;->**
+HSPLcom/example/ui/modules/AcademicsAndFinanceModulesKt;->**
+HSPLcom/example/viewmodel/InstituteViewModel;->**
+HSPLcom/example/data/firestore/InstituteRepository;->**
+HSPLcom/example/data/local/InstituteLocalDatabase;->**
+HSPLcom/example/security/EnterpriseRaspGuard;->**
+HSPLcom/example/security/HardwareKeystoreVault;->**
+HSPLcom/example/auth/FirebaseAuthServiceProvider;->**

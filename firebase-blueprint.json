@@ -1,0 +1,514 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated institute user profile with role, MFA status, and linked student/staff ID.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "teacher", "student", "parent"] },
+        "username": { "type": "string" },
+        "phone": { "type": "string" },
+        "mfaEnabled": { "type": "boolean" },
+        "totpSecret": { "type": "string" },
+        "linkedEntityId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "displayName", "role", "username", "phone", "mfaEnabled", "totpSecret", "linkedEntityId", "createdAt"]
+    },
+    "UsernameAlias": {
+      "title": "UsernameAlias",
+      "description": "Unique username reservation mapping username to user UID and role.",
+      "type": "object",
+      "properties": {
+        "username": { "type": "string" },
+        "uid": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "teacher", "student", "parent"] },
+        "email": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["username", "uid", "role", "email", "createdAt"]
+    },
+    "DeviceSession": {
+      "title": "DeviceSession",
+      "description": "Active device session record for session auditing and remote sign-out (M01).",
+      "type": "object",
+      "properties": {
+        "sessionId": { "type": "string" },
+        "uid": { "type": "string" },
+        "deviceName": { "type": "string" },
+        "platform": { "type": "string" },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["sessionId", "uid", "deviceName", "platform", "active", "createdAt"]
+    },
+    "PortalCredential": {
+      "title": "PortalCredential",
+      "description": "PBKDF2-HMAC-SHA256 salted credential assigned by Admin for Student, Parent, Teacher, or Admin portal access.",
+      "type": "object",
+      "properties": {
+        "username": { "type": "string" },
+        "passwordHash": { "type": "string" },
+        "passwordSalt": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "teacher", "student", "parent"] },
+        "linkedEntityId": { "type": "string" },
+        "displayName": { "type": "string" },
+        "assignedByUid": { "type": "string" },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["username", "passwordHash", "passwordSalt", "role", "linkedEntityId", "displayName", "assignedByUid", "active", "createdAt"]
+    },
+    "StudentRecord": {
+      "title": "StudentRecord",
+      "description": "Student master record with enrollment, course, batch, fee, attendance, photo, and attached document metrics (M03).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "enrollmentNo": { "type": "string" },
+        "fullName": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "guardianName": { "type": "string" },
+        "guardianPhone": { "type": "string" },
+        "courseId": { "type": "string" },
+        "courseName": { "type": "string" },
+        "batchId": { "type": "string" },
+        "batchName": { "type": "string" },
+        "status": { "type": "string", "enum": ["ACTIVE", "ON_LEAVE", "ALUMNI", "DROPPED"] },
+        "totalFeePaise": { "type": "integer" },
+        "paidFeePaise": { "type": "integer" },
+        "attendancePercent": { "type": "integer" },
+        "photoUri": { "type": "string" },
+        "attachmentName": { "type": "string" },
+        "ownerUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "enrollmentNo", "fullName", "email", "phone", "guardianName", "guardianPhone", "courseId", "courseName", "batchId", "batchName", "status", "totalFeePaise", "paidFeePaise", "attendancePercent", "photoUri", "attachmentName", "ownerUid", "createdAt"]
+    },
+    "AdmissionEnquiry": {
+      "title": "AdmissionEnquiry",
+      "description": "Admission lead and counsellor follow-up pipeline record (M04).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "applicantName": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "interestedCourse": { "type": "string" },
+        "source": { "type": "string" },
+        "stage": { "type": "string", "enum": ["NEW", "FOLLOW_UP", "DEMO_SCHEDULED", "COUNSELLED", "CONVERTED", "LOST"] },
+        "counsellorName": { "type": "string" },
+        "followUpDate": { "type": "string" },
+        "notes": { "type": "string" },
+        "ownerUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "applicantName", "phone", "email", "interestedCourse", "source", "stage", "counsellorName", "followUpDate", "notes", "ownerUid", "createdAt"]
+    },
+    "CourseRecord": {
+      "title": "CourseRecord",
+      "description": "Academic course, fee structure, and curriculum definition (M05).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "durationMonths": { "type": "integer" },
+        "totalFeePaise": { "type": "integer" },
+        "syllabusSummary": { "type": "string" },
+        "totalModules": { "type": "integer" },
+        "active": { "type": "boolean" },
+        "ownerUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "code", "title", "category", "durationMonths", "totalFeePaise", "syllabusSummary", "totalModules", "active", "ownerUid", "createdAt"]
+    },
+    "BatchRecord": {
+      "title": "BatchRecord",
+      "description": "Batch schedule, room allocation, and capacity record (M06).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": "string" },
+        "name": { "type": "string" },
+        "courseId": { "type": "string" },
+        "courseName": { "type": "string" },
+        "teacherName": { "type": "string" },
+        "roomName": { "type": "string" },
+        "daysOfWeek": { "type": "string" },
+        "startTime": { "type": "string" },
+        "endTime": { "type": "string" },
+        "capacity": { "type": "integer" },
+        "enrolledCount": { "type": "integer" },
+        "status": { "type": "string", "enum": ["ACTIVE", "UPCOMING", "COMPLETED"] },
+        "ownerUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "code", "name", "courseId", "courseName", "teacherName", "roomName", "daysOfWeek", "startTime", "endTime", "capacity", "enrolledCount", "status", "ownerUid", "createdAt"]
+    },
+    "AttendanceRecord": {
+      "title": "AttendanceRecord",
+      "description": "Student or staff attendance entry via roll-call or QR scan (M07).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "targetType": { "type": "string", "enum": ["STUDENT", "STAFF"] },
+        "targetId": { "type": "string" },
+        "targetName": { "type": "string" },
+        "batchId": { "type": "string" },
+        "batchName": { "type": "string" },
+        "dateIso": { "type": "string" },
+        "status": { "type": "string", "enum": ["PRESENT", "ABSENT", "LATE", "LEAVE"] },
+        "method": { "type": "string", "enum": ["MANUAL", "QR_SCAN", "BIOMETRIC"] },
+        "remarks": { "type": "string" },
+        "markedByUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "targetType", "targetId", "targetName", "batchId", "batchName", "dateIso", "status", "method", "remarks", "markedByUid", "createdAt"]
+    },
+    "FeeInvoice": {
+      "title": "FeeInvoice",
+      "description": "Student fee invoice, installment schedule, and payment receipt (M08).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "receiptNo": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "courseName": { "type": "string" },
+        "title": { "type": "string" },
+        "totalAmountPaise": { "type": "integer" },
+        "paidAmountPaise": { "type": "integer" },
+        "discountPaise": { "type": "integer" },
+        "finePaise": { "type": "integer" },
+        "paymentMode": { "type": "string", "enum": ["CASH", "UPI", "CARD", "BANK_TRANSFER", "CHEQUE"] },
+        "status": { "type": "string", "enum": ["PAID", "PARTIAL", "PENDING", "OVERDUE", "REFUNDED"] },
+        "dueDateIso": { "type": "string" },
+        "paidAtIso": { "type": "string" },
+        "ownerUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "receiptNo", "studentId", "studentName", "courseName", "title", "totalAmountPaise", "paidAmountPaise", "discountPaise", "finePaise", "paymentMode", "status", "dueDateIso", "paidAtIso", "ownerUid", "createdAt"]
+    },
+    "LedgerEntry": {
+      "title": "LedgerEntry",
+      "description": "Institute expense, vendor bill, petty cash, and double-entry ledger transaction (M09).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "entryType": { "type": "string", "enum": ["INCOME", "EXPENSE", "PETTY_CASH", "VENDOR_PAYMENT"] },
+        "category": { "type": "string" },
+        "title": { "type": "string" },
+        "vendorName": { "type": "string" },
+        "amountPaise": { "type": "integer" },
+        "gstAmountPaise": { "type": "integer" },
+        "paymentMode": { "type": "string" },
+        "referenceNo": { "type": "string" },
+        "dateIso": { "type": "string" },
+        "approvedBy": { "type": "string" },
+        "ownerUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "entryType", "category", "title", "vendorName", "amountPaise", "gstAmountPaise", "paymentMode", "referenceNo", "dateIso", "approvedBy", "ownerUid", "createdAt"]
+    },
+    "ExamRecord": {
+      "title": "ExamRecord",
+      "description": "Online or offline examination, question bank summary, and schedule (M10).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "courseId": { "type": "string" },
+        "courseName": { "type": "string" },
+        "batchName": { "type": "string" },
+        "examType": { "type": "string", "enum": ["MCQ_ONLINE", "PRACTICAL", "THEORY", "FINAL"] },
+        "durationMinutes": { "type": "integer" },
+        "totalMarks": { "type": "integer" },
+        "passingMarks": { "type": "integer" },
+        "scheduledDateIso": { "type": "string" },
+        "questionsJson": { "type": "string" },
+        "status": { "type": "string", "enum": ["SCHEDULED", "LIVE", "COMPLETED", "PUBLISHED"] },
+        "ownerUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "courseId", "courseName", "batchName", "examType", "durationMinutes", "totalMarks", "passingMarks", "scheduledDateIso", "questionsJson", "status", "ownerUid", "createdAt"]
+    },
+    "ExamResult": {
+      "title": "ExamResult",
+      "description": "Student exam submission, marks obtained, grade, and rank (M10).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "examId": { "type": "string" },
+        "examTitle": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "marksObtained": { "type": "integer" },
+        "totalMarks": { "type": "integer" },
+        "grade": { "type": "string" },
+        "rank": { "type": "integer" },
+        "status": { "type": "string", "enum": ["PASSED", "FAILED", "ABSENT"] },
+        "remarks": { "type": "string" },
+        "ownerUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "examId", "examTitle", "studentId", "studentName", "marksObtained", "totalMarks", "grade", "rank", "status", "remarks", "ownerUid", "createdAt"]
+    },
+    "StudyMaterial": {
+      "title": "StudyMaterial",
+      "description": "LMS study material, lecture notes, video link, or homework assignment (M11).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "courseName": { "type": "string" },
+        "batchName": { "type": "string" },
+        "materialType": { "type": "string", "enum": ["PDF_NOTES", "VIDEO_LECTURE", "CODE_LAB", "ASSIGNMENT"] },
+        "contentUrlOrBody": { "type": "string" },
+        "dueDateIso": { "type": "string" },
+        "maxMarks": { "type": "integer" },
+        "downloadsCount": { "type": "integer" },
+        "ownerUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "courseName", "batchName", "materialType", "contentUrlOrBody", "dueDateIso", "maxMarks", "downloadsCount", "ownerUid", "createdAt"]
+    },
+    "CertificateRecord": {
+      "title": "CertificateRecord",
+      "description": "Verifiable QR certificate, diploma, or student/staff ID card (M12).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "serialNo": { "type": "string" },
+        "certType": { "type": "string", "enum": ["DIPLOMA", "COMPLETION", "MERIT", "ID_CARD", "BONAFIDE"] },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "courseName": { "type": "string" },
+        "grade": { "type": "string" },
+        "issueDateIso": { "type": "string" },
+        "verificationHash": { "type": "string" },
+        "revoked": { "type": "boolean" },
+        "ownerUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "serialNo", "certType", "studentId", "studentName", "courseName", "grade", "issueDateIso", "verificationHash", "revoked", "ownerUid", "createdAt"]
+    },
+    "StaffMember": {
+      "title": "StaffMember",
+      "description": "Faculty, counsellor, accountant, or administrative staff member (M13).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "employeeCode": { "type": "string" },
+        "fullName": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "designation": { "type": "string" },
+        "department": { "type": "string" },
+        "monthlySalaryPaise": { "type": "integer" },
+        "joiningDateIso": { "type": "string" },
+        "status": { "type": "string", "enum": ["ACTIVE", "ON_LEAVE", "RESIGNED"] },
+        "ownerUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "employeeCode", "fullName", "email", "phone", "designation", "department", "monthlySalaryPaise", "joiningDateIso", "status", "ownerUid", "createdAt"]
+    },
+    "PayrollEntry": {
+      "title": "PayrollEntry",
+      "description": "Monthly staff salary slip, PF/TDS deduction, advance, and leave calculation (M14).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "staffId": { "type": "string" },
+        "staffName": { "type": "string" },
+        "monthYear": { "type": "string" },
+        "basicPaise": { "type": "integer" },
+        "allowancesPaise": { "type": "integer" },
+        "deductionsPaise": { "type": "integer" },
+        "netPayPaise": { "type": "integer" },
+        "status": { "type": "string", "enum": ["DRAFT", "APPROVED", "DISBURSED"] },
+        "leaveDays": { "type": "integer" },
+        "ownerUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "staffId", "staffName", "monthYear", "basicPaise", "allowancesPaise", "deductionsPaise", "netPayPaise", "status", "leaveDays", "ownerUid", "createdAt"]
+    },
+    "GuardianLink": {
+      "title": "GuardianLink",
+      "description": "Parent/guardian household link, PTM notes, and consent status (M15).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "guardianName": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "relation": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "ptmNotes": { "type": "string" },
+        "consentSigned": { "type": "boolean" },
+        "ownerUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "guardianName", "phone", "email", "relation", "studentId", "studentName", "ptmNotes", "consentSigned", "ownerUid", "createdAt"]
+    },
+    "AnnouncementItem": {
+      "title": "AnnouncementItem",
+      "description": "Institute broadcast notice, emergency alert, or inbox message (M16).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "body": { "type": "string" },
+        "targetAudience": { "type": "string", "enum": ["ALL", "STUDENTS", "TEACHERS", "PARENTS", "BATCH"] },
+        "channel": { "type": "string", "enum": ["IN_APP", "PUSH", "WHATSAPP_TEMPLATE", "SMS", "EMAIL"] },
+        "priority": { "type": "string", "enum": ["NORMAL", "IMPORTANT", "URGENT"] },
+        "senderName": { "type": "string" },
+        "ownerUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "body", "targetAudience", "channel", "priority", "senderName", "ownerUid", "createdAt"]
+    },
+    "LiveClassSession": {
+      "title": "LiveClassSession",
+      "description": "Virtual classroom session, computer lab booking, and live poll (M17).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "batchName": { "type": "string" },
+        "teacherName": { "type": "string" },
+        "meetingCode": { "type": "string" },
+        "scheduledTimeIso": { "type": "string" },
+        "durationMinutes": { "type": "integer" },
+        "status": { "type": "string", "enum": ["UPCOMING", "LIVE", "ENDED"] },
+        "attendeeCount": { "type": "integer" },
+        "activePollQuestion": { "type": "string" },
+        "ownerUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "batchName", "teacherName", "meetingCode", "scheduledTimeIso", "durationMinutes", "status", "attendeeCount", "activePollQuestion", "ownerUid", "createdAt"]
+    },
+    "AiInteractionLog": {
+      "title": "AiInteractionLog",
+      "description": "Gemini AI Tutor conversation, generated quiz/summary, and token usage record (M18).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userUid": { "type": "string" },
+        "userRole": { "type": "string" },
+        "featureType": { "type": "string", "enum": ["TUTOR_CHAT", "QUIZ_GEN", "LESSON_PLAN", "NOTICE_DRAFT", "RISK_ANALYSIS"] },
+        "modelName": { "type": "string" },
+        "promptText": { "type": "string" },
+        "responseText": { "type": "string" },
+        "tokensUsed": { "type": "integer" },
+        "safetyFlagged": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userUid", "userRole", "featureType", "modelName", "promptText", "responseText", "tokensUsed", "safetyFlagged", "createdAt"]
+    },
+    "InventoryAsset": {
+      "title": "InventoryAsset",
+      "description": "Computer lab hardware, projector, UPS, library book, or consumable stock (M20).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "assetCode": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string", "enum": ["LAB_PC", "NETWORK_UPS", "FURNITURE", "LIBRARY_BOOK", "CONSUMABLE"] },
+        "locationLab": { "type": "string" },
+        "conditionStatus": { "type": "string", "enum": ["WORKING", "UNDER_REPAIR", "ISSUED", "RETIRED"] },
+        "assignedTo": { "type": "string" },
+        "purchaseCostPaise": { "type": "integer" },
+        "ownerUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "assetCode", "name", "category", "locationLab", "conditionStatus", "assignedTo", "purchaseCostPaise", "ownerUid", "createdAt"]
+    },
+    "SupportTicket": {
+      "title": "SupportTicket",
+      "description": "Helpdesk ticket, grievance escalation, and NPS feedback item (M21).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "ticketNo": { "type": "string" },
+        "subject": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string", "enum": ["FEE_QUERY", "LAB_ISSUE", "EXAM_CELL", "CERTIFICATE", "FEEDBACK"] },
+        "priority": { "type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"] },
+        "status": { "type": "string", "enum": ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"] },
+        "requesterUid": { "type": "string" },
+        "requesterName": { "type": "string" },
+        "resolutionNotes": { "type": "string" },
+        "npsScore": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ticketNo", "subject", "description", "category", "priority", "status", "requesterUid", "requesterName", "resolutionNotes", "npsScore", "createdAt"]
+    },
+    "SecurityAuditLog": {
+      "title": "SecurityAuditLog",
+      "description": "Immutable security audit entry, Play Integrity check, or data privacy log (M22).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "actorUid": { "type": "string" },
+        "actorEmail": { "type": "string" },
+        "action": { "type": "string" },
+        "module": { "type": "string" },
+        "targetId": { "type": "string" },
+        "severity": { "type": "string", "enum": ["INFO", "WARNING", "CRITICAL"] },
+        "details": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "actorUid", "actorEmail", "action", "module", "targetId", "severity", "details", "createdAt"]
+    },
+    "InstituteBackupOrConfig": {
+      "title": "InstituteBackupOrConfig",
+      "description": "Encrypted backup snapshot manifest or global institute configuration record (M23 & M24).",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string", "enum": ["BACKUP_SNAPSHOT", "INSTITUTE_PROFILE", "ACADEMIC_YEAR", "TAX_AND_RECEIPT", "FEATURE_FLAGS"] },
+        "payloadJson": { "type": "string" },
+        "recordCount": { "type": "integer" },
+        "checksum": { "type": "string" },
+        "ownerUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "category", "payloadJson", "recordCount", "checksum", "ownerUid", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": { "schema": { "$ref": "#/entities/UserProfile" }, "description": "User profiles and RBAC role assignments." },
+    "/usernames/{username}": { "schema": { "$ref": "#/entities/UsernameAlias" }, "description": "Username alias lookup directory." },
+    "/portalCredentials/{username}": { "schema": { "$ref": "#/entities/PortalCredential" }, "description": "PBKDF2-HMAC-SHA256 salted credentials for Admin, Teacher, Student, and Parent logins." },
+    "/sessions/{sessionId}": { "schema": { "$ref": "#/entities/DeviceSession" }, "description": "Active device sessions." },
+    "/students/{studentId}": { "schema": { "$ref": "#/entities/StudentRecord" }, "description": "Students directory." },
+    "/enquiries/{enquiryId}": { "schema": { "$ref": "#/entities/AdmissionEnquiry" }, "description": "Admission CRM leads." },
+    "/courses/{courseId}": { "schema": { "$ref": "#/entities/CourseRecord" }, "description": "Institute courses and curriculum." },
+    "/batches/{batchId}": { "schema": { "$ref": "#/entities/BatchRecord" }, "description": "Batches and timetable schedules." },
+    "/attendance/{attendanceId}": { "schema": { "$ref": "#/entities/AttendanceRecord" }, "description": "Student and staff attendance records." },
+    "/fees/{feeId}": { "schema": { "$ref": "#/entities/FeeInvoice" }, "description": "Fee invoices, installments, and receipts." },
+    "/ledger/{entryId}": { "schema": { "$ref": "#/entities/LedgerEntry" }, "description": "Expenses, vendor bills, and accounting ledger." },
+    "/exams/{examId}": { "schema": { "$ref": "#/entities/ExamRecord" }, "description": "Scheduled exams and question banks." },
+    "/examResults/{resultId}": { "schema": { "$ref": "#/entities/ExamResult" }, "description": "Student exam results and mark sheets." },
+    "/materials/{materialId}": { "schema": { "$ref": "#/entities/StudyMaterial" }, "description": "Study materials, notes, and assignments." },
+    "/certificates/{certificateId}": { "schema": { "$ref": "#/entities/CertificateRecord" }, "description": "Issued QR certificates and ID cards." },
+    "/staff/{staffId}": { "schema": { "$ref": "#/entities/StaffMember" }, "description": "Faculty and staff directory." },
+    "/payroll/{payrollId}": { "schema": { "$ref": "#/entities/PayrollEntry" }, "description": "Staff payroll and leave records." },
+    "/guardians/{guardianId}": { "schema": { "$ref": "#/entities/GuardianLink" }, "description": "Parent/guardian links and PTM logs." },
+    "/announcements/{announcementId}": { "schema": { "$ref": "#/entities/AnnouncementItem" }, "description": "Broadcast notices and announcements." },
+    "/liveClasses/{liveClassId}": { "schema": { "$ref": "#/entities/LiveClassSession" }, "description": "Live classes and lab bookings." },
+    "/aiLogs/{aiLogId}": { "schema": { "$ref": "#/entities/AiInteractionLog" }, "description": "AI Tutor logs and token usage." },
+    "/assets/{assetId}": { "schema": { "$ref": "#/entities/InventoryAsset" }, "description": "Lab PCs, library books, and assets." },
+    "/tickets/{ticketId}": { "schema": { "$ref": "#/entities/SupportTicket" }, "description": "Helpdesk tickets and NPS feedback." },
+    "/auditLogs/{auditId}": { "schema": { "$ref": "#/entities/SecurityAuditLog" }, "description": "Immutable security audit trail." },
+    "/backups/{backupId}": { "schema": { "$ref": "#/entities/InstituteBackupOrConfig" }, "description": "Backup snapshots and global institute settings." }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "firestore": {
+    "database": "ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1",
+    "rules": "firestore.rules"
+  },
+  "emulators": {
+    "auth": {
+      "host": "127.0.0.1",
+      "port": 9099
+    },
+    "firestore": {
+      "host": "127.0.0.1",
+      "port": 8085
+    },
+    "singleProjectMode": true
+  }
+}
