@@ -114,7 +114,7 @@ Java_com_waqar_institute_security_AntiHookManager_nativeScanFridaAndHooks(
         flags |= 0x01;
     }
     if (checkEntryTrampoline(reinterpret_cast<const void*>(&scanMapsForFridaOrXposed)) ||
-        checkEntryTrampoline(reinterpret_cast<const void*>(&open))) {
+        checkEntryTrampoline(reinterpret_cast<const void*>(&scanTaskThreadsForFridaLoop))) {
         flags |= 0x04;
     }
     return static_cast<jint>(flags);

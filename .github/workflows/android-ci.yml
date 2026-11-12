@@ -15,7 +15,7 @@ env:
 
 jobs:
   build-and-test:
-    name: Build, Lint, Test & Package Debug APK
+    name: Build, Lint, Test & Package Debug + Release APKs
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
@@ -39,7 +39,7 @@ jobs:
           packages: 'cmdline-tools;latest platform-tools'
           accept-android-sdk-licenses: true
 
-      # 4 & 5. Accept Android SDK licenses & install required SDK platforms, build-tools, and CMake
+      # 4 & 5. Accept Android SDK licenses & install required SDK platforms and build-tools
       - name: Accept SDK Licenses & Install Required Android SDK Packages
         run: |
           export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
@@ -55,11 +55,14 @@ jobs:
             "platform-tools" \
             "platforms;android-36" \
             "platforms;android-36.1" \
-            "build-tools;36.0.0" \
-            "cmake;3.22.1"
+            "build-tools;36.0.0"
 
-      # 6. Validate Gradle Wrapper & Prepare Keystore/Environment
-      - name: Validate Gradle Wrapper & Prepare Signing Keystore
+      # 6. Validate Gradle Wrapper & Prepare Debug + Release Signing Keystores
+      - name: Validate Gradle Wrapper & Prepare Signing Keystores
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           if [ -f "gradle/wrapper/gradle-wrapper.properties" ]; then
             echo "Verified gradle-wrapper.properties:"
@@ -80,6 +83,25 @@ jobs:
               -keysize 2048 \
               -validity 10000 \
               -dname "CN=Android Debug,O=Android,C=US"
+          fi
+          if [ -n "$RELEASE_KEYSTORE_BASE64" ]; then
+            echo "$RELEASE_KEYSTORE_BASE64" | base64 -d > my-upload-key.jks
+            echo "KEYSTORE_PATH=${GITHUB_WORKSPACE}/my-upload-key.jks" >> "$GITHUB_ENV"
+            echo "STORE_PASSWORD=${RELEASE_STORE_PASSWORD}" >> "$GITHUB_ENV"
+            echo "KEY_PASSWORD=${RELEASE_KEY_PASSWORD}" >> "$GITHUB_ENV"
+          else
+            keytool -genkeypair -v \
+              -keystore my-upload-key.jks \
+              -storepass waqar_release_pass \
+              -alias upload \
+              -keypass waqar_release_pass \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=Waqar Computer Institute,OU=ERP,O=WCI,L=Lucknow,S=UP,C=IN"
+            echo "KEYSTORE_PATH=${GITHUB_WORKSPACE}/my-upload-key.jks" >> "$GITHUB_ENV"
+            echo "STORE_PASSWORD=waqar_release_pass" >> "$GITHUB_ENV"
+            echo "KEY_PASSWORD=waqar_release_pass" >> "$GITHUB_ENV"
           fi
           if [ ! -f .env ] && [ -f .env.example ]; then
             cp .env.example .env
@@ -120,27 +142,42 @@ jobs:
             --tests "com.example.RemediationVerificationTest" \
             --stacktrace
 
-      # 12. Assemble Debug APK
+      # 12. Assemble Debug APK & Signed Release APK
       - name: Assemble Debug APK
         run: |
-          gradle :app:assembleDebug --stacktrace
+          gradle :app:assembleDebug :app:assembleRelease --stacktrace
 
-      # 13. Verify Debug APK exists on disk
+      # 13. Verify Debug & Release APKs exist on disk
       - name: Verify Generated Debug APK Exists
         run: |
-          APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
-          if [ ! -f "$APK_PATH" ]; then
-            echo "ERROR: Expected Debug APK not found at $APK_PATH"
+          DEBUG_APK="app/build/outputs/apk/debug/app-debug.apk"
+          RELEASE_APK="app/build/outputs/apk/release/app-release.apk"
+          if [ ! -f "$DEBUG_APK" ]; then
+            echo "ERROR: Expected Debug APK not found at $DEBUG_APK"
             exit 1
           fi
-          ls -lh "$APK_PATH"
+          if [ ! -f "$RELEASE_APK" ]; then
+            echo "ERROR: Expected Release APK not found at $RELEASE_APK"
+            exit 1
+          fi
+          ls -lh "$DEBUG_APK" "$RELEASE_APK"
 
-      # 14. Upload Debug APK Artifact (only on successful build)
+      # 14. Upload Debug APK Artifact
       - name: Upload Debug APK Artifact
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: waqar-institute-debug-apk
           path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      # 15. Upload Signed Release APK Artifact
+      - name: Upload Release APK Artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: waqar-institute-release-apk
+          path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error
           retention-days: 30

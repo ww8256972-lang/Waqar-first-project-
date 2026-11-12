@@ -29,11 +29,7 @@ target_compile_options(
     -ffunction-sections
     -fdata-sections
     -fstack-protector-strong
-    -flto
-    -O3
-    -fno-rtti
-    -Wall
-    -Wextra
+    -O2
 )
 
 target_link_options(
@@ -42,8 +38,6 @@ target_link_options(
     -Wl,--gc-sections
     -Wl,--exclude-libs,ALL
     -Wl,-z,relro,-z,now
-    -flto
-    -s
 )
 
 find_library(

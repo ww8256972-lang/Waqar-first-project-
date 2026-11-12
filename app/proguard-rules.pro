@@ -4,14 +4,9 @@
 # Protects DEX bytecode against reverse engineering via MT Manager / JADX-GUI
 # ==============================================================================
 
-# 1. Aggressive R8 Optimization, Repackaging & Custom Dictionary Obfuscation
--optimizationpasses 5
--overloadaggressively
--allowaccessmodification
--repackageclasses ''
+# 1. R8 Optimization & Dictionary Configuration
+-optimizationpasses 2
 -obfuscationdictionary proguard-dictionary.txt
--classobfuscationdictionary proguard-dictionary.txt
--packageobfuscationdictionary proguard-dictionary.txt
 
 # 2. Strip SourceFile, LineNumberTable & Debugging Attributes so Decompilers Lose Context
 -renamesourcefileattribute SourceFile
