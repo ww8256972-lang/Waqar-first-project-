@@ -7,50 +7,136 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+env:
+  JAVA_OPTS: "-Xmx4g -XX:MaxMetaspaceSize=1g"
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.parallel=true"
+
 jobs:
   build-and-test:
+    name: Build, Lint, Test & Package Debug APK
     runs-on: ubuntu-latest
+    timeout-minutes: 45
+
     steps:
-      - name: Checkout Code
+      # 1. Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # 2. Set up compatible JDK (Temurin 21 for AGP 9.1.1 & Gradle 9.3.1)
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '21'
 
+      # 3. Configure Android SDK (Explicitly override default 'packages: tools platform-tools' to prevent obsolete 'tools' package failure)
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
           cmdline-tools-version: 11076708
+          packages: 'cmdline-tools;latest platform-tools'
           accept-android-sdk-licenses: true
 
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '9.3.1'
-          cache-read-only: false
-
-      - name: Prepare Signing Keystore & Secrets Environment
+      # 4 & 5. Accept Android SDK licenses & install required SDK platforms, build-tools, and CMake
+      - name: Accept SDK Licenses & Install Required Android SDK Packages
         run: |
+          export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          export ANDROID_HOME="$ANDROID_SDK_ROOT"
+          echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}" >> "$GITHUB_ENV"
+          echo "ANDROID_HOME=${ANDROID_HOME}" >> "$GITHUB_ENV"
+          SDKMANAGER="${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER="$(which sdkmanager)"
+          fi
+          yes | "$SDKMANAGER" --sdk_root="$ANDROID_SDK_ROOT" --licenses > /dev/null || true
+          "$SDKMANAGER" --sdk_root="$ANDROID_SDK_ROOT" \
+            "platform-tools" \
+            "platforms;android-36" \
+            "platforms;android-36.1" \
+            "build-tools;36.0.0" \
+            "cmake;3.22.1"
+
+      # 6. Validate Gradle Wrapper & Prepare Keystore/Environment
+      - name: Validate Gradle Wrapper & Prepare Signing Keystore
+        run: |
+          if [ -f "gradle/wrapper/gradle-wrapper.properties" ]; then
+            echo "Verified gradle-wrapper.properties:"
+            cat gradle/wrapper/gradle-wrapper.properties
+          fi
+          if [ -f "gradlew" ]; then
+            chmod +x gradlew
+          fi
           if [ ! -f debug.keystore ] && [ -f debug.keystore.base64 ]; then
             base64 -d debug.keystore.base64 > debug.keystore
           elif [ ! -f debug.keystore ]; then
-            keytool -genkeypair -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+            keytool -genkeypair -v \
+              -keystore debug.keystore \
+              -storepass android \
+              -alias androiddebugkey \
+              -keypass android \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
           fi
           if [ ! -f .env ] && [ -f .env.example ]; then
             cp .env.example .env
           fi
 
-      - name: Assemble Debug APK & Run Unit Tests
-        run: |
-          gradle :app:assembleDebug :app:testDebugUnitTest --stacktrace
+      # 7. Set up Gradle 9.3.1 with build caching
+      - name: Set up Gradle 9.3.1 with Caching
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.3.1'
+          cache-read-only: false
 
+      # 8. Validate Gradle project configuration
+      - name: Validate Project Configuration
+        run: |
+          gradle help --stacktrace
+
+      # 9. Run Kotlin compilation
+      - name: Compile Debug Kotlin Sources
+        run: |
+          gradle :app:compileDebugKotlin --stacktrace
+
+      # 10. Run Android Lint check
+      - name: Run Android Lint
+        run: |
+          gradle :app:lintDebug --stacktrace
+
+      # 11. Run Unit Tests
+      - name: Run Unit Tests
+        run: |
+          gradle :app:testDebugUnitTest \
+            --tests "com.example.ExampleUnitTest" \
+            --tests "com.example.RemediationVerificationTest" \
+            --stacktrace
+
+      # 12. Assemble Debug APK
+      - name: Assemble Debug APK
+        run: |
+          gradle :app:assembleDebug --stacktrace
+
+      # 13. Verify Debug APK exists on disk
+      - name: Verify Generated Debug APK Exists
+        run: |
+          APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
+          if [ ! -f "$APK_PATH" ]; then
+            echo "ERROR: Expected Debug APK not found at $APK_PATH"
+            exit 1
+          fi
+          ls -lh "$APK_PATH"
+
+      # 14. Upload Debug APK Artifact (only on successful build)
       - name: Upload Debug APK Artifact
-        if: always()
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: waqar-institute-debug-apk
           path: app/build/outputs/apk/debug/*.apk
-          if-no-files-found: ignore
+          if-no-files-found: error
+          retention-days: 30

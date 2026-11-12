@@ -6,11 +6,21 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: read
+
+env:
+  JAVA_OPTS: "-Xmx4g -XX:MaxMetaspaceSize=1g"
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.parallel=true"
+
 jobs:
   release:
+    name: Build Signed Release APK & Play Store AAB
     runs-on: ubuntu-latest
+    timeout-minutes: 45
+
     steps:
-      - name: Checkout Code
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Set up JDK 21
@@ -23,9 +33,28 @@ jobs:
         uses: android-actions/setup-android@v3
         with:
           cmdline-tools-version: 11076708
+          packages: 'cmdline-tools;latest platform-tools'
           accept-android-sdk-licenses: true
 
-      - name: Set up Gradle
+      - name: Accept SDK Licenses & Install Required Android SDK Packages
+        run: |
+          export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          export ANDROID_HOME="$ANDROID_SDK_ROOT"
+          echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}" >> "$GITHUB_ENV"
+          echo "ANDROID_HOME=${ANDROID_HOME}" >> "$GITHUB_ENV"
+          SDKMANAGER="${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER="$(which sdkmanager)"
+          fi
+          yes | "$SDKMANAGER" --sdk_root="$ANDROID_SDK_ROOT" --licenses > /dev/null || true
+          "$SDKMANAGER" --sdk_root="$ANDROID_SDK_ROOT" \
+            "platform-tools" \
+            "platforms;android-36" \
+            "platforms;android-36.1" \
+            "build-tools;36.0.0" \
+            "cmake;3.22.1"
+
+      - name: Set up Gradle 9.3.1 with Caching
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.3.1'
@@ -37,6 +66,9 @@ jobs:
           RELEASE_STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
           RELEASE_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
+          if [ -f "gradlew" ]; then
+            chmod +x gradlew
+          fi
           if [ ! -f debug.keystore ] && [ -f debug.keystore.base64 ]; then
             base64 -d debug.keystore.base64 > debug.keystore
           elif [ ! -f debug.keystore ]; then
@@ -57,15 +89,26 @@ jobs:
             cp .env.example .env
           fi
 
+      - name: Validate Project Configuration
+        run: |
+          gradle help --stacktrace
+
       - name: Build Signed Release APK & Play Store AAB
         run: |
           gradle :app:assembleRelease :app:bundleRelease --stacktrace
 
+      - name: Verify Signed Release Artifacts Exist
+        run: |
+          ls -lh app/build/outputs/apk/release/*.apk
+          ls -lh app/build/outputs/bundle/release/*.aab
+
       - name: Upload Signed Release APK & AAB Artifacts
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: waqar-institute-release-bundle
           path: |
             app/build/outputs/apk/release/*.apk
             app/build/outputs/bundle/release/*.aab
-          if-no-files-found: warn
+          if-no-files-found: error
+          retention-days: 90
