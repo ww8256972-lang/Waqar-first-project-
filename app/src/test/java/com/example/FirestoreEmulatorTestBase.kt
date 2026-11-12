@@ -46,6 +46,15 @@ abstract class FirestoreEmulatorTestBase {
                 false
             }
         }
+        @android.annotation.SuppressLint("DiscouragedApi")
+        private fun getResourceOrDefault(context: Context, name: String, fallback: String): String {
+            val id = context.resources.getIdentifier(name, "string", context.packageName)
+            if (id != 0) {
+                val v = runCatching { context.getString(id) }.getOrNull()
+                if (!v.isNullOrBlank()) return v
+            }
+            return fallback
+        }
     }
 
     @Before
@@ -57,16 +66,32 @@ abstract class FirestoreEmulatorTestBase {
         )
         val context = ApplicationProvider.getApplicationContext<Context>()
 
-        projectId = context.getString(R.string.project_id)
-        databaseId = context.getString(R.string.firestore_database_id)
+        projectId = getResourceOrDefault(context, "project_id", "gen-lang-client-0309263247")
+        databaseId = getResourceOrDefault(
+            context,
+            "firestore_database_id",
+            "ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1"
+        )
 
         if (FirebaseApp.getApps(context).isEmpty()) {
             FirebaseApp.initializeApp(
                 context,
                 FirebaseOptions.Builder()
                     .setProjectId(projectId)
-                    .setApplicationId(context.getString(R.string.google_app_id))
-                    .setApiKey(context.getString(R.string.google_api_key))
+                    .setApplicationId(
+                        getResourceOrDefault(
+                            context,
+                            "google_app_id",
+                            "1:790218222135:android:ebec440ddaf6637ab4adb2"
+                        )
+                    )
+                    .setApiKey(
+                        getResourceOrDefault(
+                            context,
+                            "google_api_key",
+                            "AIzaSyDummyTestApiKeyForLocalEmulator0000"
+                        )
+                    )
                     .build()
             )
         }

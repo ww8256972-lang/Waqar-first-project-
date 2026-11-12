@@ -2,7 +2,6 @@ package com.example.data.firestore
 
 import android.content.Context
 import android.util.Log
-import com.example.R
 import com.example.data.model.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -32,10 +31,28 @@ class InstituteRepository(
         val localStaffCache = java.util.concurrent.ConcurrentHashMap<String, StaffMember>()
         val localGuardiansCache = java.util.concurrent.ConcurrentHashMap<String, GuardianLink>()
 
+        private const val DEFAULT_FIRESTORE_DATABASE_ID =
+            "ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1"
+
+        @android.annotation.SuppressLint("DiscouragedApi")
+        fun resolveFirestoreDatabaseId(context: Context): String {
+            val resId = context.resources.getIdentifier(
+                "firestore_database_id",
+                "string",
+                context.packageName
+            )
+            if (resId != 0) {
+                val value = runCatching { context.getString(resId) }.getOrNull()
+                if (!value.isNullOrBlank()) return value
+            }
+            return DEFAULT_FIRESTORE_DATABASE_ID
+        }
+
         fun create(context: Context): InstituteRepository {
             appContext = context.applicationContext
+            com.example.security.ensureFirebaseInitialized(context)
             loadLocalVaultFromPrefs(context.applicationContext)
-            val databaseId = context.getString(R.string.firestore_database_id)
+            val databaseId = resolveFirestoreDatabaseId(context)
             val firestore = FirebaseFirestore.getInstance(databaseId)
             try {
                 val currentSettings = firestore.firestoreSettings

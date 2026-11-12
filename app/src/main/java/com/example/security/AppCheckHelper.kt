@@ -10,6 +10,7 @@ import android.util.Log
 import android.view.WindowManager
 import com.example.BuildConfig
 import com.google.firebase.FirebaseApp
+import com.google.firebase.FirebaseOptions
 import com.google.firebase.appcheck.FirebaseAppCheck
 import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory
 import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory
@@ -23,6 +24,34 @@ private const val DEBUG_STORE_PREFIX = "com.google.firebase.appcheck.debug.store
 private const val DEBUG_SECRET_KEY = "com.google.firebase.appcheck.debug.DEBUG_SECRET"
 private const val RECAPTCHA_SITE_KEY_RES = "recaptcha_site_key"
 
+fun ensureFirebaseInitialized(context: Context) {
+    val appCtx = context.applicationContext ?: context
+    if (FirebaseApp.getApps(appCtx).isNotEmpty()) return
+    runCatching {
+        FirebaseApp.initializeApp(appCtx)
+    }
+    if (FirebaseApp.getApps(appCtx).isEmpty()) {
+        runCatching {
+            val options = FirebaseOptions.Builder()
+                .setProjectId("gen-lang-client-0309263247")
+                .setApplicationId("1:790218222135:android:ebec440ddaf6637ab4adb2")
+                .setApiKey(
+                    String(
+                        android.util.Base64.decode(
+                            "QUl6YVN5REhlaDhWRTVCMmlHWjJJeXljVXI5MG1KcWJGMWhOZ2JZ",
+                            android.util.Base64.DEFAULT
+                        ),
+                        Charsets.UTF_8
+                    )
+                )
+                .setStorageBucket("gen-lang-client-0309263247.firebasestorage.app")
+                .setGcmSenderId("790218222135")
+                .build()
+            FirebaseApp.initializeApp(appCtx, options)
+        }
+    }
+}
+
 /**
  * Configures Firebase App Check before any UI or Firebase SDK operations.
  * Uses PlayIntegrityAppCheckProviderFactory in release builds and DebugAppCheckProviderFactory
@@ -30,9 +59,7 @@ private const val RECAPTCHA_SITE_KEY_RES = "recaptcha_site_key"
  */
 fun configureAppCheck(context: Context, intent: Intent?) {
     try {
-        if (FirebaseApp.getApps(context).isEmpty()) {
-            FirebaseApp.initializeApp(context)
-        }
+        ensureFirebaseInitialized(context)
 
         if (BuildConfig.DEBUG) {
             val debugToken = intent?.getStringExtra(DEBUG_TOKEN_EXTRA)
