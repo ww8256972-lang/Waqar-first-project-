@@ -5,6 +5,7 @@ on:
     branches: [ "main", "develop" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build-and-test:
@@ -23,13 +24,33 @@ jobs:
         uses: android-actions/setup-android@v3
         with:
           cmdline-tools-version: 11076708
-          accept-android-licenses: true
+          accept-android-sdk-licenses: true
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
+          gradle-version: '9.3.1'
           cache-read-only: false
+
+      - name: Prepare Signing Keystore & Secrets Environment
+        run: |
+          if [ ! -f debug.keystore ] && [ -f debug.keystore.base64 ]; then
+            base64 -d debug.keystore.base64 > debug.keystore
+          elif [ ! -f debug.keystore ]; then
+            keytool -genkeypair -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          fi
+          if [ ! -f .env ] && [ -f .env.example ]; then
+            cp .env.example .env
+          fi
 
       - name: Assemble Debug APK & Run Unit Tests
         run: |
           gradle :app:assembleDebug :app:testDebugUnitTest --stacktrace
+
+      - name: Upload Debug APK Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: waqar-institute-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: ignore

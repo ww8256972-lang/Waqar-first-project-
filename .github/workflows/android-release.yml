@@ -23,13 +23,49 @@ jobs:
         uses: android-actions/setup-android@v3
         with:
           cmdline-tools-version: 11076708
-          accept-android-licenses: true
+          accept-android-sdk-licenses: true
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
+          gradle-version: '9.3.1'
           cache-read-only: false
+
+      - name: Prepare Debug & Release Signing Keystores
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ ! -f debug.keystore ] && [ -f debug.keystore.base64 ]; then
+            base64 -d debug.keystore.base64 > debug.keystore
+          elif [ ! -f debug.keystore ]; then
+            keytool -genkeypair -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          fi
+          if [ -n "$RELEASE_KEYSTORE_BASE64" ]; then
+            echo "$RELEASE_KEYSTORE_BASE64" | base64 -d > my-upload-key.jks
+            echo "KEYSTORE_PATH=${GITHUB_WORKSPACE}/my-upload-key.jks" >> "$GITHUB_ENV"
+            echo "STORE_PASSWORD=${RELEASE_STORE_PASSWORD}" >> "$GITHUB_ENV"
+            echo "KEY_PASSWORD=${RELEASE_KEY_PASSWORD}" >> "$GITHUB_ENV"
+          else
+            keytool -genkeypair -v -keystore my-upload-key.jks -storepass waqar_release_pass -alias upload -keypass waqar_release_pass -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Waqar Computer Institute,OU=ERP,O=WCI,L=Lucknow,S=UP,C=IN"
+            echo "KEYSTORE_PATH=${GITHUB_WORKSPACE}/my-upload-key.jks" >> "$GITHUB_ENV"
+            echo "STORE_PASSWORD=waqar_release_pass" >> "$GITHUB_ENV"
+            echo "KEY_PASSWORD=waqar_release_pass" >> "$GITHUB_ENV"
+          fi
+          if [ ! -f .env ] && [ -f .env.example ]; then
+            cp .env.example .env
+          fi
 
       - name: Build Signed Release APK & Play Store AAB
         run: |
           gradle :app:assembleRelease :app:bundleRelease --stacktrace
+
+      - name: Upload Signed Release APK & AAB Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: waqar-institute-release-bundle
+          path: |
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/bundle/release/*.aab
+          if-no-files-found: warn

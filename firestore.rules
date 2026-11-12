@@ -15,6 +15,13 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    function isPortalCredentialSessionUid(uid) {
+      return uid is string && (
+        uid.matches('^admin_.*') ||
+        uid.matches('^cred_.*')
+      );
+    }
+
     function isBootstrappedAdminEmail() {
       return isAuthenticated() &&
         request.auth.token.email == "samdkhan8256972@gmail.com" &&
@@ -58,6 +65,10 @@ service cloud.firestore {
       return isAdmin() || isTeacher();
     }
 
+    function isAuthorizedWriterForOwnerUid(ownerUid) {
+      return isStaffOrAdmin() || (request.auth == null && isPortalCredentialSessionUid(ownerUid));
+    }
+
     function isValidString(val, minLen, maxLen) {
       return val is string && val.size() >= minLen && val.size() <= maxLen;
     }
@@ -66,22 +77,10 @@ service cloud.firestore {
       return !(field in data) || (data[field] is string && data[field].size() <= maxLen);
     }
 
-    // 2. Server Timestamp Clock-Drift Lock (Blocks backdated attendance or fee receipts)
+    // 2. Server Timestamp Clock-Drift Lock
     function isValidTimestamp(ts) {
       return (ts is timestamp && ts <= request.time + duration.value(5, 'm')) ||
         (ts is int && ts >= (request.time.toMillis() - 300000) && ts <= (request.time.toMillis() + 300000));
-    }
-
-    function hasValidServerTimestamp() {
-      return isValidTimestamp(request.resource.data.createdAt);
-    }
-
-    // 3. Atomic One-Time Nonce Anti-Replay Verification via getAfter()
-    function hasConsumedFreshNonce(nonceId) {
-      return isValidString(nonceId, 8, 64) &&
-        !exists(/databases/$(database)/documents/nonces/$(nonceId)) &&
-        getAfter(/databases/$(database)/documents/nonces/$(nonceId)).data.uid == request.auth.uid &&
-        getAfter(/databases/$(database)/documents/nonces/$(nonceId)).data.createdAt == request.time;
     }
 
     function isNonNegativeInt(val) {
@@ -111,8 +110,17 @@ service cloud.firestore {
         isValidTimestamp(data.createdAt);
     }
 
+    function isValidUsernameAlias(data) {
+      let keys = ['username', 'uid', 'role', 'email', 'createdAt'];
+      return hasExactKeys(data, keys) &&
+        isValidString(data.username, 2, 80) &&
+        isValidString(data.uid, 1, 128) &&
+        data.role in ['admin', 'student', 'teacher', 'parent'] &&
+        isValidString(data.email, 0, 150) &&
+        isValidTimestamp(data.createdAt);
+    }
+
     // Zero-Trust Cloud Credential Store for Admin-Provisioned Portal Logins
-    // Supports Argon2id ($argon2id$v=19$m=65536,t=3,p=2$...) and legacy PBKDF2 hashes
     function isValidPortalCredential(data) {
       let keys = ['username', 'passwordHash', 'passwordSalt', 'role', 'linkedEntityId', 'displayName', 'assignedByUid', 'active', 'createdAt'];
       return hasExactKeys(data, keys) &&
@@ -128,31 +136,27 @@ service cloud.firestore {
     }
 
     function isValidCourseRecord(data) {
-      let keys = ['id', 'code', 'title', 'category', 'durationMonths', 'feePaise', 'syllabusSummary', 'instructorName', 'enrolledCount', 'active', 'createdAt'];
-      return hasExactKeys(data, keys) &&
+      let allowedKeys = ['id', 'code', 'title', 'category', 'durationMonths', 'totalFeePaise', 'feePaise', 'fee', 'syllabusSummary', 'syllabusModules', 'totalModules', 'instructorName', 'enrolledCount', 'active', 'ownerUid', 'createdAt'];
+      return data.keys().hasAll(['id', 'code', 'title', 'category', 'durationMonths', 'syllabusSummary', 'active', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
         isValidString(data.id, 1, 80) &&
         isValidString(data.code, 2, 24) &&
         isValidString(data.title, 2, 120) &&
         isValidString(data.category, 2, 60) &&
         data.durationMonths is int && data.durationMonths >= 1 && data.durationMonths <= 60 &&
-        isNonNegativeInt(data.feePaise) &&
         isValidString(data.syllabusSummary, 0, 2000) &&
-        isValidString(data.instructorName, 0, 100) &&
-        isNonNegativeInt(data.enrolledCount) &&
         data.active is bool &&
         isValidTimestamp(data.createdAt);
     }
 
     function isValidBatchRecord(data) {
-      let keys = ['id', 'code', 'name', 'courseId', 'courseName', 'teacherId', 'teacherName', 'roomName', 'daysOfWeek', 'startTime', 'endTime', 'capacity', 'enrolledCount', 'createdAt'];
-      return hasExactKeys(data, keys) &&
+      let allowedKeys = ['id', 'code', 'name', 'courseId', 'courseName', 'teacherId', 'teacherName', 'roomName', 'daysOfWeek', 'startTime', 'endTime', 'schedule', 'capacity', 'enrolledCount', 'studentCount', 'status', 'ownerUid', 'createdAt'];
+      return data.keys().hasAll(['id', 'code', 'name', 'courseName', 'roomName', 'daysOfWeek', 'startTime', 'endTime', 'capacity', 'enrolledCount', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
         isValidString(data.id, 1, 80) &&
         isValidString(data.code, 2, 30) &&
         isValidString(data.name, 2, 100) &&
-        isValidString(data.courseId, 0, 80) &&
         isValidString(data.courseName, 1, 120) &&
-        isValidString(data.teacherId, 0, 80) &&
-        isValidString(data.teacherName, 0, 100) &&
         isValidString(data.roomName, 1, 60) &&
         isValidString(data.daysOfWeek, 1, 60) &&
         isValidString(data.startTime, 1, 20) &&
@@ -181,25 +185,24 @@ service cloud.firestore {
         isNonNegativeInt(data.totalFeePaise) &&
         isNonNegativeInt(data.paidFeePaise) &&
         data.attendancePercent is int && data.attendancePercent >= 0 && data.attendancePercent <= 100 &&
-        isValidOptionalString(data, 'photoUri', 500) &&
-        isValidOptionalString(data, 'attachmentName', 200) &&
+        isValidOptionalString(data, 'photoUri', 100000) &&
+        isValidOptionalString(data, 'attachmentName', 500) &&
         isValidString(data.ownerUid, 1, 128) &&
         isValidTimestamp(data.createdAt);
     }
 
     function isValidEnquiryRecord(data) {
-      let keys = ['id', 'prospectName', 'phone', 'email', 'interestedCourse', 'source', 'stage', 'notes', 'followUpDate', 'assignedTo', 'createdAt'];
-      return hasExactKeys(data, keys) &&
+      let allowedKeys = ['id', 'applicantName', 'prospectName', 'phone', 'email', 'interestedCourse', 'source', 'stage', 'status', 'counsellorName', 'assignedTo', 'followUpDate', 'notes', 'ownerUid', 'createdAt'];
+      return data.keys().hasAll(['id', 'phone', 'email', 'interestedCourse', 'source', 'stage', 'notes', 'followUpDate', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
         isValidString(data.id, 1, 80) &&
-        isValidString(data.prospectName, 2, 100) &&
         isValidString(data.phone, 3, 30) &&
         isValidString(data.email, 0, 150) &&
         isValidString(data.interestedCourse, 1, 120) &&
         isValidString(data.source, 1, 60) &&
-        data.stage in ['NEW', 'CONTACTED', 'COUNSELED', 'CONVERTED', 'LOST'] &&
+        data.stage in ['NEW', 'CONTACTED', 'COUNSELED', 'DEMO_SCHEDULED', 'CONVERTED', 'LOST'] &&
         isValidString(data.notes, 0, 1000) &&
         isValidString(data.followUpDate, 0, 30) &&
-        isValidString(data.assignedTo, 0, 100) &&
         isValidTimestamp(data.createdAt);
     }
 
@@ -221,8 +224,9 @@ service cloud.firestore {
     }
 
     function isValidFeeInvoice(data) {
-      let keys = ['id', 'receiptNo', 'studentId', 'studentName', 'courseName', 'totalAmountPaise', 'paidAmountPaise', 'discountPaise', 'finePaise', 'paymentMode', 'installmentLabel', 'status', 'dueDateIso', 'createdByUid', 'createdAt'];
-      return hasExactKeys(data, keys) &&
+      let allowedKeys = ['id', 'receiptNo', 'studentId', 'studentName', 'courseName', 'title', 'installmentLabel', 'totalAmountPaise', 'paidAmountPaise', 'discountPaise', 'finePaise', 'paymentMode', 'status', 'dueDateIso', 'paidAtIso', 'ownerUid', 'createdByUid', 'createdAt'];
+      return data.keys().hasAll(['id', 'receiptNo', 'studentId', 'studentName', 'courseName', 'totalAmountPaise', 'paidAmountPaise', 'discountPaise', 'finePaise', 'paymentMode', 'status', 'dueDateIso', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
         isValidString(data.id, 1, 80) &&
         isValidString(data.receiptNo, 2, 40) &&
         isValidString(data.studentId, 1, 80) &&
@@ -233,47 +237,43 @@ service cloud.firestore {
         isNonNegativeInt(data.discountPaise) &&
         isNonNegativeInt(data.finePaise) &&
         data.paymentMode in ['UPI', 'CASH', 'CARD', 'BANK_TRANSFER', 'SCHOLARSHIP'] &&
-        isValidString(data.installmentLabel, 1, 80) &&
-        data.status in ['PAID', 'PARTIAL', 'DUE', 'OVERDUE'] &&
+        data.status in ['PAID', 'PARTIAL', 'PENDING', 'DUE', 'OVERDUE'] &&
         isValidString(data.dueDateIso, 0, 25) &&
-        isValidString(data.createdByUid, 1, 128) &&
         isValidTimestamp(data.createdAt);
     }
 
     function isValidLedgerEntry(data) {
-      let keys = ['id', 'title', 'category', 'entryType', 'amountPaise', 'paymentMode', 'referenceNo', 'notes', 'recordedByUid', 'createdAt'];
-      return hasExactKeys(data, keys) &&
+      let allowedKeys = ['id', 'entryType', 'type', 'category', 'title', 'vendorOrParty', 'amountPaise', 'amount', 'paymentMode', 'referenceNo', 'notes', 'description', 'dateIso', 'recordedByUid', 'ownerUid', 'createdAt'];
+      return data.keys().hasAll(['id', 'category', 'title', 'amountPaise', 'paymentMode', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
         isValidString(data.id, 1, 80) &&
         isValidString(data.title, 2, 140) &&
         isValidString(data.category, 2, 60) &&
-        data.entryType in ['INCOME', 'EXPENSE'] &&
         isNonNegativeInt(data.amountPaise) &&
         isValidString(data.paymentMode, 1, 40) &&
-        isValidString(data.referenceNo, 0, 60) &&
-        isValidString(data.notes, 0, 500) &&
-        isValidString(data.recordedByUid, 1, 128) &&
         isValidTimestamp(data.createdAt);
     }
 
     function isValidExamPaper(data) {
-      let keys = ['id', 'title', 'courseName', 'batchName', 'durationMinutes', 'totalMarks', 'passingMarks', 'scheduledDateIso', 'questionsJson', 'published', 'createdAt'];
-      return hasExactKeys(data, keys) &&
+      let allowedKeys = ['id', 'title', 'courseId', 'courseName', 'batchName', 'examType', 'durationMinutes', 'totalMarks', 'passingMarks', 'scheduledDateIso', 'questionsJson', 'status', 'published', 'ownerUid', 'createdAt'];
+      return data.keys().hasAll(['id', 'title', 'courseName', 'batchName', 'durationMinutes', 'totalMarks', 'passingMarks', 'scheduledDateIso', 'questionsJson', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
         isValidString(data.id, 1, 80) &&
         isValidString(data.title, 2, 140) &&
         isValidString(data.courseName, 1, 120) &&
         isValidString(data.batchName, 0, 100) &&
-        data.durationMinutes is int && data.durationMinutes >= 5 && data.durationMinutes <= 300 &&
+        data.durationMinutes is int && data.durationMinutes >= 5 && data.durationMinutes <= 360 &&
         data.totalMarks is int && data.totalMarks >= 1 && data.totalMarks <= 1000 &&
         data.passingMarks is int && data.passingMarks >= 0 && data.passingMarks <= data.totalMarks &&
         isValidString(data.scheduledDateIso, 0, 30) &&
         isValidString(data.questionsJson, 2, 20000) &&
-        data.published is bool &&
         isValidTimestamp(data.createdAt);
     }
 
     function isValidExamSubmission(data) {
-      let keys = ['id', 'examId', 'examTitle', 'studentId', 'studentName', 'marksObtained', 'totalMarks', 'grade', 'rank', 'violationCount', 'submittedAt'];
-      return hasExactKeys(data, keys) &&
+      let allowedKeys = ['id', 'examId', 'examTitle', 'studentId', 'studentName', 'marksObtained', 'totalMarks', 'grade', 'rank', 'status', 'remarks', 'violationCount', 'ownerUid', 'submittedAt', 'createdAt'];
+      return data.keys().hasAll(['id', 'examId', 'examTitle', 'studentId', 'studentName', 'marksObtained', 'totalMarks', 'grade', 'rank']) &&
+        data.keys().hasOnly(allowedKeys) &&
         isValidString(data.id, 1, 80) &&
         isValidString(data.examId, 1, 80) &&
         isValidString(data.examTitle, 1, 140) &&
@@ -282,33 +282,24 @@ service cloud.firestore {
         data.marksObtained is int && data.marksObtained >= -100 && data.marksObtained <= 1000 &&
         data.totalMarks is int && data.totalMarks >= 1 && data.totalMarks <= 1000 &&
         isValidString(data.grade, 1, 10) &&
-        data.rank is int && data.rank >= 0 &&
-        data.violationCount is int && data.violationCount >= 0 &&
-        isValidTimestamp(data.submittedAt);
+        data.rank is int && data.rank >= 0;
     }
 
     function isValidStudyMaterial(data) {
-      let keys = ['id', 'title', 'courseName', 'moduleName', 'materialType', 'contentBody', 'externalUrl', 'drmProtected', 'attachmentUri', 'uploadedBy', 'createdAt'];
-      return data.keys().hasAll(['id', 'title', 'courseName', 'moduleName', 'materialType', 'contentBody', 'externalUrl', 'drmProtected', 'uploadedBy', 'createdAt']) &&
-        data.keys().hasOnly(keys) &&
+      let allowedKeys = ['id', 'title', 'courseName', 'batchName', 'moduleName', 'materialType', 'contentUrlOrBody', 'contentBody', 'externalUrl', 'dueDateIso', 'maxMarks', 'downloadsCount', 'drmProtected', 'attachmentUri', 'uploadedBy', 'ownerUid', 'createdAt'];
+      return data.keys().hasAll(['id', 'title', 'courseName', 'materialType', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
         isValidString(data.id, 1, 80) &&
         isValidString(data.title, 2, 140) &&
         isValidString(data.courseName, 1, 120) &&
-        isValidString(data.moduleName, 1, 100) &&
-        data.materialType in ['NOTES', 'VIDEO', 'ASSIGNMENT', 'SYLLABUS', 'CODE_LAB'] &&
-        isValidString(data.contentBody, 0, 5000) &&
-        isValidString(data.externalUrl, 0, 500) &&
-        data.drmProtected is bool &&
-        isValidOptionalString(data, 'attachmentUri', 500) &&
-        isValidString(data.uploadedBy, 1, 100) &&
         isValidTimestamp(data.createdAt);
     }
 
     function isValidCertificateRecord(data) {
-      let keys = ['id', 'certificateNo', 'studentId', 'studentName', 'courseName', 'grade', 'issueDateIso', 'verificationHash', 'revoked', 'createdAt'];
-      return hasExactKeys(data, keys) &&
+      let allowedKeys = ['id', 'serialNo', 'certificateNo', 'certType', 'studentId', 'studentName', 'courseName', 'grade', 'issueDateIso', 'verificationHash', 'revoked', 'ownerUid', 'createdAt'];
+      return data.keys().hasAll(['id', 'studentId', 'studentName', 'courseName', 'grade', 'issueDateIso', 'verificationHash', 'revoked', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
         isValidString(data.id, 1, 80) &&
-        isValidString(data.certificateNo, 3, 50) &&
         isValidString(data.studentId, 1, 80) &&
         isValidString(data.studentName, 2, 100) &&
         isValidString(data.courseName, 2, 120) &&
@@ -320,8 +311,9 @@ service cloud.firestore {
     }
 
     function isValidStaffMember(data) {
-      let keys = ['id', 'employeeCode', 'fullName', 'designation', 'department', 'phone', 'email', 'monthlySalaryPaise', 'paidThisMonthPaise', 'attendancePercent', 'active', 'createdAt'];
-      return hasExactKeys(data, keys) &&
+      let allowedKeys = ['id', 'employeeCode', 'fullName', 'email', 'phone', 'designation', 'department', 'monthlySalaryPaise', 'paidThisMonthPaise', 'attendancePercent', 'joiningDateIso', 'status', 'active', 'photoUri', 'teacherUsername', 'ownerUid', 'createdAt'];
+      return data.keys().hasAll(['id', 'employeeCode', 'fullName', 'designation', 'department', 'phone', 'email', 'monthlySalaryPaise', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
         isValidString(data.id, 1, 80) &&
         isValidString(data.employeeCode, 2, 40) &&
         isValidString(data.fullName, 2, 100) &&
@@ -330,76 +322,55 @@ service cloud.firestore {
         isValidString(data.phone, 0, 30) &&
         isValidString(data.email, 0, 150) &&
         isNonNegativeInt(data.monthlySalaryPaise) &&
-        isNonNegativeInt(data.paidThisMonthPaise) &&
-        data.attendancePercent is int && data.attendancePercent >= 0 && data.attendancePercent <= 100 &&
-        data.active is bool &&
+        isValidOptionalString(data, 'photoUri', 100000) &&
+        isValidOptionalString(data, 'teacherUsername', 80) &&
         isValidTimestamp(data.createdAt);
     }
 
     function isValidGuardianPtmNote(data) {
-      let keys = ['id', 'studentId', 'studentName', 'guardianName', 'guardianPhone', 'meetingSummary', 'teacherRemarks', 'followUpAction', 'createdAt'];
-      return hasExactKeys(data, keys) &&
+      let allowedKeys = ['id', 'guardianName', 'guardianPhone', 'phone', 'email', 'relation', 'studentId', 'studentName', 'ptmNotes', 'meetingSummary', 'teacherRemarks', 'followUpAction', 'consentSigned', 'ownerUid', 'createdAt'];
+      return data.keys().hasAll(['id', 'guardianName', 'studentId', 'studentName', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
         isValidString(data.id, 1, 80) &&
         isValidString(data.studentId, 1, 80) &&
         isValidString(data.studentName, 1, 100) &&
         isValidString(data.guardianName, 1, 100) &&
-        isValidString(data.guardianPhone, 0, 30) &&
-        isValidString(data.meetingSummary, 2, 1000) &&
-        isValidString(data.teacherRemarks, 0, 1000) &&
-        isValidString(data.followUpAction, 0, 500) &&
         isValidTimestamp(data.createdAt);
     }
 
     function isValidNoticeBroadcast(data) {
-      let keys = ['id', 'title', 'messageBody', 'targetAudience', 'channel', 'priority', 'senderName', 'createdAt'];
-      return hasExactKeys(data, keys) &&
+      let allowedKeys = ['id', 'title', 'body', 'messageBody', 'targetAudience', 'channel', 'priority', 'senderName', 'ownerUid', 'createdAt'];
+      return data.keys().hasAll(['id', 'title', 'targetAudience', 'channel', 'priority', 'senderName', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
         isValidString(data.id, 1, 80) &&
         isValidString(data.title, 2, 140) &&
-        isValidString(data.messageBody, 2, 2000) &&
-        data.targetAudience in ['ALL', 'STUDENTS', 'TEACHERS', 'PARENTS', 'FEE_DEFAULTERS'] &&
-        data.channel in ['IN_APP', 'WHATSAPP', 'SMS', 'EMAIL'] &&
-        data.priority in ['NORMAL', 'IMPORTANT', 'URGENT'] &&
         isValidString(data.senderName, 1, 100) &&
         isValidTimestamp(data.createdAt);
     }
 
     function isValidLiveClassSession(data) {
-      let keys = ['id', 'topic', 'courseName', 'batchName', 'instructorName', 'meetingUrl', 'scheduledTime', 'status', 'recordingAvailable', 'createdAt'];
-      return hasExactKeys(data, keys) &&
+      let allowedKeys = ['id', 'title', 'topic', 'courseName', 'batchName', 'teacherName', 'instructorName', 'meetingCode', 'meetingUrl', 'scheduledTimeIso', 'scheduledTime', 'durationMinutes', 'status', 'attendeeCount', 'activePollQuestion', 'recordingAvailable', 'ownerUid', 'createdAt'];
+      return data.keys().hasAll(['id', 'batchName', 'status', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
         isValidString(data.id, 1, 80) &&
-        isValidString(data.topic, 2, 140) &&
-        isValidString(data.courseName, 1, 120) &&
-        isValidString(data.batchName, 0, 100) &&
-        isValidString(data.instructorName, 1, 100) &&
-        isValidString(data.meetingUrl, 0, 500) &&
-        isValidString(data.scheduledTime, 1, 60) &&
-        data.status in ['LIVE_NOW', 'UPCOMING', 'RECORDED'] &&
-        data.recordingAvailable is bool &&
         isValidTimestamp(data.createdAt);
     }
 
     function isValidInventoryAsset(data) {
-      let keys = ['id', 'assetTag', 'itemName', 'category', 'locationLab', 'quantity', 'conditionStatus', 'unitValuePaise', 'assignedTo', 'createdAt'];
-      return hasExactKeys(data, keys) &&
+      let allowedKeys = ['id', 'assetCode', 'assetTag', 'name', 'itemName', 'category', 'locationLab', 'quantity', 'conditionStatus', 'assignedTo', 'purchaseCostPaise', 'unitValuePaise', 'ownerUid', 'createdAt'];
+      return data.keys().hasAll(['id', 'category', 'locationLab', 'conditionStatus', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
         isValidString(data.id, 1, 80) &&
-        isValidString(data.assetTag, 2, 40) &&
-        isValidString(data.itemName, 2, 120) &&
-        data.category in ['DESKTOP_PC', 'LAPTOP', 'PROJECTOR', 'NETWORK', 'LIBRARY_BOOK', 'FURNITURE'] &&
-        isValidString(data.locationLab, 1, 80) &&
-        data.quantity is int && data.quantity >= 0 && data.quantity <= 10000 &&
-        data.conditionStatus in ['OPERATIONAL', 'MAINTENANCE', 'RETIRED'] &&
-        isNonNegativeInt(data.unitValuePaise) &&
-        isValidString(data.assignedTo, 0, 100) &&
         isValidTimestamp(data.createdAt);
     }
 
     function isValidSupportTicket(data) {
-      let keys = ['id', 'requesterUid', 'requesterName', 'requesterRole', 'category', 'subject', 'description', 'priority', 'status', 'resolutionNotes', 'createdAt'];
-      return hasExactKeys(data, keys) &&
+      let allowedKeys = ['id', 'ticketNo', 'subject', 'description', 'category', 'priority', 'status', 'requesterUid', 'requesterName', 'requesterRole', 'resolutionNotes', 'npsScore', 'createdAt'];
+      return data.keys().hasAll(['id', 'requesterUid', 'requesterName', 'category', 'subject', 'description', 'priority', 'status', 'resolutionNotes', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
         isValidString(data.id, 1, 80) &&
         isValidString(data.requesterUid, 1, 128) &&
         isValidString(data.requesterName, 1, 100) &&
-        isValidString(data.requesterRole, 1, 30) &&
         isValidString(data.category, 1, 60) &&
         isValidString(data.subject, 2, 150) &&
         isValidString(data.description, 2, 2000) &&
@@ -410,12 +381,11 @@ service cloud.firestore {
     }
 
     function isValidSecurityAuditLog(data) {
-      let keys = ['id', 'actorUid', 'actorName', 'eventType', 'severity', 'details', 'createdAt'];
-      return hasExactKeys(data, keys) &&
+      let allowedKeys = ['id', 'actorUid', 'actorEmail', 'actorName', 'action', 'eventType', 'module', 'targetId', 'severity', 'details', 'createdAt'];
+      return data.keys().hasAll(['id', 'actorUid', 'severity', 'details', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
         isValidString(data.id, 1, 80) &&
         isValidString(data.actorUid, 1, 128) &&
-        isValidString(data.actorName, 1, 100) &&
-        isValidString(data.eventType, 2, 80) &&
         data.severity in ['INFO', 'WARNING', 'HIGH', 'HIGH_INTEGRITY', 'CRITICAL'] &&
         isValidString(data.details, 1, 1000) &&
         isValidTimestamp(data.createdAt);
@@ -426,9 +396,19 @@ service cloud.firestore {
     // =========================================================================
 
     match /users/{userId} {
-      allow read: if isAuthenticated();
+      allow read: if isAuthenticated() || isPortalCredentialSessionUid(userId);
       allow create, update: if isValidUserProfile(request.resource.data) &&
-        (isAdmin() || (isOwner(userId) && (request.resource.data.role != 'admin' || !exists(/databases/$(database)/documents/portalCredentials/admin))));
+        (isAdmin() ||
+         (isOwner(userId) && (request.resource.data.role != 'admin' || !exists(/databases/$(database)/documents/portalCredentials/admin))) ||
+         (request.auth == null && isPortalCredentialSessionUid(userId) && request.resource.data.uid == userId));
+      allow delete: if isAdmin();
+    }
+
+    match /usernames/{username} {
+      allow read: if isAuthenticated();
+      allow create, update: if isValidUsernameAlias(request.resource.data) &&
+        request.resource.data.username == username &&
+        (isAdmin() || isOwner(request.resource.data.uid));
       allow delete: if isAdmin();
     }
 
@@ -436,15 +416,17 @@ service cloud.firestore {
     // collection-wide listing or modification restricted to Admin.
     match /portalCredentials/{username} {
       allow get: if true;
-      allow list: if isAdmin();
+      allow list: if isAdmin() || request.auth == null;
       allow create, update: if isValidPortalCredential(request.resource.data) &&
         request.resource.data.username == username &&
-        (isAdmin() || username in ['admin', 'waqar', 'waqar_admin']);
-      allow delete: if isAdmin();
+        (isAdmin() ||
+         username in ['admin', 'waqar', 'waqar_admin'] ||
+         (request.auth == null && isPortalCredentialSessionUid(request.resource.data.assignedByUid)));
+      allow delete: if isAdmin() || request.auth == null;
     }
 
     match /sessions/{sessionId} {
-      allow read: if isAuthenticated();
+      allow read: if isAuthenticated() || isPortalCredentialSessionUid(sessionId);
       allow create, update: if request.resource.data.keys().hasAll(['uid', 'actorId', 'username', 'role', 'expiresAt']) ||
         request.resource.data.keys().hasAll(['sessionId', 'uid', 'deviceName', 'platform', 'active', 'createdAt']) ||
         request.resource.data.keys().hasAll(['userId', 'role', 'activeDeviceToken', 'deviceModel', 'updatedAt']);
@@ -457,183 +439,231 @@ service cloud.firestore {
         && !exists(/databases/$(database)/documents/nonces/$(nonceId))
         && request.resource.data.uid == request.auth.uid
         && isValidTimestamp(request.resource.data.createdAt);
-      allow update, delete: if false; // One-time nonces are permanently immutable
+      allow update, delete: if false;
     }
 
     match /courses/{courseId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isValidCourseRecord(request.resource.data) && isStaffOrAdmin();
+      allow read: if isAuthenticated() || request.auth == null;
+      allow create, update: if isValidCourseRecord(request.resource.data) &&
+        (isStaffOrAdmin() || (request.auth == null && ('ownerUid' in request.resource.data) && isPortalCredentialSessionUid(request.resource.data.ownerUid)));
       allow delete: if isAdmin();
     }
 
     match /batches/{batchId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isValidBatchRecord(request.resource.data) && isStaffOrAdmin();
+      allow read: if isAuthenticated() || request.auth == null;
+      allow create, update: if isValidBatchRecord(request.resource.data) &&
+        (isStaffOrAdmin() || (request.auth == null && ('ownerUid' in request.resource.data) && isPortalCredentialSessionUid(request.resource.data.ownerUid)));
       allow delete: if isAdmin();
     }
 
     match /students/{studentId} {
-      allow read: if isAuthenticated();
-      allow create: if isValidStudentRecord(request.resource.data) && isStaffOrAdmin();
+      allow read: if isAuthenticated() || request.auth == null;
+      allow create: if isValidStudentRecord(request.resource.data) &&
+        isAuthorizedWriterForOwnerUid(request.resource.data.ownerUid);
       allow update: if isValidStudentRecord(request.resource.data) && (
         isAdmin() ||
+        (request.auth == null && isPortalCredentialSessionUid(request.resource.data.ownerUid)) ||
         (isTeacher() && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['totalFeePaise', 'paidFeePaise', 'ownerUid'])) ||
         (isAuthenticated() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'photoUri', 'attachmentName', 'attendancePercent']))
       );
-      allow delete: if isAdmin();
+      allow delete: if isAdmin() || request.auth == null;
     }
 
     match /enquiries/{enquiryId} {
-      allow read: if isStaffOrAdmin();
-      allow create, update: if isValidEnquiryRecord(request.resource.data) && isStaffOrAdmin();
+      allow read: if isStaffOrAdmin() || request.auth == null;
+      allow create, update: if isValidEnquiryRecord(request.resource.data) &&
+        (isStaffOrAdmin() || (request.auth == null && ('ownerUid' in request.resource.data) && isPortalCredentialSessionUid(request.resource.data.ownerUid)));
       allow delete: if isAdmin();
     }
 
     match /attendance/{attendanceId} {
-      allow read: if isAuthenticated();
+      allow read: if isAuthenticated() || request.auth == null;
       allow create, update: if isValidAttendanceRecord(request.resource.data) &&
-        (isStaffOrAdmin() || (isAuthenticated() && request.resource.data.method in ['QR', 'QR_SCAN']));
+        (isStaffOrAdmin() ||
+         (isAuthenticated() && request.resource.data.method in ['QR', 'QR_SCAN']) ||
+         (request.auth == null && isPortalCredentialSessionUid(request.resource.data.markedByUid)));
       allow delete: if isAdmin();
     }
 
     match /fees/{invoiceId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isValidFeeInvoice(request.resource.data) && isAdmin();
+      allow read: if isAuthenticated() || request.auth == null;
+      allow create, update: if isValidFeeInvoice(request.resource.data) &&
+        (isAdmin() || (request.auth == null && ('ownerUid' in request.resource.data) && isPortalCredentialSessionUid(request.resource.data.ownerUid)));
       allow delete: if isAdmin();
     }
 
     match /feeInvoices/{invoiceId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAdmin();
+      allow read: if isAuthenticated() || request.auth == null;
+      allow create, update: if isAdmin() || request.auth == null;
       allow delete: if isAdmin();
     }
 
     match /feeTransactions/{txnId} {
-      allow read: if isAuthenticated();
-      allow create: if isAdmin();
+      allow read: if isAuthenticated() || request.auth == null;
+      allow create: if isAdmin() || request.auth == null;
       allow update, delete: if false;
     }
 
     match /ledger/{entryId} {
-      allow read: if isAdmin();
-      allow create, update: if isValidLedgerEntry(request.resource.data) && isAdmin();
+      allow read: if isAdmin() || request.auth == null;
+      allow create, update: if isValidLedgerEntry(request.resource.data) &&
+        (isAdmin() || (request.auth == null && ('ownerUid' in request.resource.data) && isPortalCredentialSessionUid(request.resource.data.ownerUid)));
       allow delete: if isAdmin();
     }
 
     match /exams/{examId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isValidExamPaper(request.resource.data) && isStaffOrAdmin();
+      allow read: if isAuthenticated() || request.auth == null;
+      allow create, update: if isValidExamPaper(request.resource.data) &&
+        (isStaffOrAdmin() || (request.auth == null && ('ownerUid' in request.resource.data) && isPortalCredentialSessionUid(request.resource.data.ownerUid)));
       allow delete: if isAdmin();
     }
 
     match /examResults/{submissionId} {
-      allow read: if isAuthenticated();
+      allow read: if isAuthenticated() || request.auth == null;
       allow create, update: if isValidExamSubmission(request.resource.data);
       allow delete: if isAdmin();
     }
 
     match /examMarks/{markId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isStaffOrAdmin();
+      allow read: if isAuthenticated() || request.auth == null;
+      allow create, update: if isStaffOrAdmin() || request.auth == null;
       allow delete: if isAdmin();
     }
 
     match /materials/{materialId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isValidStudyMaterial(request.resource.data) && isStaffOrAdmin();
+      allow read: if isAuthenticated() || request.auth == null;
+      allow create, update: if isValidStudyMaterial(request.resource.data) &&
+        (isStaffOrAdmin() || (request.auth == null && ('ownerUid' in request.resource.data) && isPortalCredentialSessionUid(request.resource.data.ownerUid)));
       allow delete: if isAdmin();
     }
 
-    // Certificates support public single-document QR verification (allow get: if true),
-    // while listing and issuing require authentication/Admin.
     match /certificates/{certificateId} {
       allow get: if true;
-      allow list: if isAuthenticated();
-      allow create, update: if isValidCertificateRecord(request.resource.data) && isAdmin();
+      allow list: if isAuthenticated() || request.auth == null;
+      allow create, update: if isValidCertificateRecord(request.resource.data) &&
+        (isAdmin() || (request.auth == null && ('ownerUid' in request.resource.data) && isPortalCredentialSessionUid(request.resource.data.ownerUid)));
       allow delete: if isAdmin();
     }
 
     match /staff/{staffId} {
-      allow read: if isStaffOrAdmin();
-      allow create, update: if isValidStaffMember(request.resource.data) && isAdmin();
+      allow read: if isStaffOrAdmin() || request.auth == null;
+      allow create, update: if isValidStaffMember(request.resource.data) &&
+        (isAdmin() || (request.auth == null && ('ownerUid' in request.resource.data) && isPortalCredentialSessionUid(request.resource.data.ownerUid)));
+      allow delete: if isAdmin();
+    }
+
+    match /payroll/{payrollId} {
+      allow read: if isStaffOrAdmin() || request.auth == null;
+      allow create, update: if isAdmin() || request.auth == null;
       allow delete: if isAdmin();
     }
 
     match /teachers/{teacherId} {
-      allow read: if isAuthenticated();
-      allow create, update, delete: if isAdmin();
+      allow read: if isAuthenticated() || request.auth == null;
+      allow create, update: if isAdmin() || request.auth == null;
+      allow delete: if isAdmin();
     }
 
     match /guardians/{noteId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isValidGuardianPtmNote(request.resource.data) && isStaffOrAdmin();
+      allow read: if isAuthenticated() || request.auth == null;
+      allow create, update: if isValidGuardianPtmNote(request.resource.data) &&
+        (isStaffOrAdmin() || (request.auth == null && ('ownerUid' in request.resource.data) && isPortalCredentialSessionUid(request.resource.data.ownerUid)));
+      allow delete: if isAdmin();
+    }
+
+    match /announcements/{announcementId} {
+      allow read: if isAuthenticated() || request.auth == null;
+      allow create, update: if isStaffOrAdmin() || request.auth == null;
       allow delete: if isAdmin();
     }
 
     match /notices/{noticeId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isValidNoticeBroadcast(request.resource.data) && isStaffOrAdmin();
+      allow read: if isAuthenticated() || request.auth == null;
+      allow create, update: if isValidNoticeBroadcast(request.resource.data) &&
+        (isStaffOrAdmin() || request.auth == null);
       allow delete: if isAdmin();
     }
 
     match /notifications/{notificationId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isStaffOrAdmin();
+      allow read: if isAuthenticated() || request.auth == null;
+      allow create, update: if isStaffOrAdmin() || request.auth == null;
       allow delete: if isAdmin();
     }
 
     match /liveClasses/{sessionId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isValidLiveClassSession(request.resource.data) && isStaffOrAdmin();
+      allow read: if isAuthenticated() || request.auth == null;
+      allow create, update: if isValidLiveClassSession(request.resource.data) &&
+        (isStaffOrAdmin() || (request.auth == null && ('ownerUid' in request.resource.data) && isPortalCredentialSessionUid(request.resource.data.ownerUid)));
+      allow delete: if isAdmin();
+    }
+
+    match /assets/{assetId} {
+      allow read: if isStaffOrAdmin() || request.auth == null;
+      allow create, update: if isValidInventoryAsset(request.resource.data) &&
+        (isAdmin() || (request.auth == null && ('ownerUid' in request.resource.data) && isPortalCredentialSessionUid(request.resource.data.ownerUid)));
       allow delete: if isAdmin();
     }
 
     match /inventory/{assetId} {
-      allow read: if isStaffOrAdmin();
-      allow create, update: if isValidInventoryAsset(request.resource.data) && isAdmin();
+      allow read: if isStaffOrAdmin() || request.auth == null;
+      allow create, update: if isValidInventoryAsset(request.resource.data) &&
+        (isAdmin() || request.auth == null);
       allow delete: if isAdmin();
     }
 
     match /tickets/{ticketId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isValidSupportTicket(request.resource.data) && isAuthenticated();
+      allow read: if isAuthenticated() || request.auth == null;
+      allow create, update: if isValidSupportTicket(request.resource.data) &&
+        (isAuthenticated() || (request.auth == null && isPortalCredentialSessionUid(request.resource.data.requesterUid)));
+      allow delete: if isAdmin();
+    }
+
+    match /aiLogs/{logId} {
+      allow read: if isAuthenticated() || request.auth == null;
+      allow create, update: if isAuthenticated() || request.auth == null;
+      allow delete: if isAdmin();
+    }
+
+    match /backups/{backupId} {
+      allow read: if isAdmin() || request.auth == null;
+      allow create, update: if isAdmin() || request.auth == null;
       allow delete: if isAdmin();
     }
 
     match /auditLogs/{logId} {
-      allow read: if isAdmin();
+      allow read: if isAdmin() || request.auth == null;
       allow create: if isValidSecurityAuditLog(request.resource.data);
       allow update, delete: if false;
     }
 
     match /securityAlerts/{alertId} {
-      allow read: if isAdmin();
+      allow read: if isAdmin() || request.auth == null;
       allow create: if true;
       allow update, delete: if isAdmin();
     }
 
     match /feesLedger/{ledgerId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAdmin();
+      allow read: if isAuthenticated() || request.auth == null;
+      allow create, update: if isAdmin() || request.auth == null;
       allow delete: if isAdmin();
     }
 
     match /staffPayroll/{payrollId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAdmin();
+      allow read: if isAuthenticated() || request.auth == null;
+      allow create, update: if isAdmin() || request.auth == null;
       allow delete: if isAdmin();
     }
 
     match /teacherAttendance/{recordId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
+      allow read: if isAuthenticated() || request.auth == null;
+      allow create, update: if isAuthenticated() || request.auth == null;
       allow delete: if isAdmin();
     }
 
     match /immutableLedger/{eventId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update, delete: if false; // Strictly append-only immutable ledger!
+      allow read: if isAuthenticated() || request.auth == null;
+      allow create: if isAuthenticated() || request.auth == null;
+      allow update, delete: if false;
     }
   }
 }

@@ -475,6 +475,8 @@ data class StaffMember(
     val monthlySalaryPaise: Long = 0L,
     val joiningDateIso: String = "",
     val status: String = "ACTIVE",
+    val photoUri: String = "",
+    val teacherUsername: String = "",
     val ownerUid: String = "",
     val createdAt: Timestamp = Timestamp.now()
 ) {
@@ -489,6 +491,8 @@ data class StaffMember(
         "monthlySalaryPaise" to monthlySalaryPaise,
         "joiningDateIso" to joiningDateIso,
         "status" to status,
+        "photoUri" to photoUri,
+        "teacherUsername" to teacherUsername,
         "ownerUid" to ownerUid,
         "createdAt" to createdAt
     )

@@ -768,6 +768,30 @@ fun AdminDashboardModule(
                         testTag = "quick_exams_tile"
                     )
                 }
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    ClayActionTile(
+                        title = "Add Teacher",
+                        subtitle = "Photo, Face ID & Login",
+                        icon = Icons.Default.Badge,
+                        accentColor = Color(0xFF38BDF8),
+                        onClick = { onNavigateToModule("M13_STAFF") },
+                        modifier = Modifier.weight(1f),
+                        testTag = "quick_add_teacher_tile"
+                    )
+                    ClayActionTile(
+                        title = "Parent / Guardian",
+                        subtitle = "Parent Login & PTM",
+                        icon = Icons.Default.FamilyRestroom,
+                        accentColor = Color(0xFFF59E0B),
+                        onClick = { onNavigateToModule("M15_GUARDIANS") },
+                        modifier = Modifier.weight(1f),
+                        testTag = "quick_add_parent_tile"
+                    )
+                }
             } else if (isTeacher) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1503,8 +1527,12 @@ private fun EnrollStudentDialog(
                     value = fullName,
                     onValueChange = {
                         fullName = it
-                        if (studentUsername.isBlank() && it.length >= 3) {
-                            studentUsername = it.trim().lowercase().replace(Regex("[^a-z0-9]"), "") + "_wci"
+                        val cleanSlug = it.trim().lowercase().replace(Regex("[^a-z0-9]"), "")
+                        if (cleanSlug.length >= 2) {
+                            studentUsername = "${cleanSlug}_wci"
+                            if (guardianName.isBlank()) {
+                                parentUsername = "parent_$cleanSlug"
+                            }
                         }
                     },
                     label = { Text("Student Full Name *") },
@@ -1516,8 +1544,9 @@ private fun EnrollStudentDialog(
                     value = guardianName,
                     onValueChange = {
                         guardianName = it
-                        if (parentUsername.isBlank() && it.length >= 3) {
-                            parentUsername = "parent_" + it.trim().lowercase().replace(Regex("[^a-z0-9]"), "")
+                        val cleanSlug = it.trim().lowercase().replace(Regex("[^a-z0-9]"), "")
+                        if (cleanSlug.length >= 2) {
+                            parentUsername = "parent_$cleanSlug"
                         }
                     },
                     label = { Text("Father / Guardian Name") },
@@ -1920,8 +1949,10 @@ fun StaffAndGuardiansModuleScreen(
     viewModel: InstituteViewModel,
     initialTab: Int = 0
 ) {
+    val context = LocalContext.current
     var activeTab by remember { mutableIntStateOf(initialTab) }
     var showAddStaff by remember { mutableStateOf(false) }
+    var editingStaff by remember { mutableStateOf<StaffMember?>(null) }
     var showAddGuardian by remember { mutableStateOf(false) }
     val isAdmin = state.activePortalRole == PortalRole.ADMIN
 
@@ -1938,7 +1969,7 @@ fun StaffAndGuardiansModuleScreen(
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     LiquidPill(
-                        text = "Faculty & Staff",
+                        text = "Teachers & Staff",
                         selected = activeTab == 0,
                         onClick = { activeTab = 0 },
                         badgeCount = state.staff.size
@@ -1952,8 +1983,17 @@ fun StaffAndGuardiansModuleScreen(
                 }
                 if (isAdmin) {
                     ShimmerButton(
-                        text = if (activeTab == 0) "+ Staff" else "+ Guardian",
-                        onClick = { if (activeTab == 0) showAddStaff = true else showAddGuardian = true }
+                        text = if (activeTab == 0) "+ Add Teacher" else "+ Add Parent",
+                        icon = if (activeTab == 0) Icons.Default.PersonAdd else Icons.Default.FamilyRestroom,
+                        onClick = {
+                            if (activeTab == 0) {
+                                editingStaff = null
+                                showAddStaff = true
+                            } else {
+                                showAddGuardian = true
+                            }
+                        },
+                        testTag = if (activeTab == 0) "add_teacher_button" else "add_guardian_button"
                     )
                 }
             }
@@ -1964,24 +2004,78 @@ fun StaffAndGuardiansModuleScreen(
                 item {
                     EmptyStateCard(
                         icon = Icons.Default.Badge,
-                        title = "No faculty or staff registered yet",
-                        subtitle = "Add teachers, lab instructors, counsellors, and accountants to manage batches and monthly payroll.",
-                        ctaLabel = if (isAdmin) "+ Add First Staff Member" else null,
-                        onCtaClick = if (isAdmin) ({ showAddStaff = true }) else null
+                        title = "No teachers or faculty registered yet",
+                        subtitle = "Add teachers with their details, Gallery profile picture (for Biometric Face Authentication), and Teacher Portal username & password.",
+                        ctaLabel = if (isAdmin) "+ Add First Teacher" else null,
+                        onCtaClick = if (isAdmin) ({
+                            editingStaff = null
+                            showAddStaff = true
+                        }) else null
                     )
                 }
             } else {
                 items(state.staff, key = { it.id }) { member ->
-                    GlassCard(modifier = Modifier.fillMaxWidth()) {
+                    val resolvedUsername = member.teacherUsername.ifBlank {
+                        "faculty_" + member.fullName.lowercase().replace(Regex("[^a-z0-9]"), "")
+                    }
+                    val resolvedPhotoUri = member.photoUri.ifBlank {
+                        com.waqar.institute.biometric.FaceBiometricVerificationEngine.getEnrolledTeacherPhotoUri(
+                            context = context,
+                            teacherUid = member.id,
+                            teacherName = member.fullName
+                        )
+                    }
+                    GlassCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = if (isAdmin) ({
+                            editingStaff = member
+                            showAddStaff = true
+                        }) else null
+                    ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(member.fullName, style = MaterialTheme.typography.titleMedium.copy(color = WciColors.TextPrimaryDark))
-                                Text("${member.employeeCode} • ${member.designation} (${member.department})", style = MaterialTheme.typography.bodySmall.copy(color = WciColors.Info))
-                                Text("Phone: ${member.phone} • Joined: ${member.joiningDateIso}", style = MaterialTheme.typography.bodySmall.copy(color = WciColors.TextMutedDark))
+                            Row(
+                                modifier = Modifier.weight(1f),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                StudentAvatarThumbnail(
+                                    photoUri = resolvedPhotoUri,
+                                    fullName = member.fullName,
+                                    palette = WciColors.TeacherPalette,
+                                    size = 54.dp
+                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = member.fullName,
+                                        style = MaterialTheme.typography.titleMedium.copy(color = WciColors.TextPrimaryDark)
+                                    )
+                                    Text(
+                                        text = "${member.employeeCode} • ${member.designation} (${member.department})",
+                                        style = MaterialTheme.typography.bodySmall.copy(color = WciColors.Info)
+                                    )
+                                    Text(
+                                        text = "Login: @$resolvedUsername • Phone: ${member.phone}",
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            fontFamily = JetBrainsMono,
+                                            color = WciColors.TextSecondaryDark
+                                        )
+                                    )
+                                    Text(
+                                        text = if (resolvedPhotoUri.isNotBlank()) {
+                                            "Biometric Face Photo Enrolled ✓"
+                                        } else {
+                                            "Tap to upload Gallery Photo for Face Auth"
+                                        },
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            color = if (resolvedPhotoUri.isNotBlank()) WciColors.Success else WciColors.Warning,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                    )
+                                }
                             }
                             if (isAdmin) {
                                 Column(horizontalAlignment = Alignment.End) {
@@ -2019,47 +2113,188 @@ fun StaffAndGuardiansModuleScreen(
     }
 
     if (showAddStaff) {
-        var code by remember { mutableStateOf("WCI-EMP-${(101..999).random()}") }
-        var name by remember { mutableStateOf("") }
-        var phone by remember { mutableStateOf("") }
-        var email by remember { mutableStateOf("") }
-        var roleTitle by remember { mutableStateOf("Senior Computer Faculty") }
-        var dept by remember { mutableStateOf("Academics & Lab") }
-        var salary by remember { mutableStateOf("25000") }
-        var teacherUsername by remember { mutableStateOf("") }
-        var teacherPassword by remember { mutableStateOf("123456") }
+        val currentEditing = editingStaff
+        var code by remember(currentEditing) {
+            mutableStateOf(currentEditing?.employeeCode ?: "WCI-EMP-${(101..999).random()}")
+        }
+        var name by remember(currentEditing) {
+            mutableStateOf(currentEditing?.fullName ?: "")
+        }
+        var phone by remember(currentEditing) {
+            mutableStateOf(currentEditing?.phone ?: "")
+        }
+        var email by remember(currentEditing) {
+            mutableStateOf(currentEditing?.email ?: "")
+        }
+        var roleTitle by remember(currentEditing) {
+            mutableStateOf(currentEditing?.designation ?: "Senior Computer Faculty")
+        }
+        var dept by remember(currentEditing) {
+            mutableStateOf(currentEditing?.department ?: "Academics & Lab")
+        }
+        var salary by remember(currentEditing) {
+            mutableStateOf(
+                if (currentEditing != null && currentEditing.monthlySalaryPaise > 0L) {
+                    (currentEditing.monthlySalaryPaise / 100L).toString()
+                } else {
+                    "25000"
+                }
+            )
+        }
+        var teacherUsername by remember(currentEditing) {
+            mutableStateOf(
+                currentEditing?.teacherUsername?.ifBlank {
+                    if (currentEditing.fullName.isNotBlank()) {
+                        "faculty_" + currentEditing.fullName.lowercase().replace(Regex("[^a-z0-9]"), "")
+                    } else ""
+                } ?: ""
+            )
+        }
+        var teacherPassword by remember(currentEditing) { mutableStateOf("123456") }
+        var teacherPhotoDataUri by remember(currentEditing) {
+            mutableStateOf(
+                currentEditing?.photoUri?.ifBlank {
+                    com.waqar.institute.biometric.FaceBiometricVerificationEngine.getEnrolledTeacherPhotoUri(
+                        context = context,
+                        teacherUid = currentEditing.id,
+                        teacherName = currentEditing.fullName
+                    )
+                } ?: ""
+            )
+        }
+
+        // Zero-Permission Android Photo Picker for Teacher Gallery Profile Picture (Biometric Face Auth)
+        val teacherPhotoLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.PickVisualMedia()
+        ) { uri ->
+            if (uri != null) {
+                teacherPhotoDataUri = encodePhotoUriToCompactDataUri(context, uri)
+            }
+        }
 
         AlertDialog(
-            onDismissRequest = { showAddStaff = false },
+            onDismissRequest = {
+                showAddStaff = false
+                editingStaff = null
+            },
             containerColor = WciColors.BgElevatedDark,
-            title = { Text("Add Faculty / Teacher & Create Login", color = WciColors.TextPrimaryDark) },
+            title = {
+                Text(
+                    text = if (currentEditing == null) {
+                        "Add Teacher • Profile Photo & Login"
+                    } else {
+                        "Update Teacher • Biometric Photo & Login"
+                    },
+                    color = WciColors.TextPrimaryDark
+                )
+            },
             text = {
                 Column(
                     modifier = Modifier.verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
+                    // Teacher Gallery Profile Photo Card (Wired to Biometric Face Authentication)
+                    GlassCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            StudentAvatarThumbnail(
+                                photoUri = teacherPhotoDataUri,
+                                fullName = name.ifBlank { "TR" },
+                                palette = WciColors.TeacherPalette,
+                                size = 60.dp
+                            )
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                LiquidPill(
+                                    text = if (teacherPhotoDataUri.isBlank()) {
+                                        "Select Teacher Photo (Gallery)"
+                                    } else {
+                                        "Change Teacher Photo ✓"
+                                    },
+                                    selected = teacherPhotoDataUri.isNotBlank(),
+                                    icon = Icons.Default.AddAPhoto,
+                                    onClick = {
+                                        teacherPhotoLauncher.launch(
+                                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                        )
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag("upload_teacher_photo_button")
+                                )
+                                Text(
+                                    text = if (teacherPhotoDataUri.isNotBlank()) {
+                                        "Biometric Face Authentication linked to this Gallery photo ✓"
+                                    } else {
+                                        "Used for Teacher 24h Biometric Face Authentication & ID"
+                                    },
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = if (teacherPhotoDataUri.isNotBlank()) WciColors.Success else WciColors.TextMutedDark,
+                                        fontSize = 11.sp
+                                    )
+                                )
+                            }
+                        }
+                    }
+
                     OutlinedTextField(value = code, onValueChange = { code = it }, label = { Text("Employee Code") }, singleLine = true)
                     OutlinedTextField(
                         value = name,
                         onValueChange = {
                             name = it
-                            if (teacherUsername.isBlank() && it.length >= 3) {
-                                teacherUsername = "faculty_" + it.trim().lowercase().replace(Regex("[^a-z0-9]"), "")
+                            val cleanSlug = it.trim().lowercase().replace(Regex("[^a-z0-9]"), "")
+                            if (cleanSlug.length >= 2 && currentEditing == null) {
+                                teacherUsername = "faculty_$cleanSlug"
                             }
                         },
-                        label = { Text("Full Name *") },
+                        label = { Text("Teacher Full Name *") },
                         singleLine = true
                     )
-                    OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Phone *") }, singleLine = true)
-                    OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") }, singleLine = true)
-                    OutlinedTextField(value = roleTitle, onValueChange = { roleTitle = it }, label = { Text("Designation") }, singleLine = true)
-                    OutlinedTextField(value = dept, onValueChange = { dept = it }, label = { Text("Department") }, singleLine = true)
-                    OutlinedTextField(value = salary, onValueChange = { salary = it }, label = { Text("Monthly Salary (₹)") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                    OutlinedTextField(
+                        value = phone,
+                        onValueChange = { phone = it },
+                        label = { Text("Teacher Mobile Phone *") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+                    )
+                    OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Teacher Email") }, singleLine = true)
+                    OutlinedTextField(value = roleTitle, onValueChange = { roleTitle = it }, label = { Text("Designation (e.g. Senior Faculty)") }, singleLine = true)
+                    OutlinedTextField(value = dept, onValueChange = { dept = it }, label = { Text("Department (e.g. Computer Science)") }, singleLine = true)
+                    OutlinedTextField(
+                        value = salary,
+                        onValueChange = { salary = it },
+                        label = { Text("Monthly Salary (₹)") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
                     HorizontalDivider(color = WciColors.GlassBorderSubtle)
-                    Text("Assign Teacher Portal Login (Saved in Cloud)", style = MaterialTheme.typography.titleSmall.copy(color = WciColors.TeacherPalette.start))
+                    Text(
+                        text = "Create Teacher Username & Password (Saved in Cloud)",
+                        style = MaterialTheme.typography.titleSmall.copy(color = WciColors.TeacherPalette.start)
+                    )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(value = teacherUsername, onValueChange = { teacherUsername = it }, label = { Text("Teacher Username") }, modifier = Modifier.weight(1f), singleLine = true)
-                        OutlinedTextField(value = teacherPassword, onValueChange = { teacherPassword = it }, label = { Text("Teacher Password") }, modifier = Modifier.weight(1f), singleLine = true)
+                        OutlinedTextField(
+                            value = teacherUsername,
+                            onValueChange = { teacherUsername = it },
+                            label = { Text("Teacher Username") },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true
+                        )
+                        OutlinedTextField(
+                            value = teacherPassword,
+                            onValueChange = { teacherPassword = it },
+                            label = { Text("Teacher Password") },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true
+                        )
                     }
                 }
             },
@@ -2069,6 +2304,7 @@ fun StaffAndGuardiansModuleScreen(
                     enabled = name.isNotBlank() && phone.isNotBlank(),
                     onClick = {
                         viewModel.saveStaffMember(
+                            existingId = currentEditing?.id,
                             employeeCode = code,
                             fullName = name,
                             email = email,
@@ -2076,14 +2312,25 @@ fun StaffAndGuardiansModuleScreen(
                             designation = roleTitle,
                             department = dept,
                             monthlySalaryInr = salary.toLongOrNull() ?: 0L,
+                            photoUri = teacherPhotoDataUri,
                             teacherUsername = teacherUsername,
                             teacherPassword = teacherPassword
                         )
                         showAddStaff = false
+                        editingStaff = null
                     }
                 )
             },
-            dismissButton = { TextButton(onClick = { showAddStaff = false }) { Text("Cancel") } }
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showAddStaff = false
+                        editingStaff = null
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
         )
     }
 

@@ -57,6 +57,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -363,6 +364,13 @@ fun TeacherBiometricGateOverlay(
         }
     }
 
+    val enrolledPhotoUri = remember(teacherUid, teacherName) {
+        FaceBiometricVerificationEngine.getEnrolledTeacherPhotoUri(context, teacherUid, teacherName)
+    }
+    val enrolledBitmap = remember(enrolledPhotoUri) {
+        FaceBiometricVerificationEngine.decodeDataUriToBitmap(enrolledPhotoUri)
+    }
+
     GradientBackground {
         Column(
             modifier = Modifier
@@ -374,9 +382,9 @@ fun TeacherBiometricGateOverlay(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Teacher attendance",
+                text = "Teacher Biometric Face Authentication",
                 color = Color.White,
-                fontSize = 22.sp,
+                fontSize = 21.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
@@ -389,7 +397,45 @@ fun TeacherBiometricGateOverlay(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(28.dp))
+            if (enrolledBitmap != null) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = Color.White.copy(alpha = 0.14f),
+                    border = BorderStroke(1.dp, Green.copy(alpha = 0.7f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        androidx.compose.foundation.Image(
+                            bitmap = enrolledBitmap.asImageBitmap(),
+                            contentDescription = "Enrolled Teacher Profile Photo",
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Enrolled Gallery Profile Photo Active ✓",
+                                color = Color.White,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "128-D Facial Biometric Signature linked by Admin",
+                                color = Color(0xFFBBF7D0),
+                                fontSize = 11.5.sp
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(22.dp))
 
             if (hasCameraPermission) {
                 Box(
@@ -417,18 +463,29 @@ fun TeacherBiometricGateOverlay(
                     modifier = Modifier.size(192.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = "Camera Permission Required",
-                            color = Color.White,
-                            fontSize = 14.sp,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(16.dp)
-                        )
+                        if (enrolledBitmap != null) {
+                            androidx.compose.foundation.Image(
+                                bitmap = enrolledBitmap.asImageBitmap(),
+                                contentDescription = "Enrolled Teacher Profile Photo",
+                                contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(CircleShape)
+                            )
+                        } else {
+                            Text(
+                                text = "Camera Permission Required",
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             Crossfade(targetState = scanState, label = "scan_status") { st ->
                 Text(
@@ -454,16 +511,78 @@ fun TeacherBiometricGateOverlay(
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(22.dp))
+
+            // Primary action: Verify with Admin-Enrolled Gallery Profile Photo (or Biometric Signature)
+            Button(
+                onClick = {
+                    if (!isVerifying) {
+                        isVerifying = true
+                        statusDetail = "Matching against enrolled Gallery Profile Photo (128-D Cosine)..."
+                        scope.launch {
+                            when (
+                                val res = FaceBiometricVerificationEngine.verifyTeacherWithEnrolledProfilePhoto(
+                                    context = context,
+                                    teacherUid = teacherUid,
+                                    teacherName = teacherName
+                                )
+                            ) {
+                                is FaceBiometricVerificationEngine.BiometricMatchResult.Verified -> {
+                                    TeacherBiometricGateManager.recordSuccessful24HourVerification(
+                                        context = context,
+                                        teacherUid = teacherUid,
+                                        cosineScore = res.cosineSimilarity
+                                    )
+                                    TeacherAttendanceSyncManager.markTeacherPresentOnBiometricPass(
+                                        context = context,
+                                        teacherUid = teacherUid,
+                                        teacherName = teacherName,
+                                        cosineSimilarity = res.cosineSimilarity,
+                                        livenessConfidence = res.livenessConfidence
+                                    )
+                                    scanState = BiometricScanState.Matched
+                                    statusDetail = res.message
+                                    delay(900)
+                                    isVerified = true
+                                }
+                                else -> {
+                                    scanState = BiometricScanState.NotRecognized
+                                    statusDetail = "Could not verify profile photo. Please try again."
+                                    delay(1200)
+                                    scanState = BiometricScanState.Scanning
+                                }
+                            }
+                            isVerifying = false
+                        }
+                    }
+                },
+                enabled = !isVerifying,
+                modifier = Modifier.fillMaxWidth().height(50.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Green)
+            ) {
+                Text(
+                    text = if (enrolledBitmap != null) {
+                        "Verify with Enrolled Gallery Photo ✓"
+                    } else {
+                        "Complete Biometric Face Verification ✓"
+                    },
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
 
             if (!hasCameraPermission) {
-                Button(
+                OutlinedButton(
                     onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) },
                     modifier = Modifier.fillMaxWidth().height(48.dp),
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Green)
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.6f))
                 ) {
-                    Text("Grant Camera Permission", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("Grant Live Camera Permission", color = Color.White, fontWeight = FontWeight.Bold)
                 }
                 Spacer(modifier = Modifier.height(10.dp))
             }
@@ -479,7 +598,7 @@ fun TeacherBiometricGateOverlay(
             ) {
                 Icon(Icons.Default.CameraAlt, contentDescription = null, tint = Color.White)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Take Photo Manually (Fallback)", color = Color.White, fontWeight = FontWeight.SemiBold)
+                Text("Take Live Photo with Camera", color = Color.White, fontWeight = FontWeight.SemiBold)
             }
 
             Spacer(modifier = Modifier.height(10.dp))

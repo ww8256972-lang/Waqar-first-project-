@@ -22,8 +22,19 @@ class InstituteRepository(
 ) {
     companion object {
         const val BOOTSTRAPPED_ADMIN_EMAIL = "samdkhan8256972@gmail.com"
+        private const val LOCAL_VAULT_PREFS = "wci_local_erp_vault_prefs"
+
+        @Volatile
+        private var appContext: Context? = null
+
+        val localCredentialsCache = java.util.concurrent.ConcurrentHashMap<String, PortalCredential>()
+        val localStudentsCache = java.util.concurrent.ConcurrentHashMap<String, StudentRecord>()
+        val localStaffCache = java.util.concurrent.ConcurrentHashMap<String, StaffMember>()
+        val localGuardiansCache = java.util.concurrent.ConcurrentHashMap<String, GuardianLink>()
 
         fun create(context: Context): InstituteRepository {
+            appContext = context.applicationContext
+            loadLocalVaultFromPrefs(context.applicationContext)
             val databaseId = context.getString(R.string.firestore_database_id)
             val firestore = FirebaseFirestore.getInstance(databaseId)
             try {
@@ -41,12 +52,80 @@ class InstituteRepository(
             return InstituteRepository(firestore, FirebaseAuth.getInstance())
         }
 
+        fun cacheCredentialLocally(credential: PortalCredential) {
+            val key = credential.username.trim().lowercase()
+            if (key.isBlank()) return
+            val normalized = credential.copy(username = key)
+            localCredentialsCache[key] = normalized
+            val ctx = appContext ?: return
+            runCatching {
+                val prefs = ctx.getSharedPreferences(LOCAL_VAULT_PREFS, Context.MODE_PRIVATE)
+                val obj = org.json.JSONObject().apply {
+                    put("username", normalized.username)
+                    put("passwordHash", normalized.passwordHash)
+                    put("passwordSalt", normalized.passwordSalt)
+                    put("role", normalized.role)
+                    put("linkedEntityId", normalized.linkedEntityId)
+                    put("displayName", normalized.displayName)
+                    put("assignedByUid", normalized.assignedByUid)
+                    put("active", normalized.active)
+                }
+                prefs.edit().putString("cred_$key", obj.toString()).apply()
+            }
+        }
+
+        fun getCachedCredentialLocally(username: String): PortalCredential? {
+            val key = username.trim().lowercase()
+            localCredentialsCache[key]?.let { return it }
+            val ctx = appContext ?: return null
+            return runCatching {
+                val prefs = ctx.getSharedPreferences(LOCAL_VAULT_PREFS, Context.MODE_PRIVATE)
+                val raw = prefs.getString("cred_$key", null) ?: return null
+                val obj = org.json.JSONObject(raw)
+                PortalCredential(
+                    username = obj.optString("username", key),
+                    passwordHash = obj.optString("passwordHash", ""),
+                    passwordSalt = obj.optString("passwordSalt", ""),
+                    role = obj.optString("role", "student"),
+                    linkedEntityId = obj.optString("linkedEntityId", ""),
+                    displayName = obj.optString("displayName", key),
+                    assignedByUid = obj.optString("assignedByUid", "admin_waqar_root"),
+                    active = obj.optBoolean("active", true)
+                ).also { localCredentialsCache[key] = it }
+            }.getOrNull()
+        }
+
+        private fun loadLocalVaultFromPrefs(context: Context) {
+            runCatching {
+                val prefs = context.getSharedPreferences(LOCAL_VAULT_PREFS, Context.MODE_PRIVATE)
+                prefs.all.forEach { (k, v) ->
+                    val raw = v as? String ?: return@forEach
+                    if (k.startsWith("cred_")) {
+                        val obj = org.json.JSONObject(raw)
+                        val uname = obj.optString("username", k.removePrefix("cred_")).lowercase()
+                        localCredentialsCache[uname] = PortalCredential(
+                            username = uname,
+                            passwordHash = obj.optString("passwordHash", ""),
+                            passwordSalt = obj.optString("passwordSalt", ""),
+                            role = obj.optString("role", "student"),
+                            linkedEntityId = obj.optString("linkedEntityId", ""),
+                            displayName = obj.optString("displayName", uname),
+                            assignedByUid = obj.optString("assignedByUid", "admin_waqar_root"),
+                            active = obj.optBoolean("active", true)
+                        )
+                    }
+                }
+            }
+        }
+
         fun isOfflineOrNetworkError(throwable: Throwable): Boolean {
             var curr: Throwable? = throwable
             while (curr != null) {
                 if (curr is java.io.IOException) return true
+                if (curr is kotlinx.coroutines.TimeoutCancellationException) return true
                 if (curr is FirebaseFirestoreException) {
                     if (curr.code == FirebaseFirestoreException.Code.UNAVAILABLE ||
+                        curr.code == FirebaseFirestoreException.Code.DEADLINE_EXCEEDED ||
                         curr.message?.contains("offline", ignoreCase = true) == true ||
                         curr.message?.contains("network", ignoreCase = true) == true ||
                         curr.message?.contains("deadline exceeded", ignoreCase = true) == true
@@ -189,16 +268,39 @@ class InstituteRepository(
 
     suspend fun getPortalCredential(username: String): PortalCredential? {
         val cleanKey = username.trim().lowercase()
+        getCachedCredentialLocally(cleanKey)?.let { return it }
+
         val path = "portalCredentials/$cleanKey"
         val docRef = db.collection("portalCredentials").document(cleanKey)
+        // Check local Firestore persistence cache first if available
+        try {
+            val cachedSnap = docRef.get(Source.CACHE).await()
+            if (cachedSnap.exists()) {
+                val obj = cachedSnap.toObject(PortalCredential::class.java)
+                if (obj != null) {
+                    cacheCredentialLocally(obj)
+                    return obj
+                }
+            }
+        } catch (_: Exception) {
+        }
+
         return try {
-            val snap = docRef.get(Source.DEFAULT).await()
-            if (snap.exists()) snap.toObject(PortalCredential::class.java) else null
+            val snap = kotlinx.coroutines.withTimeoutOrNull(2500L) {
+                docRef.get(Source.DEFAULT).await()
+            }
+            if (snap != null && snap.exists()) {
+                snap.toObject(PortalCredential::class.java)?.also { cacheCredentialLocally(it) }
+            } else {
+                null
+            }
         } catch (e: Exception) {
             if (isOfflineOrNetworkError(e)) {
                 try {
                     val cachedSnap = docRef.get(Source.CACHE).await()
-                    if (cachedSnap.exists()) cachedSnap.toObject(PortalCredential::class.java) else null
+                    if (cachedSnap.exists()) {
+                        cachedSnap.toObject(PortalCredential::class.java)?.also { cacheCredentialLocally(it) }
+                    } else null
                 } catch (_: Exception) {
                     null
                 }
@@ -210,12 +312,16 @@ class InstituteRepository(
 
     suspend fun savePortalCredential(credential: PortalCredential) {
         val cleanKey = credential.username.trim().lowercase()
+        val normalized = credential.copy(username = cleanKey)
+        cacheCredentialLocally(normalized)
         val path = "portalCredentials/$cleanKey"
         try {
-            db.collection("portalCredentials").document(cleanKey)
-                .set(credential.copy(username = cleanKey).toMap()).await()
+            kotlinx.coroutines.withTimeoutOrNull(2500L) {
+                db.collection("portalCredentials").document(cleanKey)
+                    .set(normalized.toMap()).await()
+            }
         } catch (e: Exception) {
-            if (!isOfflineOrNetworkError(e)) {
+            if (!isOfflineOrNetworkError(e) && auth.currentUser != null) {
                 handleFirestoreError(e, OperationType.WRITE, path, auth)
             }
         }
@@ -223,6 +329,13 @@ class InstituteRepository(
 
     suspend fun deletePortalCredential(username: String) {
         val cleanKey = username.trim().lowercase()
+        localCredentialsCache.remove(cleanKey)
+        appContext?.let { ctx ->
+            runCatching {
+                ctx.getSharedPreferences(LOCAL_VAULT_PREFS, Context.MODE_PRIVATE)
+                    .edit().remove("cred_$cleanKey").apply()
+            }
+        }
         val path = "portalCredentials/$cleanKey"
         try {
             db.collection("portalCredentials").document(cleanKey).delete().await()
@@ -241,15 +354,19 @@ class InstituteRepository(
     fun observeStudents(): Flow<List<StudentRecord>> = observeCollection("students", StudentRecord::class.java)
 
     suspend fun saveStudent(student: StudentRecord) {
+        localStudentsCache[student.id] = student
         val path = "students/${student.id}"
         try {
             db.collection("students").document(student.id).set(student.toMap()).await()
         } catch (e: Exception) {
-            handleFirestoreError(e, OperationType.WRITE, path, auth)
+            if (!isOfflineOrNetworkError(e)) {
+                handleFirestoreError(e, OperationType.WRITE, path, auth)
+            }
         }
     }
 
     suspend fun deleteStudent(studentId: String) {
+        localStudentsCache.remove(studentId)
         val path = "students/$studentId"
         try {
             db.collection("students").document(studentId).delete().await()
@@ -261,57 +378,109 @@ class InstituteRepository(
     suspend fun findMatchingStudentForLogin(rawUsername: String): StudentRecord? {
         val clean = rawUsername.trim().lowercase()
         val slug = clean.replace(Regex("[^a-z0-9]"), "")
+        fun matches(s: StudentRecord): Boolean {
+            val stuNameSlug = s.fullName.trim().lowercase().replace(Regex("[^a-z0-9]"), "")
+            val guardSlug = s.guardianName.trim().lowercase().replace(Regex("[^a-z0-9]"), "")
+            val enrollLower = s.enrollmentNo.trim().lowercase()
+            val emailUser = s.email.substringBefore("@").trim().lowercase()
+            return clean == stuNameSlug ||
+                clean == "${stuNameSlug}_wci" ||
+                slug == stuNameSlug ||
+                slug == "${stuNameSlug}wci" ||
+                clean == "parent_$stuNameSlug" ||
+                slug == "parent$stuNameSlug" ||
+                (guardSlug.isNotBlank() && (clean == "parent_$guardSlug" || slug == "parent$guardSlug" || clean == guardSlug)) ||
+                clean == enrollLower ||
+                slug == enrollLower.replace(Regex("[^a-z0-9]"), "") ||
+                clean == s.phone.trim() ||
+                (s.guardianPhone.isNotBlank() && clean == s.guardianPhone.trim()) ||
+                (emailUser.isNotBlank() && clean == emailUser)
+        }
+
+        localStudentsCache.values.firstOrNull(::matches)?.let { return it }
+
         return runCatching {
-            val snap = try {
+            val cachedList = runCatching {
+                db.collection("students").get(Source.CACHE).await()
+                    .documents.mapNotNull { it.toObject(StudentRecord::class.java) }
+            }.getOrDefault(emptyList())
+            cachedList.forEach { localStudentsCache[it.id] = it }
+            cachedList.firstOrNull(::matches)?.let { return@runCatching it }
+
+            val snap = kotlinx.coroutines.withTimeoutOrNull(2000L) {
                 db.collection("students").get(Source.DEFAULT).await()
-            } catch (e: Exception) {
-                if (isOfflineOrNetworkError(e)) {
-                    db.collection("students").get(Source.CACHE).await()
-                } else throw e
             }
-            val all = snap.documents.mapNotNull { it.toObject(StudentRecord::class.java) }
-            all.firstOrNull { s ->
-                val stuNameSlug = s.fullName.trim().lowercase().replace(Regex("[^a-z0-9]"), "")
-                val guardSlug = s.guardianName.trim().lowercase().replace(Regex("[^a-z0-9]"), "")
-                val enrollLower = s.enrollmentNo.trim().lowercase()
-                val emailUser = s.email.substringBefore("@").trim().lowercase()
-                clean == stuNameSlug ||
-                    clean == "${stuNameSlug}_wci" ||
-                    slug == stuNameSlug ||
-                    slug == "${stuNameSlug}wci" ||
-                    clean == "parent_$guardSlug" ||
-                    slug == "parent$guardSlug" ||
-                    clean == enrollLower ||
-                    slug == enrollLower.replace(Regex("[^a-z0-9]"), "") ||
-                    clean == s.phone.trim() ||
-                    (emailUser.isNotBlank() && clean == emailUser)
-            }
+            val all = snap?.documents?.mapNotNull { it.toObject(StudentRecord::class.java) } ?: emptyList()
+            all.forEach { localStudentsCache[it.id] = it }
+            all.firstOrNull(::matches)
         }.getOrNull()
     }
 
     suspend fun findMatchingStaffForLogin(rawUsername: String): StaffMember? {
         val clean = rawUsername.trim().lowercase()
         val slug = clean.replace(Regex("[^a-z0-9]"), "")
-        return runCatching {
-            val snap = try {
-                db.collection("staff").get(Source.DEFAULT).await()
-            } catch (e: Exception) {
-                if (isOfflineOrNetworkError(e)) {
-                    db.collection("staff").get(Source.CACHE).await()
-                } else throw e
-            }
-            val all = snap.documents.mapNotNull { it.toObject(StaffMember::class.java) }
-            all.firstOrNull { st ->
-                val nameSlug = st.fullName.trim().lowercase().replace(Regex("[^a-z0-9]"), "")
-                val empLower = st.employeeCode.trim().lowercase()
-                val emailUser = st.email.substringBefore("@").trim().lowercase()
+        fun matches(st: StaffMember): Boolean {
+            val nameSlug = st.fullName.trim().lowercase().replace(Regex("[^a-z0-9]"), "")
+            val tUser = st.teacherUsername.trim().lowercase()
+            val empLower = st.employeeCode.trim().lowercase()
+            val emailUser = st.email.substringBefore("@").trim().lowercase()
+            return (tUser.isNotBlank() && clean == tUser) ||
                 clean == nameSlug ||
-                    clean == "${nameSlug}_wci" ||
-                    slug == nameSlug ||
-                    clean == empLower ||
-                    clean == st.phone.trim() ||
-                    (emailUser.isNotBlank() && clean == emailUser)
+                clean == "faculty_$nameSlug" ||
+                clean == "${nameSlug}_wci" ||
+                slug == nameSlug ||
+                slug == "faculty$nameSlug" ||
+                clean == empLower ||
+                clean == st.phone.trim() ||
+                (emailUser.isNotBlank() && clean == emailUser)
+        }
+
+        localStaffCache.values.firstOrNull(::matches)?.let { return it }
+
+        return runCatching {
+            val cachedList = runCatching {
+                db.collection("staff").get(Source.CACHE).await()
+                    .documents.mapNotNull { it.toObject(StaffMember::class.java) }
+            }.getOrDefault(emptyList())
+            cachedList.forEach { localStaffCache[it.id] = it }
+            cachedList.firstOrNull(::matches)?.let { return@runCatching it }
+
+            val snap = kotlinx.coroutines.withTimeoutOrNull(2000L) {
+                db.collection("staff").get(Source.DEFAULT).await()
             }
+            val all = snap?.documents?.mapNotNull { it.toObject(StaffMember::class.java) } ?: emptyList()
+            all.forEach { localStaffCache[it.id] = it }
+            all.firstOrNull(::matches)
+        }.getOrNull()
+    }
+
+    suspend fun findMatchingGuardianForLogin(rawUsername: String): GuardianLink? {
+        val clean = rawUsername.trim().lowercase()
+        val slug = clean.replace(Regex("[^a-z0-9]"), "")
+        fun matches(g: GuardianLink): Boolean {
+            val gSlug = g.guardianName.trim().lowercase().replace(Regex("[^a-z0-9]"), "")
+            val sSlug = g.studentName.trim().lowercase().replace(Regex("[^a-z0-9]"), "")
+            return (gSlug.isNotBlank() && (clean == "parent_$gSlug" || slug == "parent$gSlug" || clean == gSlug)) ||
+                (sSlug.isNotBlank() && (clean == "parent_$sSlug" || slug == "parent$sSlug")) ||
+                clean == g.phone.trim()
+        }
+
+        localGuardiansCache.values.firstOrNull(::matches)?.let { return it }
+
+        return runCatching {
+            val cachedList = runCatching {
+                db.collection("guardians").get(Source.CACHE).await()
+                    .documents.mapNotNull { it.toObject(GuardianLink::class.java) }
+            }.getOrDefault(emptyList())
+            cachedList.forEach { localGuardiansCache[it.id] = it }
+            cachedList.firstOrNull(::matches)?.let { return@runCatching it }
+
+            val snap = kotlinx.coroutines.withTimeoutOrNull(2000L) {
+                db.collection("guardians").get(Source.DEFAULT).await()
+            }
+            val all = snap?.documents?.mapNotNull { it.toObject(GuardianLink::class.java) } ?: emptyList()
+            all.forEach { localGuardiansCache[it.id] = it }
+            all.firstOrNull(::matches)
         }.getOrNull()
     }
 
@@ -522,11 +691,16 @@ class InstituteRepository(
     fun observePayroll(): Flow<List<PayrollEntry>> = observeCollection("payroll", PayrollEntry::class.java)
 
     suspend fun saveStaff(member: StaffMember) {
+        localStaffCache[member.id] = member
         val path = "staff/${member.id}"
         try {
-            db.collection("staff").document(member.id).set(member.toMap()).await()
+            kotlinx.coroutines.withTimeoutOrNull(2500L) {
+                db.collection("staff").document(member.id).set(member.toMap()).await()
+            }
         } catch (e: Exception) {
-            handleFirestoreError(e, OperationType.WRITE, path, auth)
+            if (!isOfflineOrNetworkError(e) && auth.currentUser != null) {
+                handleFirestoreError(e, OperationType.WRITE, path, auth)
+            }
         }
     }
 
@@ -535,7 +709,9 @@ class InstituteRepository(
         try {
             db.collection("payroll").document(entry.id).set(entry.toMap()).await()
         } catch (e: Exception) {
-            handleFirestoreError(e, OperationType.WRITE, path, auth)
+            if (!isOfflineOrNetworkError(e)) {
+                handleFirestoreError(e, OperationType.WRITE, path, auth)
+            }
         }
     }
 
@@ -546,11 +722,16 @@ class InstituteRepository(
     fun observeGuardians(): Flow<List<GuardianLink>> = observeCollection("guardians", GuardianLink::class.java)
 
     suspend fun saveGuardian(guardian: GuardianLink) {
+        localGuardiansCache[guardian.id] = guardian
         val path = "guardians/${guardian.id}"
         try {
-            db.collection("guardians").document(guardian.id).set(guardian.toMap()).await()
+            kotlinx.coroutines.withTimeoutOrNull(2500L) {
+                db.collection("guardians").document(guardian.id).set(guardian.toMap()).await()
+            }
         } catch (e: Exception) {
-            handleFirestoreError(e, OperationType.WRITE, path, auth)
+            if (!isOfflineOrNetworkError(e) && auth.currentUser != null) {
+                handleFirestoreError(e, OperationType.WRITE, path, auth)
+            }
         }
     }
 
