@@ -84,7 +84,7 @@ object StrongBoxKeymasterVault {
         if (existing != null) return existing.secretKey
 
         val strongBoxSupported = isStrongBoxAvailable(context)
-        if (strongBoxSupported && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        if (strongBoxSupported) {
             runCatching {
                 return generateKeyInternal(useStrongBox = true)
             }
@@ -110,10 +110,14 @@ object StrongBoxKeymasterVault {
         return runCatching {
             keyGenerator.init(builder.build())
             keyGenerator.generateKey()
-        }.recoverCatching {
-            builder.setIsStrongBoxBacked(false)
-            keyGenerator.init(builder.build())
-            keyGenerator.generateKey()
+        }.recoverCatching { err ->
+            if (useStrongBox && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                builder.setIsStrongBoxBacked(false)
+                keyGenerator.init(builder.build())
+                keyGenerator.generateKey()
+            } else {
+                throw err
+            }
         }.getOrThrow()
     }
 }
