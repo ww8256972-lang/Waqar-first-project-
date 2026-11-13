@@ -1,0 +1,37 @@
+name: institute authz tests
+model_file: model.fga
+tuples:
+  - {user: user:anita, relation: admin, object: institute:main}
+  - {user: institute:main, relation: institute, object: batch:cpp2026}
+  - {user: user:teacher_01, relation: teacher, object: batch:cpp2026}
+  - {user: institute:main, relation: institute, object: batch:java2026}
+  - {user: user:teacher_02, relation: teacher, object: batch:java2026}
+  - {user: institute:main, relation: institute, object: student_profile:rahul}
+  - {user: batch:cpp2026, relation: batch, object: student_profile:rahul}
+  - {user: user:rahul, relation: owner, object: student_profile:rahul}
+  - {user: user:rahul_dad, relation: guardian, object: student_profile:rahul}
+  - {user: institute:main, relation: institute, object: fee_record:rahul_nov}
+  - {user: student_profile:rahul, relation: profile, object: fee_record:rahul_nov}
+tests:
+  - name: teacher marks own batch only
+    check:
+      - user: user:teacher_01
+        object: batch:cpp2026
+        assertions: {can_mark_attendance: true}
+      - user: user:teacher_01
+        object: batch:java2026
+        assertions: {can_mark_attendance: false}
+  - name: fee privacy
+    check:
+      - user: user:rahul
+        object: fee_record:rahul_nov
+        assertions: {can_view: true, can_edit: false}
+      - user: user:rahul_dad
+        object: fee_record:rahul_nov
+        assertions: {can_view: true, can_edit: false}
+      - user: user:teacher_01
+        object: fee_record:rahul_nov
+        assertions: {can_view: false}
+      - user: user:anita
+        object: fee_record:rahul_nov
+        assertions: {can_view: true, can_edit: true}

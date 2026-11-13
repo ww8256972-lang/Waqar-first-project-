@@ -107,6 +107,7 @@ class CertificateGeneratorViewModel : ViewModel() {
                 ?: "Enrolled Student"
 
             val enrollmentNo = student?.enrollmentNo?.takeIf { it.isNotBlank() }
+                ?: issuedCert?.studentId?.takeIf { it.isNotBlank() }
                 ?: "WCI-2026-1001"
 
             val serialNo = issuedCert?.serialNo?.takeIf { it.isNotBlank() }
@@ -125,7 +126,7 @@ class CertificateGeneratorViewModel : ViewModel() {
 
             // Calculate best exam percentage & grade for this student
             val studentExams = examResults.filter {
-                (student != null && (it.studentId == student.id || it.studentName.equals(student.fullName, ignoreCase = true))) ||
+                (student != null && (it.studentId == student.id || it.studentId.equals(student.enrollmentNo, ignoreCase = true) || it.studentName.equals(student.fullName, ignoreCase = true))) ||
                     it.studentName.equals(studentName, ignoreCase = true)
             }
             val bestExam = studentExams.maxByOrNull {
@@ -134,7 +135,14 @@ class CertificateGeneratorViewModel : ViewModel() {
             val computedPct = when {
                 bestExam != null && bestExam.totalMarks > 0 ->
                     (bestExam.marksObtained * 100) / bestExam.totalMarks
-                issuedCert != null -> 85
+                issuedCert != null -> when (issuedCert.grade.trim().uppercase()) {
+                    "A+" -> 95
+                    "A" -> 85
+                    "B+" -> 75
+                    "B" -> 65
+                    "C" -> 50
+                    else -> 80
+                }
                 else -> 0
             }
             val resolvedGrade = issuedCert?.grade?.takeIf { it.isNotBlank() }
@@ -164,19 +172,27 @@ class CertificateGeneratorViewModel : ViewModel() {
                 elapsedMonths.coerceIn(1, (requiredMonths - 1).coerceAtLeast(1))
             }
 
-            // Duration From -> To (15 Months span)
-            val calTo = Calendar.getInstance().apply { time = nowDate }
+            // Duration From -> To using actual course span or student enrollment date
+            val issueDateRaw = issuedCert?.issueDateIso?.takeIf { it.isNotBlank() }
+                ?: sdfIso.format(nowDate)
+            val parsedIssueDate = runCatching { sdfIso.parse(issueDateRaw) }.getOrNull() ?: nowDate
+            val calTo = Calendar.getInstance().apply { time = parsedIssueDate }
             val calFrom = Calendar.getInstance().apply {
-                time = nowDate
-                add(Calendar.MONTH, -requiredMonths)
+                time = if (student?.createdAt != null && elapsedMonths >= requiredMonths) {
+                    student.createdAt.toDate()
+                } else {
+                    parsedIssueDate
+                }
+                if (student?.createdAt == null || elapsedMonths < requiredMonths) {
+                    add(Calendar.MONTH, -requiredMonths)
+                }
             }
             val durationFromStr = sdfDisplay.format(calFrom.time)
             val durationToStr = sdfDisplay.format(calTo.time)
 
             val issueDateDisplay = issuedCert?.issueDateIso?.takeIf { it.isNotBlank() }
                 ?: sdfDisplay.format(nowDate)
-            val issueDateIso = issuedCert?.issueDateIso?.takeIf { it.isNotBlank() }
-                ?: sdfIso.format(nowDate)
+            val issueDateIso = issueDateRaw
 
             val verificationHash = issuedCert?.verificationHash?.takeIf { it.isNotBlank() }
                 ?: "SHA256:${(serialNo + enrollmentNo + studentName).hashCode().toUInt().toString(16).uppercase()}"

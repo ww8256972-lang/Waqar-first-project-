@@ -125,13 +125,10 @@ class OfflineFirstRepository(
         markedByUid: String
     ): Result<String> = withContext(ioDispatcher) {
         runCatching {
-            val deterministicId = computeIdempotencyId(
-                "att",
-                targetType,
-                targetId,
-                batchId,
-                dateIso
-            )
+            val prefix = if (targetType.equals("STAFF", ignoreCase = true)) "teachers" else "students"
+            val cleanTarget = targetId.trim().replace(Regex("[^a-zA-Z0-9_-]"), "_")
+                .ifBlank { targetName.trim().replace(Regex("[^a-zA-Z0-9_-]"), "_").ifBlank { "user" } }
+            val deterministicId = "${prefix}_${dateIso.trim()}_$cleanTarget".take(80)
             val entity = QueuedAttendanceEntity(
                 id = deterministicId,
                 targetType = targetType,

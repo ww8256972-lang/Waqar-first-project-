@@ -97,10 +97,15 @@ object GlobalExceptionHandler : Thread.UncaughtExceptionHandler {
             android.os.Looper.getMainLooper()?.thread === thread
         }.getOrDefault(thread.name == "main")
 
-        // Only delegate to the system crash handler if the main UI looper itself has died;
-        // absorb background worker / native daemon thread exceptions so the app stays open.
         if (isMainThread) {
-            previousHandler?.uncaughtException(thread, throwable)
+            // When the Main UI thread crashes, do NOT freeze the looper into a 5-second black screen ANR.
+            // Delegate cleanly to the platform default handler so Android does not hang on a dead looper.
+            val handler = previousHandler
+            if (handler != null) {
+                handler.uncaughtException(thread, throwable)
+            } else {
+                android.os.Process.killProcess(android.os.Process.myPid())
+            }
         }
     }
 

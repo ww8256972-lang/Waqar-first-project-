@@ -22,9 +22,11 @@ dependencyResolutionManagement {
     // Required for Talsec freeRASP Android SDK
     maven { url = uri("https://europe-west3-maven.pkg.dev/talsec-artifact-repository/freerasp") }
     maven { url = uri("https://jitpack.io") }
+    maven { url = uri("https://download.agora.io/maven/") }
   }
 }
 
 rootProject.name = "Waqar Institute"
 
 include(":app")
+include(":security")

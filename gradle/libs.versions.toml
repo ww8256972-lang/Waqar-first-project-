@@ -52,6 +52,7 @@ freerasp = "15.1.0"
 certTransparency = "2.5.0"
 lsparanoid = "0.6.0"
 playIntegrity = "1.4.0"
+agoraRtc = "4.5.1"
 
 
 [libraries]
@@ -130,6 +131,7 @@ google-tink-android = { group = "com.google.crypto.tink", name = "tink-android",
 talsec-freerasp = { group = "com.aheaditec.talsec.security", name = "TalsecSecurity-Community", version.ref = "freerasp" }
 appmattus-ct = { group = "com.appmattus.certificatetransparency", name = "certificatetransparency-android", version.ref = "certTransparency" }
 lsparanoid-core = { group = "org.lsposed.lsparanoid", name = "core", version.ref = "lsparanoid" }
+agora-full-sdk = { group = "io.agora.rtc", name = "full-sdk", version.ref = "agoraRtc" }
 
 
 [plugins]

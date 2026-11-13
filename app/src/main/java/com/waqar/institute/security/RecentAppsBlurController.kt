@@ -44,13 +44,11 @@ object RecentAppsBlurController {
     }
 
     fun onWindowFocusChanged(activity: Activity, hasFocus: Boolean) {
+        // Do NOT apply render blur during startup or when system dialogs / keyboard gain/lose focus.
+        // Blur is strictly for background recents transition when the activity is stopped.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val decorView = activity.window?.decorView ?: return
-            if (!hasFocus) {
-                decorView.setRenderEffect(
-                    RenderEffect.createBlurEffect(28f, 28f, Shader.TileMode.CLAMP)
-                )
-            } else {
+            if (hasFocus) {
                 decorView.setRenderEffect(null)
             }
         }
@@ -59,7 +57,7 @@ object RecentAppsBlurController {
 
 @Composable
 fun LifecyclePrivacyBlurContainer(
-    enabled: Boolean = true,
+    enabled: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -73,7 +71,7 @@ fun LifecyclePrivacyBlurContainer(
             }
             when (event) {
                 Lifecycle.Event.ON_RESUME -> isAppInBackgroundOrRecents = false
-                Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP -> {
+                Lifecycle.Event.ON_STOP -> {
                     isAppInBackgroundOrRecents = true
                     MemoryScrubberManager.scrubAllRegisteredBuffers()
                 }
@@ -87,15 +85,7 @@ fun LifecyclePrivacyBlurContainer(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .then(
-                if (enabled && isAppInBackgroundOrRecents) {
-                    Modifier.blur(24.dp)
-                } else {
-                    Modifier
-                }
-            )
+        modifier = Modifier.fillMaxSize()
     ) {
         content()
         if (enabled && isAppInBackgroundOrRecents) {

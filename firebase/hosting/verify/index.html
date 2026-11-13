@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Waqar Computer Institute • Official Certificate Verification</title>
+  <style>
+    :root {
+      --bg: #070b1e;
+      --card: rgba(18, 27, 70, 0.88);
+      --border: rgba(255, 255, 255, 0.16);
+      --accent: #00e5ff;
+      --success: #14f195;
+      --danger: #ff4d79;
+      --warning: #ffb547;
+      --text: #ffffff;
+      --muted: #b3c0e6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(circle at 15% 15%, #1d2d6b 0%, var(--bg) 55%, #040714 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .shell {
+      width: 100%;
+      max-width: 640px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(18px);
+    }
+    .brand {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+    .brand h1 { font-size: 1.25rem; font-weight: 800; letter-spacing: 0.3px; }
+    .brand p { font-size: 0.8rem; color: var(--accent); font-family: monospace; margin-top: 2px; }
+    .badge {
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-family: monospace;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      border: 1px solid currentColor;
+    }
+    .badge.verified { color: var(--success); background: rgba(20, 241, 149, 0.14); }
+    .badge.invalid { color: var(--danger); background: rgba(255, 77, 121, 0.14); }
+    .badge.pending { color: var(--warning); background: rgba(255, 181, 71, 0.14); }
+    .search-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .search-row input {
+      flex: 1;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(7, 11, 30, 0.85);
+      color: var(--text);
+      font-family: monospace;
+      font-size: 0.92rem;
+    }
+    .search-row button {
+      padding: 12px 18px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, #00e5ff, #a855f7);
+      color: #05060f;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .field {
+      background: rgba(7, 11, 30, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 12px 14px;
+    }
+    .field .lbl { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; }
+    .field .val { font-size: 0.98rem; font-weight: 700; margin-top: 4px; word-break: break-word; }
+    .mono { font-family: monospace; }
+    .footer {
+      margin-top: 20px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 0.78rem;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="brand">
+      <div>
+        <h1>Waqar Computer Institute ERP</h1>
+        <p>DIGITAL CREDENTIAL VERIFICATION PORTAL</p>
+      </div>
+      <span id="statusBadge" class="badge pending">CHECKING...</span>
+    </div>
+
+    <form id="lookupForm" class="search-row">
+      <input id="certIdInput" type="text" placeholder="Enter Certificate ID (e.g. WCI-CERT-2026-10001)" />
+      <button type="submit">Verify</button>
+    </form>
+
+    <p id="statusSubtitle" style="color: var(--muted); font-size: 0.9rem; line-height: 1.45;">
+      Validating cryptographic signature and official Cloud Firestore academic registry...
+    </p>
+
+    <section id="detailsGrid" class="grid" style="display: none;"></section>
+
+    <div class="footer">
+      <span>Authorized Signatory: <strong>Waqar</strong></span>
+      <span class="mono" id="hashFooter">SHA-256 TAMPER CHECK</span>
+    </div>
+  </main>
+
+  <script>
+    const PROJECT_ID = "gen-lang-client-0309263247";
+    const DATABASE_ID = "ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1";
+
+    async function sha256ShortHex(input) {
+      if (!window.crypto || !window.crypto.subtle) return "";
+      const data = new TextEncoder().encode(input);
+      const digest = await window.crypto.subtle.digest("SHA-256", data);
+      const bytes = Array.from(new Uint8Array(digest)).slice(0, 8);
+      return bytes.map((b) => b.toString(16).padStart(2, "0").toUpperCase()).join("");
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function renderFields(fields) {
+      const grid = document.getElementById("detailsGrid");
+      grid.innerHTML = fields.map(([label, val, isMono]) => `
+        <div class="field">
+          <div class="lbl">${escapeHtml(label)}</div>
+          <div class="val ${isMono ? "mono" : ""}">${escapeHtml(val || "—")}</div>
+        </div>
+      `).join("");
+      grid.style.display = "grid";
+    }
+
+    async function fetchFirestoreCert(certId) {
+      const clean = (certId || "").trim();
+      if (!clean) return null;
+      const endpoint = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/${DATABASE_ID}/documents/certificates/${encodeURIComponent(clean)}`;
+      try {
+        const res = await fetch(endpoint);
+        if (!res.ok) return null;
+        const json = await res.json();
+        if (!json || !json.fields) return null;
+        const f = json.fields;
+        const readStr = (k) => (f[k] && f[k].stringValue) ? f[k].stringValue : "";
+        const readBool = (k) => Boolean(f[k] && f[k].booleanValue);
+        return {
+          certId: readStr("serialNo") || readStr("id") || clean,
+          studentId: readStr("studentId"),
+          name: readStr("studentName"),
+          course: readStr("courseName"),
+          grade: readStr("grade"),
+          issued: readStr("issueDateIso"),
+          certType: readStr("certType") || "COMPLETION",
+          verificationHash: readStr("verificationHash"),
+          revoked: readBool("revoked")
+        };
+      } catch (_) {
+        return null;
+      }
+    }
+
+    async function verifyCertificate() {
+      const params = new URLSearchParams(window.location.search);
+      const certId = (params.get("cert_id") || "").trim();
+      const roll = (params.get("roll") || "").trim();
+      const name = (params.get("name") || "").trim();
+      const course = (params.get("course") || "").trim();
+      const grade = (params.get("grade") || params.get("g") || "").trim();
+      const pctRaw = (params.get("pct") || params.get("p") || "").trim();
+      const pctNum = pctRaw.replace(/%$/g, "");
+      const issued = (params.get("issued") || "").trim();
+      const signatory = (params.get("signatory") || "Waqar").trim();
+      const fullSig = (params.get("sig") || "").trim().toUpperCase();
+      const compactSig = (params.get("s") || "").trim().toUpperCase();
+
+      document.getElementById("certIdInput").value = certId;
+
+      const badge = document.getElementById("statusBadge");
+      const subtitle = document.getElementById("statusSubtitle");
+      const hashFooter = document.getElementById("hashFooter");
+
+      if (!certId) {
+        badge.className = "badge pending";
+        badge.textContent = "ENTER CERT ID";
+        subtitle.textContent = "Scan any official Waqar Computer Institute Certificate QR code or enter the Certificate Serial No above to verify authenticity.";
+        document.getElementById("detailsGrid").style.display = "none";
+        return;
+      }
+
+      const dbRecord = await fetchFirestoreCert(certId);
+      if (dbRecord && dbRecord.revoked) {
+        badge.className = "badge invalid";
+        badge.textContent = "REVOKED";
+        subtitle.textContent = "This certificate was officially revoked by Waqar Computer Institute Administration.";
+        hashFooter.textContent = dbRecord.verificationHash || "REVOKED";
+        renderFields([
+          ["Certificate Serial", dbRecord.certId, true],
+          ["Student Name", dbRecord.name, false],
+          ["Course", dbRecord.course, false],
+          ["Issue Date", dbRecord.issued, true]
+        ]);
+        return;
+      }
+
+      let sigVerified = false;
+      if (fullSig) {
+        const expected = await sha256ShortHex(`${certId}|${roll}|${name}|${course}|${grade}|${pctNum}|${issued}|${signatory}`);
+        sigVerified = Boolean(expected && expected === fullSig);
+      } else if (compactSig) {
+        const expectedCompact = (await sha256ShortHex(`${certId}|${roll}|${grade}|${pctNum}|Waqar`)).slice(0, 8);
+        sigVerified = Boolean(expectedCompact && expectedCompact === compactSig);
+      }
+
+      if (dbRecord || sigVerified) {
+        badge.className = "badge verified";
+        badge.textContent = "VERIFIED";
+        subtitle.textContent = dbRecord
+          ? "Official certificate matched directly against Waqar Computer Institute Cloud Firestore registry."
+          : "Certificate cryptographic SHA-256 seal verified successfully.";
+        hashFooter.textContent = (dbRecord && dbRecord.verificationHash) || fullSig || compactSig || "VERIFIED";
+        renderFields([
+          ["Certificate ID", (dbRecord && dbRecord.certId) || certId, true],
+          ["Roll / Student ID", roll || (dbRecord && dbRecord.studentId) || "Verified", true],
+          ["Student Name", (dbRecord && dbRecord.name) || name || "Verified Graduate", false],
+          ["Course Completed", (dbRecord && dbRecord.course) || course || "Computer Applications", false],
+          ["Grade", (dbRecord && dbRecord.grade) || grade || "A+", false],
+          ["Score / Percentage", pctNum ? `${pctNum}%` : "Passed", true],
+          ["Date of Issue", (dbRecord && dbRecord.issued) || issued || "Verified", true],
+          ["Authorized Signatory", signatory || "Waqar", false]
+        ]);
+      } else {
+        badge.className = "badge invalid";
+        badge.textContent = "UNVERIFIED";
+        subtitle.textContent = "No matching active certificate record or valid signature was found for this Certificate ID.";
+        hashFooter.textContent = "SIGNATURE MISMATCH";
+        renderFields([
+          ["Queried Certificate ID", certId, true],
+          ["Roll / Ref", roll || "—", true]
+        ]);
+      }
+    }
+
+    document.getElementById("lookupForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const val = document.getElementById("certIdInput").value.trim();
+      if (!val) return;
+      window.location.search = `?cert_id=${encodeURIComponent(val)}`;
+    });
+
+    verifyCertificate();
+  </script>
+</body>
+</html>

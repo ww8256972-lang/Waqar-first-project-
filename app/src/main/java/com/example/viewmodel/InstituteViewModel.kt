@@ -434,12 +434,20 @@ class InstituteViewModel(
                                     )
                                 }
                                 runCatching {
+                                    val attToken = com.waqar.institute.security.ZeroTrustAttestationEngine.generateHardwareBoundToken(
+                                        context = activityContext.applicationContext,
+                                        userId = result.profile.username,
+                                        portalRole = effectiveRole.key
+                                    )
+                                    val vmValid = com.waqar.institute.security.BinaryVirtualizationBridge.verifyCriticalPayloadInVm(
+                                        attToken.payloadString.toByteArray(Charsets.UTF_8)
+                                    )
                                     recordAudit(
                                         action = "PORTAL_LOGIN_SUCCESS",
                                         module = "M01_AUTH",
                                         targetId = result.profile.username,
                                         severity = "INFO",
-                                        details = "Authenticated ${effectiveRole.label} portal user '${result.profile.username}'"
+                                        details = "Authenticated ${effectiveRole.label} '${result.profile.username}' • HardwareAttest=${attToken.hardwareBacked} • VmVerified=$vmValid"
                                     )
                                 }
                             }
@@ -647,6 +655,20 @@ class InstituteViewModel(
 
                 startRealtimeStreamsIfNeeded(user.uid)
                 recomputeRoleScopedData()
+                viewModelScope.launch {
+                    withContext(Dispatchers.IO) {
+                        runCatching {
+                            val attToken = com.waqar.institute.security.ZeroTrustAttestationEngine.generateHardwareBoundToken(
+                                context = null,
+                                userId = cleanUsername,
+                                portalRole = resolvedRole
+                            )
+                            com.waqar.institute.security.BinaryVirtualizationBridge.verifyCriticalPayloadInVm(
+                                attToken.payloadString.toByteArray(Charsets.UTF_8)
+                            )
+                        }
+                    }
+                }
             }.onFailure { err ->
                 postMessage("Auth profile sync notice: ${err.localizedMessage ?: "offline"}")
             }
@@ -656,6 +678,23 @@ class InstituteViewModel(
     private fun startRealtimeStreamsIfNeeded(uid: String) {
         if (collectionJobsStartedForUid == uid) return
         collectionJobsStartedForUid = uid
+
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val activeState = _uiState.value
+                    val actorId = activeState.userProfile?.username?.takeIf { it.isNotBlank() } ?: uid
+                    val portalRoleKey = activeState.activePortalRole.key
+                    val boundTokenMap = com.waqar.institute.security.ZeroTrustAttestationEngine.generateHardwareBoundToken(
+                        userId = actorId,
+                        portalRole = portalRoleKey
+                    )
+                    val signedPayload = (boundTokenMap["payload"] ?: "$actorId:$portalRoleKey")
+                        .toByteArray(Charsets.UTF_8)
+                    com.waqar.institute.security.BinaryVirtualizationBridge.verifyCriticalPayloadInVm(signedPayload)
+                }
+            }
+        }
 
         viewModelScope.launch {
             repository.observeSessions(uid).catch { }.collect { list ->
@@ -1228,7 +1267,9 @@ class InstituteViewModel(
         viewModelScope.launch {
             var count = 0
             studentStatuses.forEach { (stu, status) ->
-                val id = "att_${UUID.randomUUID().toString().take(8)}"
+                val cleanTarget = stu.id.trim().replace(Regex("[^a-zA-Z0-9_-]"), "_")
+                    .ifBlank { stu.enrollmentNo.trim().replace(Regex("[^a-zA-Z0-9_-]"), "_").ifBlank { "student" } }
+                val id = "students_${dateStr}_$cleanTarget".take(80)
                 val record = AttendanceRecord(
                     id = id,
                     targetType = "STUDENT",
@@ -1271,9 +1312,12 @@ class InstituteViewModel(
         remarks: String = ""
     ) {
         val uid = currentActorUid() ?: return
-        val id = "att_${UUID.randomUUID().toString().take(8)}"
         val safeNow = Timestamp(Date(System.currentTimeMillis() - 1000))
         val dateStr = todayIso()
+        val prefix = if (targetType.equals("STAFF", ignoreCase = true)) "teachers" else "students"
+        val cleanTarget = targetId.trim().replace(Regex("[^a-zA-Z0-9_-]"), "_")
+            .ifBlank { targetName.trim().replace(Regex("[^a-zA-Z0-9_-]"), "_").ifBlank { "user" } }
+        val id = "${prefix}_${dateStr}_$cleanTarget".take(80)
 
         val record = AttendanceRecord(
             id = id,
@@ -1582,8 +1626,8 @@ class InstituteViewModel(
         grade: String
     ) {
         val uid = currentActorUid() ?: return
-        val id = "crt_${UUID.randomUUID().toString().take(8)}"
         val serialNo = "WCI-CERT-${2026}-${(10000..99999).random()}"
+        val id = serialNo
         val hash = UUID.randomUUID().toString().replace("-", "").uppercase().take(16)
         val cert = CertificateRecord(
             id = id,
@@ -1752,7 +1796,8 @@ class InstituteViewModel(
         val id = "grd_${UUID.randomUUID().toString().take(8)}"
         val matchedStudent = (rawStudents + InstituteRepository.localStudentsCache.values).firstOrNull {
             it.fullName.equals(studentName.trim(), ignoreCase = true) ||
-                it.id.equals(studentName.trim(), ignoreCase = true)
+                it.id.equals(studentName.trim(), ignoreCase = true) ||
+                it.enrollmentNo.equals(studentName.trim(), ignoreCase = true)
         }
         val link = GuardianLink(
             id = id,
@@ -1793,6 +1838,7 @@ class InstituteViewModel(
                 recomputeRoleScopedData()
                 postMessage("Linked guardian ${link.guardianName} • Parent Login: @$effectiveParentUsername")
                 runCatching { repository.saveGuardian(link) }
+                recordAudit("SAVE_GUARDIAN", "M15_PARENTS", link.id, "INFO", "Linked Parent ${link.guardianName} to ${link.studentName}")
             }.onFailure { postMessage("Guardian error: ${it.localizedMessage}") }
         }
     }

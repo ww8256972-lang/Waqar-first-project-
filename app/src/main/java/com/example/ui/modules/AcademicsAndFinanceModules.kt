@@ -343,14 +343,14 @@ fun AttendanceModuleScreen(
                         style = MaterialTheme.typography.bodySmall.copy(color = WciColors.TextMutedDark)
                     )
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    LiquidPill(
-                        text = "QR Check-in",
-                        selected = false,
-                        icon = Icons.Default.QrCodeScanner,
-                        onClick = { showQrScanDialog = true }
-                    )
-                    if (canMarkAttendance) {
+                if (canMarkAttendance) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        LiquidPill(
+                            text = "QR Check-in",
+                            selected = false,
+                            icon = Icons.Default.QrCodeScanner,
+                            onClick = { showQrScanDialog = true }
+                        )
                         ShimmerButton(
                             text = "+ Mark",
                             icon = Icons.AutoMirrored.Filled.FactCheck,
@@ -645,7 +645,7 @@ fun AttendanceModuleScreen(
         )
     }
 
-    if (showQrScanDialog) {
+    if (canMarkAttendance && showQrScanDialog) {
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
         val activeBatchName = state.batches.firstOrNull()?.name ?: "ADCA Morning Batch"

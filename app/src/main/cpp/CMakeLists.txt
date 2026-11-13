@@ -18,6 +18,7 @@ add_library(
     MobileFaceNetCosineMatcher.cpp
     ZeroCopyIpcRingEngine.cpp
     MicroVmExamSandboxEngine.cpp
+    VmBytecodeInterpreter.cpp
 )
 
 target_compile_options(

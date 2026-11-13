@@ -137,6 +137,8 @@ fun allowedDrawerDestinationsForRole(role: PortalRole): List<ModuleDestination> 
     }
     return AllDrawerDestinations.filter { it.routeId in allowedIds }.map { dest ->
         when {
+            role == PortalRole.ADMIN && dest.routeId == "M15_PARENTS" ->
+                dest.copy(title = "Manage Parents / Add Parent User", shortLabel = "Parents")
             role == PortalRole.STUDENT && dest.routeId == "M01_DASHBOARD" ->
                 dest.copy(title = "Learning Home", shortLabel = "Home")
             role == PortalRole.TEACHER && dest.routeId == "M01_DASHBOARD" ->
@@ -675,7 +677,7 @@ private fun PortalShellBody(
                                 "M12_MATERIALS" -> ExamsMaterialsCertificatesModuleScreen(state = state, viewModel = viewModel, initialTab = 2)
                                 "M13_CERTIFICATES" -> ExamsMaterialsCertificatesModuleScreen(state = state, viewModel = viewModel, initialTab = 3)
                                 PortalModuleDestination.M13_STAFF -> StaffAndGuardiansModuleScreen(state = state, viewModel = viewModel, initialTab = 0)
-                                "M15_PARENTS" -> StaffAndGuardiansModuleScreen(state = state, viewModel = viewModel, initialTab = 1)
+                                "M15_PARENTS", "M15_GUARDIANS" -> StaffAndGuardiansModuleScreen(state = state, viewModel = viewModel, initialTab = 1)
                                 "M16_ANNOUNCEMENTS" -> InboxAndLiveClassesModuleScreen(state = state, viewModel = viewModel, initialTab = 0)
                                 "M17_LIVE_CLASSES" -> InboxAndLiveClassesModuleScreen(state = state, viewModel = viewModel, initialTab = 1)
                                 "M18_AI_HUB" -> AiHubModuleScreen(state = state, viewModel = viewModel)

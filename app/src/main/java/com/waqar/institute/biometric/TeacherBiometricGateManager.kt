@@ -78,8 +78,11 @@ import com.google.mlkit.vision.face.Face
 import com.google.mlkit.vision.face.FaceDetection
 import com.google.mlkit.vision.face.FaceDetectorOptions
 import com.google.mlkit.vision.face.FaceLandmark
+import android.graphics.Bitmap
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.lsposed.lsparanoid.Obfuscate
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
@@ -164,6 +167,7 @@ fun TeacherBiometricGateOverlay(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val mainExecutor = remember(context) { ContextCompat.getMainExecutor(context) }
     var isVerified by remember(teacherUid) {
         mutableStateOf(TeacherBiometricGateManager.isTeacherVerifiedWithin24Hours(context, teacherUid))
     }
@@ -208,33 +212,38 @@ fun TeacherBiometricGateOverlay(
             isVerifying = true
             statusDetail = "Analyzing static photo with 128-D Cosine Matcher..."
             scope.launch {
-                when (val res = FaceBiometricVerificationEngine.verifyTeacherLiveFace(teacherUid, teacherName, bitmap)) {
-                    is FaceBiometricVerificationEngine.BiometricMatchResult.Verified -> {
-                        TeacherBiometricGateManager.recordSuccessful24HourVerification(
-                            context = context,
-                            teacherUid = teacherUid,
-                            cosineScore = res.cosineSimilarity
-                        )
-                        TeacherAttendanceSyncManager.markTeacherPresentOnBiometricPass(
-                            context = context,
-                            teacherUid = teacherUid,
-                            teacherName = teacherName,
-                            cosineSimilarity = res.cosineSimilarity,
-                            livenessConfidence = res.livenessConfidence
-                        )
-                        scanState = BiometricScanState.Matched
-                        statusDetail = "Aadhaar Biometric Verified (Cosine=${"%.4f".format(res.cosineSimilarity)})"
-                        delay(1200)
-                        isVerified = true
+                val res = FaceBiometricVerificationEngine.verifyTeacherLiveFace(teacherUid, teacherName, bitmap)
+                withContext(Dispatchers.Main) {
+                    when (res) {
+                        is FaceBiometricVerificationEngine.BiometricMatchResult.Verified -> {
+                            withContext(Dispatchers.IO) {
+                                TeacherBiometricGateManager.recordSuccessful24HourVerification(
+                                    context = context,
+                                    teacherUid = teacherUid,
+                                    cosineScore = res.cosineSimilarity
+                                )
+                                TeacherAttendanceSyncManager.markTeacherPresentOnBiometricPass(
+                                    context = context,
+                                    teacherUid = teacherUid,
+                                    teacherName = teacherName,
+                                    cosineSimilarity = res.cosineSimilarity,
+                                    livenessConfidence = res.livenessConfidence
+                                )
+                            }
+                            scanState = BiometricScanState.Matched
+                            statusDetail = "Aadhaar Biometric Verified (Cosine=${"%.4f".format(res.cosineSimilarity)})"
+                            delay(800)
+                            isVerified = true
+                        }
+                        else -> {
+                            scanState = BiometricScanState.NotRecognized
+                            statusDetail = "Photo verification failed. Please try the live circular scanner."
+                            delay(1500)
+                            scanState = BiometricScanState.Scanning
+                        }
                     }
-                    else -> {
-                        scanState = BiometricScanState.NotRecognized
-                        statusDetail = "Photo verification failed. Please try the live circular scanner."
-                        delay(1500)
-                        scanState = BiometricScanState.Scanning
-                    }
+                    isVerifying = false
                 }
-                isVerifying = false
             }
         }
     }
@@ -270,8 +279,8 @@ fun TeacherBiometricGateOverlay(
 
     DisposableEffect(Unit) {
         onDispose {
-            executor.shutdownNow()
-            faceDetector.close()
+            runCatching { executor.shutdown() }
+            runCatching { faceDetector.close() }
         }
     }
 
@@ -281,12 +290,13 @@ fun TeacherBiometricGateOverlay(
                 imageProxy = imageProxy,
                 detector = faceDetector,
                 executor = executor,
+                callbackExecutor = mainExecutor,
                 onNoFace = {
                     landmarks = emptyList()
                     sawEyeOpen = false
                     sawEyeClosed = false
                 },
-                onFaceDetected = { face, pts, w, h ->
+                onFaceDetected = { face, pts, _, _ ->
                     landmarks = pts
                     val left = face.leftEyeOpenProbability ?: 0.85f
                     val right = face.rightEyeOpenProbability ?: 0.85f
@@ -318,45 +328,49 @@ fun TeacherBiometricGateOverlay(
                                 livenessScore = livenessScore
                             )
 
-                            when (matchResult) {
-                                is FaceBiometricVerificationEngine.BiometricMatchResult.Verified -> {
-                                    TeacherBiometricGateManager.recordSuccessful24HourVerification(
-                                        context = context,
-                                        teacherUid = teacherUid,
-                                        cosineScore = matchResult.cosineSimilarity
-                                    )
-                                    TeacherAttendanceSyncManager.markTeacherPresentOnBiometricPass(
-                                        context = context,
-                                        teacherUid = teacherUid,
-                                        teacherName = teacherName,
-                                        cosineSimilarity = matchResult.cosineSimilarity,
-                                        livenessConfidence = matchResult.livenessConfidence
-                                    )
-                                    scanState = BiometricScanState.Matched
-                                    statusDetail = matchResult.message
-                                    delay(1200)
-                                    isVerified = true
+                            withContext(Dispatchers.Main) {
+                                when (matchResult) {
+                                    is FaceBiometricVerificationEngine.BiometricMatchResult.Verified -> {
+                                        withContext(Dispatchers.IO) {
+                                            TeacherBiometricGateManager.recordSuccessful24HourVerification(
+                                                context = context,
+                                                teacherUid = teacherUid,
+                                                cosineScore = matchResult.cosineSimilarity
+                                            )
+                                            TeacherAttendanceSyncManager.markTeacherPresentOnBiometricPass(
+                                                context = context,
+                                                teacherUid = teacherUid,
+                                                teacherName = teacherName,
+                                                cosineSimilarity = matchResult.cosineSimilarity,
+                                                livenessConfidence = matchResult.livenessConfidence
+                                            )
+                                        }
+                                        scanState = BiometricScanState.Matched
+                                        statusDetail = matchResult.message
+                                        delay(800)
+                                        isVerified = true
+                                    }
+                                    is FaceBiometricVerificationEngine.BiometricMatchResult.Mismatch -> {
+                                        scanState = BiometricScanState.NotRecognized
+                                        statusDetail = matchResult.message
+                                        delay(1500)
+                                        scanState = BiometricScanState.Scanning
+                                    }
+                                    is FaceBiometricVerificationEngine.BiometricMatchResult.SpoofOrLivenessFailed -> {
+                                        scanState = BiometricScanState.NotRecognized
+                                        statusDetail = matchResult.reason
+                                        delay(1500)
+                                        scanState = BiometricScanState.Scanning
+                                    }
+                                    is FaceBiometricVerificationEngine.BiometricMatchResult.Error -> {
+                                        scanState = BiometricScanState.NotRecognized
+                                        statusDetail = matchResult.errorMessage
+                                        delay(1500)
+                                        scanState = BiometricScanState.Scanning
+                                    }
                                 }
-                                is FaceBiometricVerificationEngine.BiometricMatchResult.Mismatch -> {
-                                    scanState = BiometricScanState.NotRecognized
-                                    statusDetail = matchResult.message
-                                    delay(1500)
-                                    scanState = BiometricScanState.Scanning
-                                }
-                                is FaceBiometricVerificationEngine.BiometricMatchResult.SpoofOrLivenessFailed -> {
-                                    scanState = BiometricScanState.NotRecognized
-                                    statusDetail = matchResult.reason
-                                    delay(1500)
-                                    scanState = BiometricScanState.Scanning
-                                }
-                                is FaceBiometricVerificationEngine.BiometricMatchResult.Error -> {
-                                    scanState = BiometricScanState.NotRecognized
-                                    statusDetail = matchResult.errorMessage
-                                    delay(1500)
-                                    scanState = BiometricScanState.Scanning
-                                }
+                                isVerifying = false
                             }
-                            isVerifying = false
                         }
                     }
                 }
@@ -364,11 +378,15 @@ fun TeacherBiometricGateOverlay(
         }
     }
 
-    val enrolledPhotoUri = remember(teacherUid, teacherName) {
-        FaceBiometricVerificationEngine.getEnrolledTeacherPhotoUri(context, teacherUid, teacherName)
-    }
-    val enrolledBitmap = remember(enrolledPhotoUri) {
-        FaceBiometricVerificationEngine.decodeDataUriToBitmap(enrolledPhotoUri)
+    var enrolledBitmap by remember(teacherUid, teacherName) { mutableStateOf<Bitmap?>(null) }
+    LaunchedEffect(teacherUid, teacherName) {
+        enrolledBitmap = withContext(Dispatchers.IO) {
+            val uri = FaceBiometricVerificationEngine.getEnrolledTeacherPhotoUri(context, teacherUid, teacherName)
+            if (uri.isBlank()) null
+            else withContext(Dispatchers.Default) {
+                FaceBiometricVerificationEngine.decodeDataUriToBitmap(uri)
+            }
+        }
     }
 
     GradientBackground {
@@ -397,7 +415,8 @@ fun TeacherBiometricGateOverlay(
                 textAlign = TextAlign.Center
             )
 
-            if (enrolledBitmap != null) {
+            val localEnrolledHeaderBitmap = enrolledBitmap
+            if (localEnrolledHeaderBitmap != null) {
                 Spacer(modifier = Modifier.height(10.dp))
                 Surface(
                     shape = RoundedCornerShape(14.dp),
@@ -411,7 +430,7 @@ fun TeacherBiometricGateOverlay(
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         androidx.compose.foundation.Image(
-                            bitmap = enrolledBitmap.asImageBitmap(),
+                            bitmap = localEnrolledHeaderBitmap.asImageBitmap(),
                             contentDescription = "Enrolled Teacher Profile Photo",
                             contentScale = androidx.compose.ui.layout.ContentScale.Crop,
                             modifier = Modifier
@@ -463,9 +482,10 @@ fun TeacherBiometricGateOverlay(
                     modifier = Modifier.size(192.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        if (enrolledBitmap != null) {
+                        val localEnrolledCircleBitmap = enrolledBitmap
+                        if (localEnrolledCircleBitmap != null) {
                             androidx.compose.foundation.Image(
-                                bitmap = enrolledBitmap.asImageBitmap(),
+                                bitmap = localEnrolledCircleBitmap.asImageBitmap(),
                                 contentDescription = "Enrolled Teacher Profile Photo",
                                 contentScale = androidx.compose.ui.layout.ContentScale.Crop,
                                 modifier = Modifier
@@ -520,39 +540,42 @@ fun TeacherBiometricGateOverlay(
                         isVerifying = true
                         statusDetail = "Matching against enrolled Gallery Profile Photo (128-D Cosine)..."
                         scope.launch {
-                            when (
-                                val res = FaceBiometricVerificationEngine.verifyTeacherWithEnrolledProfilePhoto(
-                                    context = context,
-                                    teacherUid = teacherUid,
-                                    teacherName = teacherName
-                                )
-                            ) {
-                                is FaceBiometricVerificationEngine.BiometricMatchResult.Verified -> {
-                                    TeacherBiometricGateManager.recordSuccessful24HourVerification(
-                                        context = context,
-                                        teacherUid = teacherUid,
-                                        cosineScore = res.cosineSimilarity
-                                    )
-                                    TeacherAttendanceSyncManager.markTeacherPresentOnBiometricPass(
-                                        context = context,
-                                        teacherUid = teacherUid,
-                                        teacherName = teacherName,
-                                        cosineSimilarity = res.cosineSimilarity,
-                                        livenessConfidence = res.livenessConfidence
-                                    )
-                                    scanState = BiometricScanState.Matched
-                                    statusDetail = res.message
-                                    delay(900)
-                                    isVerified = true
+                            val res = FaceBiometricVerificationEngine.verifyTeacherWithEnrolledProfilePhoto(
+                                context = context,
+                                teacherUid = teacherUid,
+                                teacherName = teacherName
+                            )
+                            withContext(Dispatchers.Main) {
+                                when (res) {
+                                    is FaceBiometricVerificationEngine.BiometricMatchResult.Verified -> {
+                                        withContext(Dispatchers.IO) {
+                                            TeacherBiometricGateManager.recordSuccessful24HourVerification(
+                                                context = context,
+                                                teacherUid = teacherUid,
+                                                cosineScore = res.cosineSimilarity
+                                            )
+                                            TeacherAttendanceSyncManager.markTeacherPresentOnBiometricPass(
+                                                context = context,
+                                                teacherUid = teacherUid,
+                                                teacherName = teacherName,
+                                                cosineSimilarity = res.cosineSimilarity,
+                                                livenessConfidence = res.livenessConfidence
+                                            )
+                                        }
+                                        scanState = BiometricScanState.Matched
+                                        statusDetail = res.message
+                                        delay(700)
+                                        isVerified = true
+                                    }
+                                    else -> {
+                                        scanState = BiometricScanState.NotRecognized
+                                        statusDetail = "Could not verify profile photo. Please try again."
+                                        delay(1200)
+                                        scanState = BiometricScanState.Scanning
+                                    }
                                 }
-                                else -> {
-                                    scanState = BiometricScanState.NotRecognized
-                                    statusDetail = "Could not verify profile photo. Please try again."
-                                    delay(1200)
-                                    scanState = BiometricScanState.Scanning
-                                }
+                                isVerifying = false
                             }
-                            isVerifying = false
                         }
                     }
                 },
@@ -917,6 +940,7 @@ private fun processLiveFrame(
     imageProxy: ImageProxy,
     detector: com.google.mlkit.vision.face.FaceDetector,
     executor: Executor,
+    callbackExecutor: Executor,
     onNoFace: () -> Unit,
     onFaceDetected: (Face, List<Offset?>, Int, Int) -> Unit
 ) {
@@ -935,7 +959,7 @@ private fun processLiveFrame(
         .addOnSuccessListener(executor) { faces ->
             val face = faces.maxByOrNull { it.boundingBox.width() }
             if (face == null) {
-                onNoFace()
+                callbackExecutor.execute { onNoFace() }
             } else {
                 val side = minOf(rotatedW, rotatedH).toFloat().coerceAtLeast(1f)
                 val ox = (rotatedW - side) / 2f
@@ -946,7 +970,7 @@ private fun processLiveFrame(
                         Offset(1f - (p.x - ox) / side, (p.y - oy) / side)
                     }
                 }
-                onFaceDetected(face, mapped, rotatedW, rotatedH)
+                callbackExecutor.execute { onFaceDetected(face, mapped, rotatedW, rotatedH) }
             }
         }
         .addOnCompleteListener(executor) {

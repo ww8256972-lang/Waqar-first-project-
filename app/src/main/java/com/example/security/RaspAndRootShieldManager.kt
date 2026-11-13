@@ -34,12 +34,23 @@ object RaspAndRootShieldManager : ThreatListener.ThreatDetected {
                 _securityViolation.value = null // Logged in EnterpriseRaspGuard for Admin Security Center
             }
             if (expectedCertBase64Hash.isNotBlank()) {
+                val packageInstallers = arrayOf(
+                    "com.android.vending",
+                    "com.google.android.packageinstaller",
+                    "com.android.packageinstaller",
+                    "com.miui.packageinstaller",
+                    "com.samsung.android.packageinstaller",
+                    "com.coloros.packageinstaller",
+                    "com.oppo.packageinstaller",
+                    "com.vivo.packageinstaller",
+                    "com.huawei.appmarket"
+                )
                 val config = TalsecConfig.Builder(
                     appContext.packageName,
                     arrayOf(expectedCertBase64Hash)
                 )
                     .watcherMail("samdkhan8256972@gmail.com")
-                    .supportedAlternativeStores(arrayOf("com.android.vending"))
+                    .supportedAlternativeStores(packageInstallers)
                     .prod(false)
                     .build()
                 // Keep config validated for RASP compliance without starting native ptrace/kill daemon on sideloaded builds

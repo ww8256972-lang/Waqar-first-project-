@@ -168,6 +168,7 @@ dependencies {
   implementation(libs.androidx.work.runtime.ktx)
   implementation(libs.androidx.media3.exoplayer)
   implementation(libs.androidx.media3.ui)
+  implementation(libs.agora.full.sdk)
   implementation(libs.mlkit.face.detection)
   implementation(libs.mlkit.barcode.scanning)
   implementation(libs.google.play.integrity)
@@ -187,6 +188,7 @@ dependencies {
   debugImplementation(libs.leakcanary.android)
   implementation(libs.androidx.security.crypto)
   implementation(libs.kotlinx.serialization.json)
+  implementation(project(":security"))
 
   testImplementation(libs.androidx.compose.ui.test.junit4)
   testImplementation(libs.androidx.core)

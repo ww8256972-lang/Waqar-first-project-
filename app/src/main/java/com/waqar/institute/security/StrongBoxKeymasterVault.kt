@@ -107,7 +107,13 @@ object StrongBoxKeymasterVault {
             builder.setIsStrongBoxBacked(true)
         }
 
-        keyGenerator.init(builder.build())
-        return keyGenerator.generateKey()
+        return runCatching {
+            keyGenerator.init(builder.build())
+            keyGenerator.generateKey()
+        }.recoverCatching {
+            builder.setIsStrongBoxBacked(false)
+            keyGenerator.init(builder.build())
+            keyGenerator.generateKey()
+        }.getOrThrow()
     }
 }

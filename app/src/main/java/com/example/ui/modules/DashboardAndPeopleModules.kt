@@ -179,7 +179,7 @@ fun AdminDashboardModule(
             state.fees.filter {
                 it.studentId.equals(selectedParentChild.id, ignoreCase = true) ||
                     it.studentName.equals(selectedParentChild.fullName, ignoreCase = true)
-            }.ifEmpty { state.fees }
+            }
         } else {
             state.fees
         }
@@ -203,7 +203,7 @@ fun AdminDashboardModule(
             state.examResults.filter {
                 it.studentId.equals(selectedParentChild.id, ignoreCase = true) ||
                     it.studentName.equals(selectedParentChild.fullName, ignoreCase = true)
-            }.ifEmpty { state.examResults }
+            }
         } else {
             state.examResults
         }
@@ -239,10 +239,41 @@ fun AdminDashboardModule(
             }
         }
 
-        // Student Portal: Always-Visible 3D Claymorphism "UPCOMING EXAM / NEXT EXAM" Hero Card
+        // Student Portal: Schedule-Gated "Upcoming Exam - Scheduled by Admin" Hero Card
         if (isStudent) {
             item {
-                val nextExam = state.exams.firstOrNull()
+                val nowMs = System.currentTimeMillis()
+                val scheduledExamInfo = remember(state.exams, nowMs) {
+                    val sdfDateTime = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.US)
+                    val rangeRegex = Regex("""^(\d{4}-\d{2}-\d{2})\s+(\d{1,2}:\d{2})-(\d{1,2}:\d{2})$""")
+                    val singleRegex = Regex("""^(\d{4}-\d{2}-\d{2})\s+(\d{1,2}:\d{2})$""")
+                    state.exams.mapNotNull { exam ->
+                        val raw = exam.scheduledDateIso.trim()
+                        val (startMs, endMs) = when {
+                            rangeRegex.matches(raw) -> {
+                                val m = rangeRegex.matchEntire(raw)!!
+                                val d = m.groupValues[1]
+                                val s = runCatching { sdfDateTime.parse("$d ${m.groupValues[2]}")?.time }.getOrNull()
+                                val e = runCatching { sdfDateTime.parse("$d ${m.groupValues[3]}")?.time }.getOrNull()
+                                s to (e ?: s?.plus(exam.durationMinutes.coerceAtLeast(15) * 60_000L))
+                            }
+                            singleRegex.matches(raw) -> {
+                                val s = runCatching { sdfDateTime.parse(raw)?.time }.getOrNull()
+                                s to s?.plus(exam.durationMinutes.coerceAtLeast(15) * 60_000L)
+                            }
+                            else -> null to null
+                        }
+                        if (startMs != null && endMs != null && nowMs <= endMs) {
+                            Triple(exam, startMs, endMs)
+                        } else null
+                    }.minByOrNull { it.second }
+                }
+                val nextExam = scheduledExamInfo?.first
+                val nextStartMs = scheduledExamInfo?.second
+                val nextEndMs = scheduledExamInfo?.third
+                val isExamLiveNow = nextExam != null && nextStartMs != null && nextEndMs != null &&
+                    nowMs in nextStartMs..nextEndMs
+
                 GlassCard(
                     modifier = Modifier.fillMaxWidth(),
                     cornerRadius = 28.dp,
@@ -265,16 +296,20 @@ fun AdminDashboardModule(
                                 .padding(horizontal = 10.dp, vertical = 4.dp)
                         ) {
                             Text(
-                                text = if (state.preferences.languageCode == "HI") "आगामी परीक्षा • UPCOMING EXAM" else "NEXT EXAM • UPCOMING EXAM",
+                                text = when {
+                                    isExamLiveNow -> "EXAM WINDOW LIVE NOW"
+                                    nextExam != null -> "SCHEDULED BY ADMIN • UPCOMING"
+                                    else -> "UPCOMING EXAM - SCHEDULED BY ADMIN"
+                                },
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontFamily = JetBrainsMono,
                                     fontWeight = FontWeight.ExtraBold,
-                                    color = Color.White
+                                    color = if (isExamLiveNow) WciColors.Success else Color.White
                                 )
                             )
                         }
                         Text(
-                            text = if (nextExam != null) "${nextExam.durationMinutes} min • ${nextExam.totalMarks} Marks" else "CBT Online Mode",
+                            text = if (nextExam != null) "${nextExam.durationMinutes} min • ${nextExam.totalMarks} Marks" else "Awaiting Schedule",
                             style = MaterialTheme.typography.bodySmall.copy(
                                 fontFamily = JetBrainsMono,
                                 color = WciColors.Info
@@ -284,9 +319,9 @@ fun AdminDashboardModule(
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
                         text = nextExam?.title ?: if (state.preferences.languageCode == "HI") {
-                            "Upcoming Exam (आगामी ऑनलाइन परीक्षा)"
+                            "Upcoming Exam - एडमिन द्वारा निर्धारित"
                         } else {
-                            "Upcoming Exam — Awaiting Admin Schedule"
+                            "Upcoming Exam - Scheduled by Admin"
                         },
                         style = MaterialTheme.typography.headlineMedium.copy(
                             color = Color.White,
@@ -296,9 +331,9 @@ fun AdminDashboardModule(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = if (nextExam != null) {
-                            "${nextExam.courseName} • Batch: ${nextExam.batchName}"
+                            "${nextExam.courseName} • Batch: ${nextExam.batchName} • Window: ${nextExam.scheduledDateIso}"
                         } else {
-                            "Your upcoming batch MCQ & practical lab exam will unlock here as soon as Admin sets the schedule."
+                            "No live exam window is active right now. Scheduled batch exams appear and unlock automatically at the Admin-assigned date and time."
                         },
                         style = MaterialTheme.typography.bodySmall.copy(
                             color = WciColors.TextSecondaryDark
@@ -311,23 +346,20 @@ fun AdminDashboardModule(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         val countdownTriple by produceState(
-                            initialValue = Triple("01", "06", "30"),
-                            key1 = nextExam?.scheduledDateIso
+                            initialValue = Triple("--", "--", "--"),
+                            key1 = nextStartMs
                         ) {
-                            while (true) {
-                                val targetMillis = runCatching {
-                                    val iso = nextExam?.scheduledDateIso.orEmpty()
-                                    if (iso.isNotBlank()) {
-                                        java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
-                                            .parse(iso)?.time?.plus(10 * 3600 * 1000L)
-                                    } else null
-                                }.getOrNull() ?: (System.currentTimeMillis() + 30L * 3600L * 1000L)
-                                val diffSec = ((targetMillis - System.currentTimeMillis()) / 1000L).coerceAtLeast(0L)
-                                val d = (diffSec / 86400L).toString().padStart(2, '0')
-                                val h = ((diffSec % 86400L) / 3600L).toString().padStart(2, '0')
-                                val m = ((diffSec % 3600L) / 60L).toString().padStart(2, '0')
-                                value = Triple(d, h, m)
-                                kotlinx.coroutines.delay(30_000L)
+                            if (nextStartMs == null) {
+                                value = Triple("--", "--", "--")
+                            } else {
+                                while (true) {
+                                    val diffSec = ((nextStartMs - System.currentTimeMillis()) / 1000L).coerceAtLeast(0L)
+                                    val d = (diffSec / 86400L).toString().padStart(2, '0')
+                                    val h = ((diffSec % 86400L) / 3600L).toString().padStart(2, '0')
+                                    val m = ((diffSec % 3600L) / 60L).toString().padStart(2, '0')
+                                    value = Triple(d, h, m)
+                                    kotlinx.coroutines.delay(30_000L)
+                                }
                             }
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -372,8 +404,8 @@ fun AdminDashboardModule(
                                 onClick = { showExamInstructionsModal = true }
                             )
                             LiquidPill(
-                                text = if (nextExam != null) "Start CBT" else "Exam Hall",
-                                selected = true,
+                                text = if (isExamLiveNow) "Start CBT" else "Exam Hall",
+                                selected = isExamLiveNow,
                                 icon = Icons.Default.Quiz,
                                 onClick = { onNavigateToModule("M10_EXAMS") }
                             )
@@ -681,7 +713,7 @@ fun AdminDashboardModule(
                             CountUpInt(targetValue = presentTodayCount, color = WciColors.Success, fontSizeSp = 26)
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Verified QR Logs",
+                                text = if (isTeacher) "Verified Attendance & QR Logs" else "Verified Attendance Logs",
                                 style = MaterialTheme.typography.bodySmall.copy(color = WciColors.TextMutedDark)
                             )
                         }
@@ -783,11 +815,11 @@ fun AdminDashboardModule(
                         testTag = "quick_add_teacher_tile"
                     )
                     ClayActionTile(
-                        title = "Parent / Guardian",
-                        subtitle = "Parent Login & PTM",
+                        title = "Manage Parents",
+                        subtitle = "Add Parent User & PTM",
                         icon = Icons.Default.FamilyRestroom,
                         accentColor = Color(0xFFF59E0B),
-                        onClick = { onNavigateToModule("M15_GUARDIANS") },
+                        onClick = { onNavigateToModule("M15_PARENTS") },
                         modifier = Modifier.weight(1f),
                         testTag = "quick_add_parent_tile"
                     )
@@ -2100,8 +2132,16 @@ fun StaffAndGuardiansModuleScreen(
                 }
             } else {
                 items(state.guardians, key = { it.id }) { g ->
+                    val linkedEnrollment = state.students.firstOrNull {
+                        it.id.equals(g.studentId, ignoreCase = true) ||
+                            it.fullName.equals(g.studentName, ignoreCase = true)
+                    }?.enrollmentNo.orEmpty()
                     GlassCard(modifier = Modifier.fillMaxWidth()) {
                         Text("${g.guardianName} (${g.relation} of ${g.studentName})", style = MaterialTheme.typography.titleMedium.copy(color = WciColors.TextPrimaryDark))
+                        Text(
+                            text = "Linked Student ID: ${g.studentId}" + if (linkedEnrollment.isNotBlank()) " • Roll: $linkedEnrollment" else "",
+                            style = MaterialTheme.typography.bodySmall.copy(fontFamily = JetBrainsMono, color = WciColors.Info)
+                        )
                         Text("Phone: ${g.phone} • Consent Signed: ${if (g.consentSigned) "Yes" else "Pending"}", style = MaterialTheme.typography.bodySmall.copy(color = WciColors.Success))
                         if (g.ptmNotes.isNotBlank()) {
                             Text("PTM Notes: ${g.ptmNotes}", style = MaterialTheme.typography.bodySmall.copy(color = WciColors.TextSecondaryDark))
@@ -2399,7 +2439,7 @@ fun StaffAndGuardiansModuleScreen(
                     )
                     OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Guardian Mobile *") }, singleLine = true)
                     OutlinedTextField(value = relation, onValueChange = { relation = it }, label = { Text("Relation (Father/Mother/Guardian)") }, singleLine = true)
-                    OutlinedTextField(value = sName, onValueChange = { sName = it }, label = { Text("Linked Student Name *") }, singleLine = true)
+                    OutlinedTextField(value = sName, onValueChange = { sName = it }, label = { Text("Linked Student Name, Roll No or ID *") }, singleLine = true)
                     OutlinedTextField(value = ptm, onValueChange = { ptm = it }, label = { Text("PTM / Consent Notes") })
                     HorizontalDivider(color = WciColors.GlassBorderSubtle)
                     Text(

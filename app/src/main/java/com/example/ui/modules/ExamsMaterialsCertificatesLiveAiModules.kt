@@ -39,6 +39,7 @@ import com.example.data.model.ExamRecord
 import com.example.data.model.PortalRole
 import com.example.exam.ExamQuestionItem
 import com.example.exam.QuestionBank
+import com.example.media.AgoraLiveVideoClassroomRoom
 import com.example.media.BindScreenCapturePolicy
 import com.example.media.ExoPlayerHdLecturePlayer
 import com.example.media.ExoPlayerLectureManager
@@ -55,6 +56,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 private data class DraftCustomMcq(
     val question: String,
@@ -96,6 +99,70 @@ private fun parseCustomExamQuestions(questionsJson: String, courseName: String):
     }.getOrDefault(emptyList())
 }
 
+private enum class ExamWindowStatus { UPCOMING, LIVE, ENDED, UNSCHEDULED }
+
+private data class ExamScheduleEvaluation(
+    val status: ExamWindowStatus,
+    val startMillis: Long?,
+    val endMillis: Long?,
+    val displayWindow: String
+)
+
+private fun evaluateExamScheduleWindow(
+    scheduledDateIso: String,
+    durationMinutes: Int,
+    nowMillis: Long = System.currentTimeMillis()
+): ExamScheduleEvaluation {
+    val raw = scheduledDateIso.trim()
+    if (raw.isBlank()) {
+        return ExamScheduleEvaluation(ExamWindowStatus.UNSCHEDULED, null, null, "Not scheduled by Admin")
+    }
+    val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).apply { isLenient = false }
+    val rangeRegex = Regex("""^(\d{4}-\d{2}-\d{2})\s+(\d{1,2}:\d{2})-(\d{1,2}:\d{2})$""")
+    val singleRegex = Regex("""^(\d{4}-\d{2}-\d{2})\s+(\d{1,2}:\d{2})$""")
+    val (startMs, endMs) = when {
+        rangeRegex.matches(raw) -> {
+            val m = rangeRegex.matchEntire(raw)!!
+            val date = m.groupValues[1]
+            val s = runCatching { sdf.parse("$date ${m.groupValues[2]}")?.time }.getOrNull()
+            val e = runCatching { sdf.parse("$date ${m.groupValues[3]}")?.time }.getOrNull()
+            val fixedEnd = if (s != null && e != null && e > s) e else s?.plus(durationMinutes.coerceAtLeast(10) * 60_000L)
+            s to fixedEnd
+        }
+        singleRegex.matches(raw) -> {
+            val s = runCatching { sdf.parse(raw)?.time }.getOrNull()
+            s to s?.plus(durationMinutes.coerceAtLeast(10) * 60_000L)
+        }
+        else -> null to null
+    }
+    if (startMs == null || endMs == null) {
+        return ExamScheduleEvaluation(ExamWindowStatus.UNSCHEDULED, null, null, raw)
+    }
+    val status = when {
+        nowMillis < startMs -> ExamWindowStatus.UPCOMING
+        nowMillis <= endMs -> ExamWindowStatus.LIVE
+        else -> ExamWindowStatus.ENDED
+    }
+    return ExamScheduleEvaluation(status, startMs, endMs, raw)
+}
+
+private fun hasStudentAlreadyAttemptedExam(
+    exam: ExamRecord,
+    studentId: String,
+    enrollmentNo: String,
+    studentName: String,
+    results: List<com.example.data.model.ExamResult>
+): Boolean {
+    return results.any { res ->
+        val matchesExam = res.examId.equals(exam.id, ignoreCase = true) ||
+            (exam.title.isNotBlank() && res.examTitle.equals(exam.title, ignoreCase = true))
+        val matchesStudent = (studentId.isNotBlank() && res.studentId.equals(studentId, ignoreCase = true)) ||
+            (enrollmentNo.isNotBlank() && res.studentId.equals(enrollmentNo, ignoreCase = true)) ||
+            (studentName.isNotBlank() && res.studentName.equals(studentName, ignoreCase = true))
+        matchesExam && matchesStudent
+    }
+}
+
 // ============================================================================
 // M10, M11, M12: EXAMS & MARK SHEETS, STUDY MATERIAL, QR CERTIFICATES
 // ============================================================================
@@ -117,6 +184,36 @@ fun ExamsMaterialsCertificatesModuleScreen(
     var activeExamAttempt by remember { mutableStateOf<ExamRecord?>(null) }
     var submittedResultSummary by remember { mutableStateOf<String?>(null) }
     var resultCountdownSeconds by remember { mutableIntStateOf(300) }
+
+    val activeStudentRecord = state.students.firstOrNull {
+        it.id == state.userProfile?.linkedEntityId ||
+            it.fullName.equals(state.userProfile?.displayName.orEmpty(), ignoreCase = true)
+    }
+    val currentStuId = activeStudentRecord?.id ?: state.userProfile?.linkedEntityId.orEmpty()
+    val currentStuRoll = activeStudentRecord?.enrollmentNo.orEmpty()
+    val currentStuName = activeStudentRecord?.fullName ?: state.userProfile?.displayName.orEmpty()
+    val nowSnapshot = System.currentTimeMillis()
+    val evaluatedExams = remember(state.exams, nowSnapshot) {
+        state.exams.map { exam ->
+            exam to evaluateExamScheduleWindow(exam.scheduledDateIso, exam.durationMinutes, nowSnapshot)
+        }
+    }
+    val heroExamPair = remember(evaluatedExams) {
+        evaluatedExams.firstOrNull { it.second.status == ExamWindowStatus.LIVE }
+            ?: evaluatedExams.firstOrNull { it.second.status == ExamWindowStatus.UPCOMING }
+            ?: evaluatedExams.firstOrNull()
+    }
+    val latestScheduledExam = heroExamPair?.first
+    val heroEvaluation = heroExamPair?.second
+    val heroAlreadyAttempted = if (latestScheduledExam != null && state.activePortalRole == PortalRole.STUDENT) {
+        hasStudentAlreadyAttemptedExam(
+            exam = latestScheduledExam,
+            studentId = currentStuId,
+            enrollmentNo = currentStuRoll,
+            studentName = currentStuName,
+            results = state.examResults
+        )
+    } else false
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -180,9 +277,8 @@ fun ExamsMaterialsCertificatesModuleScreen(
 
         when (activeTab) {
             0 -> {
-                val latestScheduledExam = state.exams.firstOrNull()
                 item {
-                    // Always-visible 3D Claymorphism "Upcoming Exam" Hero Card with Date & 24-Hour Time
+                    // Schedule-Gated "Upcoming Exam - Scheduled by Admin" Hero Card
                     GlassCard(
                         modifier = Modifier.fillMaxWidth(),
                         cornerRadius = 28.dp,
@@ -204,19 +300,23 @@ fun ExamsMaterialsCertificatesModuleScreen(
                                     .padding(horizontal = 10.dp, vertical = 4.dp)
                             ) {
                                 Text(
-                                    text = "UPCOMING EXAM • ONLINE CBT",
+                                    text = when {
+                                        heroEvaluation?.status == ExamWindowStatus.LIVE -> "LIVE EXAM WINDOW • ONLINE CBT"
+                                        latestScheduledExam != null -> "UPCOMING EXAM • SCHEDULED BY ADMIN"
+                                        else -> "UPCOMING EXAM - SCHEDULED BY ADMIN"
+                                    },
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontFamily = JetBrainsMono,
                                         fontWeight = FontWeight.ExtraBold,
-                                        color = Color.White
+                                        color = if (heroEvaluation?.status == ExamWindowStatus.LIVE) WciColors.Success else Color.White
                                     )
                                 )
                             }
                             Text(
                                 text = if (latestScheduledExam != null) {
-                                    "Schedule: ${latestScheduledExam.scheduledDateIso.ifBlank { "Live Now" }} • ${latestScheduledExam.durationMinutes} Mins"
+                                    "${latestScheduledExam.scheduledDateIso.ifBlank { "Unscheduled" }} • ${latestScheduledExam.durationMinutes} Mins"
                                 } else {
-                                    "24-Hour Schedule Ready • 45 Mins"
+                                    "Admin Schedule Required"
                                 },
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     fontFamily = JetBrainsMono,
@@ -226,7 +326,7 @@ fun ExamsMaterialsCertificatesModuleScreen(
                         }
                         Spacer(modifier = Modifier.height(10.dp))
                         Text(
-                            text = latestScheduledExam?.title ?: "Upcoming Exam — Awaiting Admin Schedule",
+                            text = latestScheduledExam?.title ?: "Upcoming Exam - Scheduled by Admin",
                             style = MaterialTheme.typography.headlineMedium.copy(
                                 color = Color.White,
                                 fontWeight = FontWeight.ExtraBold
@@ -234,12 +334,15 @@ fun ExamsMaterialsCertificatesModuleScreen(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = if (latestScheduledExam != null) {
-                                "${latestScheduledExam.courseName} • Batch: ${latestScheduledExam.batchName} • Scheduled Date & Time (24h): ${latestScheduledExam.scheduledDateIso.ifBlank { "Today" }}"
-                            } else if (canManageAssessments) {
-                                "Publish an online MCQ test with custom questions, 4 options, 1 real correct answer, any date, and 24-hour clock time."
-                            } else {
-                                "Your next batch examination is being prepared by the Examination Cell. As soon as Admin publishes the exam time, the Start Exam button unlocks automatically."
+                            text = when {
+                                latestScheduledExam != null && heroEvaluation?.status == ExamWindowStatus.LIVE ->
+                                    "${latestScheduledExam.courseName} • Batch: ${latestScheduledExam.batchName} • Window Open Now (${latestScheduledExam.scheduledDateIso})"
+                                latestScheduledExam != null ->
+                                    "${latestScheduledExam.courseName} • Batch: ${latestScheduledExam.batchName} • Opens at: ${latestScheduledExam.scheduledDateIso}"
+                                canManageAssessments ->
+                                    "Publish an online MCQ test with custom questions, Date, 24h Start Time & End Time, and Duration."
+                                else ->
+                                    "No active exam window is currently open. When Admin/Faculty schedules an exam date and time window, it unlocks here automatically."
                             },
                             style = MaterialTheme.typography.bodySmall.copy(color = WciColors.TextSecondaryDark)
                         )
@@ -250,10 +353,12 @@ fun ExamsMaterialsCertificatesModuleScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                val datePart = latestScheduledExam?.scheduledDateIso?.substringBefore(" ")?.takeIf { it.isNotBlank() } ?: "--"
+                                val timePart = latestScheduledExam?.scheduledDateIso?.substringAfter(" ", "")?.ifBlank { "--:--" } ?: "--:--"
                                 listOf(
-                                    (if (latestScheduledExam != null) "LIVE" else "03") to "Date",
-                                    (if (latestScheduledExam != null) latestScheduledExam.scheduledDateIso.takeLast(5).ifBlank { "14:00" } else "14:00") to "24h Time",
-                                    "${latestScheduledExam?.durationMinutes ?: 45}" to "Mins"
+                                    datePart to "Date",
+                                    timePart to "24h Window",
+                                    "${latestScheduledExam?.durationMinutes ?: 0}" to "Mins"
                                 ).forEach { (v, u) ->
                                     Box(
                                         modifier = Modifier
@@ -287,36 +392,75 @@ fun ExamsMaterialsCertificatesModuleScreen(
                                     text = "+ Schedule Exam",
                                     onClick = { showCreateExam = true }
                                 )
-                            } else if (state.activePortalRole == PortalRole.STUDENT) {
-                                LiquidPill(
-                                    text = if (latestScheduledExam != null) "Start Exam Now" else "Practice Demo Test",
-                                    selected = true,
-                                    icon = Icons.Default.PlayArrow,
-                                    onClick = {
-                                        activeExamAttempt = latestScheduledExam ?: ExamRecord(
-                                            id = "practice_cbt_01",
-                                            title = "ADCA & Tally Prime Practice CBT",
-                                            courseName = state.students.firstOrNull()?.courseName ?: "ADCA",
-                                            batchName = state.students.firstOrNull()?.batchName ?: "Morning Batch",
-                                            examType = "PRACTICE_MCQ",
-                                            durationMinutes = 30,
-                                            totalMarks = 100,
-                                            passingMarks = 40,
-                                            scheduledDateIso = "2026-11-20 14:00",
-                                            questionsJson = "[]"
+                            } else if (state.activePortalRole == PortalRole.STUDENT && latestScheduledExam != null) {
+                                when {
+                                    heroAlreadyAttempted -> {
+                                        LiquidPill(
+                                            text = "Submitted ✓ • View Marks",
+                                            selected = false,
+                                            icon = Icons.Default.Verified,
+                                            onClick = { activeTab = 1 }
                                         )
                                     }
-                                )
+                                    heroEvaluation?.status == ExamWindowStatus.LIVE -> {
+                                        LiquidPill(
+                                            text = "Start Exam Now",
+                                            selected = true,
+                                            icon = Icons.Default.PlayArrow,
+                                            onClick = { activeExamAttempt = latestScheduledExam }
+                                        )
+                                    }
+                                    heroEvaluation?.status == ExamWindowStatus.UPCOMING -> {
+                                        LiquidPill(
+                                            text = "Locked Until Start",
+                                            selected = false,
+                                            icon = Icons.Default.Lock,
+                                            onClick = {
+                                                viewModel.postMessage("Upcoming Exam opens at ${latestScheduledExam.scheduledDateIso}")
+                                            }
+                                        )
+                                    }
+                                    else -> {
+                                        LiquidPill(
+                                            text = "Window Closed",
+                                            selected = false,
+                                            icon = Icons.Default.LockClock,
+                                            onClick = {
+                                                viewModel.postMessage("This exam window has closed.")
+                                            }
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
                 }
 
-                if (state.exams.isNotEmpty()) {
-                    items(state.exams, key = { it.id }) { exam ->
+                if (evaluatedExams.isEmpty()) {
+                    if (state.activePortalRole != PortalRole.STUDENT && !canManageAssessments) {
+                        item {
+                            EmptyStateCard(
+                                icon = Icons.Default.Quiz,
+                                title = "Upcoming Exam - Scheduled by Admin",
+                                subtitle = "No examination schedule has been published yet."
+                            )
+                        }
+                    }
+                } else {
+                    items(evaluatedExams, key = { it.first.id }) { (exam, eval) ->
                         val customQCount = remember(exam.questionsJson) {
                             parseCustomExamQuestions(exam.questionsJson, exam.courseName).size
                         }
+                        val alreadyAttempted = if (state.activePortalRole == PortalRole.STUDENT) {
+                            hasStudentAlreadyAttemptedExam(
+                                exam = exam,
+                                studentId = currentStuId,
+                                enrollmentNo = currentStuRoll,
+                                studentName = currentStuName,
+                                results = state.examResults
+                            )
+                        } else false
+
                         GlassCard(
                             modifier = Modifier.fillMaxWidth(),
                             glowColor = Color(0xFF818CF8)
@@ -351,10 +495,10 @@ fun ExamsMaterialsCertificatesModuleScreen(
                                             )
                                         }
                                         Text(
-                                            text = "Date & 24h Time: ${exam.scheduledDateIso.ifBlank { "Immediate" }} • ${exam.durationMinutes} Mins",
+                                            text = "${exam.scheduledDateIso.ifBlank { "Unscheduled" }} • ${exam.durationMinutes} Mins",
                                             style = MaterialTheme.typography.bodySmall.copy(
                                                 fontFamily = JetBrainsMono,
-                                                color = WciColors.Success
+                                                color = if (eval.status == ExamWindowStatus.LIVE) WciColors.Success else WciColors.Warning
                                             )
                                         )
                                     }
@@ -371,20 +515,72 @@ fun ExamsMaterialsCertificatesModuleScreen(
                                         style = MaterialTheme.typography.bodySmall.copy(color = WciColors.Info)
                                     )
                                     Text(
-                                        text = "Max Marks: ${exam.totalMarks} • Passing Marks: ${exam.passingMarks} • ${if (customQCount > 0) "$customQCount Custom Admin MCQs" else "50 Pool MCQs"}",
+                                        text = "Max Marks: ${exam.totalMarks} • Passing: ${exam.passingMarks} • ${if (customQCount > 0) "$customQCount Custom Admin MCQs" else "50 Pool MCQs"}",
                                         style = MaterialTheme.typography.bodySmall.copy(
                                             fontFamily = JetBrainsMono,
                                             color = WciColors.TextSecondaryDark
                                         )
                                     )
                                 }
-                                if (state.activePortalRole != PortalRole.PARENT) {
-                                    LiquidPill(
-                                        text = if (state.activePortalRole == PortalRole.STUDENT) "Start Exam" else "Preview CBT",
-                                        selected = true,
-                                        icon = Icons.Default.PlayArrow,
-                                        onClick = { activeExamAttempt = exam }
-                                    )
+                                when {
+                                    canManageAssessments -> {
+                                        LiquidPill(
+                                            text = "Preview CBT",
+                                            selected = true,
+                                            icon = Icons.Default.PlayArrow,
+                                            onClick = { activeExamAttempt = exam }
+                                        )
+                                    }
+                                    state.activePortalRole == PortalRole.STUDENT -> {
+                                        when {
+                                            alreadyAttempted -> {
+                                                LiquidPill(
+                                                    text = "Submitted ✓",
+                                                    selected = false,
+                                                    icon = Icons.Default.Verified,
+                                                    onClick = { activeTab = 1 }
+                                                )
+                                            }
+                                            eval.status == ExamWindowStatus.LIVE -> {
+                                                LiquidPill(
+                                                    text = "Start Exam",
+                                                    selected = true,
+                                                    icon = Icons.Default.PlayArrow,
+                                                    onClick = { activeExamAttempt = exam }
+                                                )
+                                            }
+                                            eval.status == ExamWindowStatus.UPCOMING -> {
+                                                LiquidPill(
+                                                    text = "Scheduled",
+                                                    selected = false,
+                                                    icon = Icons.Default.Lock,
+                                                    onClick = {
+                                                        viewModel.postMessage("Scheduled for ${exam.scheduledDateIso}. Entry opens at start time.")
+                                                    }
+                                                )
+                                            }
+                                            eval.status == ExamWindowStatus.ENDED -> {
+                                                LiquidPill(
+                                                    text = "Closed",
+                                                    selected = false,
+                                                    icon = Icons.Default.LockClock,
+                                                    onClick = {
+                                                        viewModel.postMessage("Exam window (${exam.scheduledDateIso}) has ended.")
+                                                    }
+                                                )
+                                            }
+                                            else -> {
+                                                LiquidPill(
+                                                    text = "Unscheduled",
+                                                    selected = false,
+                                                    icon = Icons.Default.Lock,
+                                                    onClick = {
+                                                        viewModel.postMessage("Awaiting Admin start/end time schedule.")
+                                                    }
+                                                )
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -792,8 +988,9 @@ fun ExamsMaterialsCertificatesModuleScreen(
         var title by remember { mutableStateOf("") }
         var course by remember { mutableStateOf(state.courses.firstOrNull()?.title ?: "ADCA") }
         var batch by remember { mutableStateOf(state.batches.firstOrNull()?.name ?: "Morning Batch") }
-        var examDateIso by remember { mutableStateOf("2026-11-20") }
-        var examTime24h by remember { mutableStateOf("14:30") }
+        var examDateIso by remember { mutableStateOf(SimpleDateFormat("yyyy-MM-dd", Locale.US).format(java.util.Date())) }
+        var examTime24h by remember { mutableStateOf("14:00") }
+        var examEndTime24h by remember { mutableStateOf("15:00") }
         var duration by remember { mutableStateOf("45") }
         var totalMarks by remember { mutableStateOf("100") }
         var passMarks by remember { mutableStateOf("40") }
@@ -843,7 +1040,7 @@ fun ExamsMaterialsCertificatesModuleScreen(
         AlertDialog(
             onDismissRequest = { showCreateExam = false },
             containerColor = WciColors.BgElevatedDark,
-            title = { Text("Publish Online CBT Exam (24h Clock + 4 Questions)", color = WciColors.TextPrimaryDark) },
+            title = { Text("Schedule Online CBT Exam (24h Window)", color = WciColors.TextPrimaryDark) },
             text = {
                 Column(
                     modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -854,18 +1051,25 @@ fun ExamsMaterialsCertificatesModuleScreen(
                         OutlinedTextField(value = course, onValueChange = { course = it }, label = { Text("Course *") }, modifier = Modifier.weight(1f), singleLine = true)
                         OutlinedTextField(value = batch, onValueChange = { batch = it }, label = { Text("Batch") }, modifier = Modifier.weight(1f), singleLine = true)
                     }
+                    OutlinedTextField(
+                        value = examDateIso,
+                        onValueChange = { examDateIso = it },
+                        label = { Text("Exam Date (YYYY-MM-DD)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedTextField(
-                            value = examDateIso,
-                            onValueChange = { examDateIso = it },
-                            label = { Text("Exam Date (YYYY-MM-DD)") },
+                            value = examTime24h,
+                            onValueChange = { examTime24h = it },
+                            label = { Text("Start (24h HH:mm)") },
                             modifier = Modifier.weight(1f),
                             singleLine = true
                         )
                         OutlinedTextField(
-                            value = examTime24h,
-                            onValueChange = { examTime24h = it },
-                            label = { Text("24-Hour Time (HH:mm)") },
+                            value = examEndTime24h,
+                            onValueChange = { examEndTime24h = it },
+                            label = { Text("End (24h HH:mm)") },
                             modifier = Modifier.weight(1f),
                             singleLine = true
                         )
@@ -999,6 +1203,7 @@ fun ExamsMaterialsCertificatesModuleScreen(
                                 jsonArr.put(obj)
                             }
                         }
+                        val formattedSchedule = "${examDateIso.trim()} ${examTime24h.trim()}-${examEndTime24h.trim()}".take(30)
                         viewModel.createExam(
                             title = title,
                             courseName = course,
@@ -1007,7 +1212,7 @@ fun ExamsMaterialsCertificatesModuleScreen(
                             durationMinutes = duration.toIntOrNull() ?: 45,
                             totalMarks = totalMarks.toIntOrNull() ?: 100,
                             passingMarks = passMarks.toIntOrNull() ?: 40,
-                            scheduledDateIso = "${examDateIso.trim()} ${examTime24h.trim()}",
+                            scheduledDateIso = formattedSchedule,
                             questionsJson = jsonArr.toString()
                         )
                         showCreateExam = false
@@ -1144,6 +1349,7 @@ fun ExamsMaterialsCertificatesModuleScreen(
 
     if (showIssueCertificate) {
         var certType by remember { mutableStateOf("DIPLOMA") }
+        var selectedStudentId by remember { mutableStateOf(state.students.firstOrNull()?.id ?: "") }
         var studentName by remember { mutableStateOf(state.students.firstOrNull()?.fullName ?: "") }
         var courseName by remember { mutableStateOf(state.students.firstOrNull()?.courseName ?: "ADCA") }
         var grade by remember { mutableStateOf("A+") }
@@ -1153,7 +1359,41 @@ fun ExamsMaterialsCertificatesModuleScreen(
             containerColor = WciColors.BgElevatedDark,
             title = { Text("Issue Verifiable QR Certificate", color = WciColors.TextPrimaryDark) },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (state.students.isNotEmpty()) {
+                        Text(
+                            text = "Select Enrolled Student (Auto-fills Name, Roll No & Course):",
+                            style = MaterialTheme.typography.labelSmall.copy(color = WciColors.Info, fontWeight = FontWeight.ExtraBold)
+                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            state.students.forEach { stu ->
+                                LiquidPill(
+                                    text = "${stu.fullName} (${stu.enrollmentNo})",
+                                    selected = selectedStudentId == stu.id,
+                                    onClick = {
+                                        selectedStudentId = stu.id
+                                        studentName = stu.fullName
+                                        courseName = stu.courseName
+                                        val bestGrade = state.examResults
+                                            .filter { it.studentId == stu.id || it.studentName.equals(stu.fullName, ignoreCase = true) }
+                                            .maxByOrNull { it.marksObtained }
+                                            ?.grade
+                                        if (!bestGrade.isNullOrBlank()) {
+                                            grade = bestGrade
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         listOf("DIPLOMA", "COMPLETION", "MERIT", "BONAFIDE").forEach { ct ->
                             LiquidPill(text = ct, selected = certType == ct, onClick = { certType = ct })
@@ -1169,7 +1409,10 @@ fun ExamsMaterialsCertificatesModuleScreen(
                     text = "Issue Certificate",
                     enabled = studentName.isNotBlank() && courseName.isNotBlank(),
                     onClick = {
-                        viewModel.issueCertificate(certType, "stu_cert", studentName, courseName, grade)
+                        val matchedId = state.students.firstOrNull {
+                            it.id == selectedStudentId || it.fullName.equals(studentName.trim(), ignoreCase = true)
+                        }?.id ?: selectedStudentId.ifBlank { "stu_verified" }
+                        viewModel.issueCertificate(certType, matchedId, studentName, courseName, grade)
                         showIssueCertificate = false
                     }
                 )
@@ -1604,6 +1847,12 @@ fun InboxAndLiveClassesModuleScreen(
     var activeTab by remember(initialTab) { mutableIntStateOf(initialTab) }
     var showBroadcastDialog by remember { mutableStateOf(false) }
     var showScheduleLive by remember { mutableStateOf(false) }
+    var selectedLiveClassId by remember(state.liveClasses) {
+        mutableStateOf(state.liveClasses.firstOrNull()?.id ?: "")
+    }
+    var videoStageMode by remember { mutableStateOf("AGORA") }
+    val activeSession = state.liveClasses.firstOrNull { it.id == selectedLiveClassId }
+        ?: state.liveClasses.firstOrNull()
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -1750,7 +1999,7 @@ fun InboxAndLiveClassesModuleScreen(
                         icon = Icons.Default.Videocam,
                         title = "No live classes or lab bookings active",
                         subtitle = if (canBroadcastOrHost) {
-                            "Launch interactive virtual classes or computer lab practical sessions with live polls and attendance tracking."
+                            "Launch interactive virtual classes or computer lab practical sessions with Agora live video, audio, and polls."
                         } else {
                             "Upcoming live classes, computer lab practical sessions, and interactive polls scheduled for your batch appear here."
                         },
@@ -1760,15 +2009,47 @@ fun InboxAndLiveClassesModuleScreen(
                 }
             } else {
                 item {
-                    ExoPlayerHdLecturePlayer(
-                        streamUrl = ExoPlayerLectureManager.DEFAULT_SAMPLE_LECTURE_STREAM,
-                        title = state.liveClasses.firstOrNull()?.title ?: "Waqar Institute HD Masterclass"
-                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        LiquidPill(
+                            text = "Live Video Room (Agora RTC)",
+                            selected = videoStageMode == "AGORA",
+                            icon = Icons.Default.Videocam,
+                            onClick = { videoStageMode = "AGORA" }
+                        )
+                        LiquidPill(
+                            text = "HD Recorded Lecture",
+                            selected = videoStageMode == "RECORDED",
+                            icon = Icons.Default.PlayCircle,
+                            onClick = { videoStageMode = "RECORDED" }
+                        )
+                    }
+                }
+                item {
+                    val sessionTitle = activeSession?.title ?: "Waqar Institute Live Classroom"
+                    val channelCode = (activeSession?.meetingCode?.ifBlank { activeSession.id } ?: "wci_live_room")
+                        .replace(Regex("[^a-zA-Z0-9_-]"), "_")
+                    val hostDisplay = activeSession?.teacherName ?: "Waqar Sir"
+
+                    if (videoStageMode == "AGORA") {
+                        AgoraLiveVideoClassroomRoom(
+                            channelId = channelCode,
+                            sessionTitle = sessionTitle,
+                            hostName = hostDisplay,
+                            isHostRole = canBroadcastOrHost
+                        )
+                    } else {
+                        ExoPlayerHdLecturePlayer(
+                            streamUrl = ExoPlayerLectureManager.DEFAULT_SAMPLE_LECTURE_STREAM,
+                            title = sessionTitle
+                        )
+                    }
                 }
                 items(state.liveClasses, key = { it.id }) { lc ->
+                    val isSelected = activeSession?.id == lc.id
                     GlassCard(
                         modifier = Modifier.fillMaxWidth(),
-                        glowColor = WciColors.Success
+                        glowColor = if (isSelected) Color(0xFFFF4D79) else WciColors.Success,
+                        onClick = { selectedLiveClassId = lc.id }
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -1783,7 +2064,12 @@ fun InboxAndLiveClassesModuleScreen(
                                     Text("Live Poll: ${lc.activePollQuestion}", style = MaterialTheme.typography.bodySmall.copy(color = WciColors.Warning))
                                 }
                             }
-                            Text(lc.status, style = MaterialTheme.typography.labelLarge.copy(color = WciColors.Success))
+                            Text(
+                                text = if (isSelected) "ACTIVE" else lc.status,
+                                style = MaterialTheme.typography.labelLarge.copy(
+                                    color = if (isSelected) Color(0xFFFF4D79) else WciColors.Success
+                                )
+                            )
                         }
                     }
                 }

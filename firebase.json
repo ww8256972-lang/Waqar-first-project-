@@ -3,6 +3,26 @@
     "database": "ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1",
     "rules": "firestore.rules"
   },
+  "hosting": {
+    "public": "firebase/hosting-prod",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "cleanUrls": true,
+    "trailingSlash": false,
+    "rewrites": [
+      {
+        "source": "/verify",
+        "destination": "/verify/index.html"
+      },
+      {
+        "source": "/verify/**",
+        "destination": "/verify/index.html"
+      }
+    ]
+  },
   "emulators": {
     "auth": {
       "host": "127.0.0.1",

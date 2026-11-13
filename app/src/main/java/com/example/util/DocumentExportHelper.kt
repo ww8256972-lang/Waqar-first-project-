@@ -86,24 +86,39 @@ object DocumentExportHelper {
     fun exportAndShareCertificatePdf(
         context: Context,
         instituteName: String,
-        cert: CertificateRecord
+        cert: CertificateRecord,
+        enrollmentNo: String = "",
+        percentage: Int = -1
     ) {
+        val resolvedRoll = enrollmentNo.ifBlank { cert.studentId }.ifBlank { cert.serialNo }
+        val resolvedPct = if (percentage >= 0) {
+            percentage.coerceIn(0, 100)
+        } else {
+            when (cert.grade.trim().uppercase()) {
+                "A+" -> 95
+                "A" -> 85
+                "B+" -> 75
+                "B" -> 65
+                "C" -> 50
+                else -> 80
+            }
+        }
         val compactUrl = CertificateQrGenerator.buildCompactScannableUrl(
             certSerialNo = cert.serialNo,
-            enrollmentNo = cert.studentId.ifBlank { "WCI-2026-1001" },
+            enrollmentNo = resolvedRoll,
             grade = cert.grade,
-            percentage = 88
+            percentage = resolvedPct
         )
         exportOfficialTemplatePdf(
             context = context,
             studentName = cert.studentName,
-            certificateOrRollNo = "${cert.serialNo} / ${cert.studentId.ifBlank { "WCI-1001" }}",
+            certificateOrRollNo = "${cert.serialNo} / $resolvedRoll",
             serialNo = cert.serialNo,
             courseTitle = cert.courseName,
-            durationFrom = "11 Aug 2025",
-            durationTo = "${cert.issueDateIso.ifBlank { "11 Nov 2026" }} (15M)",
-            gradeAndPercentage = "Grade ${cert.grade} (Verified)",
-            dateOfIssue = cert.issueDateIso.ifBlank { "11 Nov 2026" },
+            durationFrom = "Enrolled Term",
+            durationTo = "${cert.issueDateIso.ifBlank { "Issued" }} (Completed)",
+            gradeAndPercentage = "Grade ${cert.grade} ($resolvedPct%)",
+            dateOfIssue = cert.issueDateIso.ifBlank { "Verified" },
             studentSignature = cert.studentName,
             compactScannableUrl = compactUrl
         )

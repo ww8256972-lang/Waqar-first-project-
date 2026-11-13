@@ -22,41 +22,48 @@
     public static int e(...);
 }
 
-# 4. Keep ONLY JNI_OnLoad & Dynamic RegisterNatives Bridge (No Exported Java_... Symbols!)
--keep class com.example.security.NativeSecurityBridge {
-    public static native ** *(...);
+# 4. Keep All JNI Native Methods & Security Classes across both package namespaces
+-keepclasseswithmembernames class * {
     native <methods>;
 }
--keep class com.waqar.institute.security.NativeSecurityBridge {
-    public static native ** *(...);
-    native <methods>;
-}
--keep class com.waqar.institute.security.EnterpriseSecuritySuite {
-    public static native ** *(...);
-    native <methods>;
-}
--keep class com.example.security.EnterpriseRaspGuard {
-    native <methods>;
-}
--keep class com.waqar.institute.security.TeeSecurityManager {
-    native <methods>;
-}
+-keep class com.example.security.** { *; }
+-keep class com.waqar.institute.security.** { *; }
+-keep class com.waqar.institute.biometric.** { *; }
+-keep class com.waqar.institute.sandbox.** { *; }
+-keep class com.waqar.institute.ipc.** { *; }
+-keep class com.waqar.institute.certificate.** { *; }
+-keep class com.waqar.institute.universal.** { *; }
+-keep class io.agora.** { *; }
+-dontwarn io.agora.**
 
-# 5. Keep Rules for BouncyCastle Argon2id, Tink, Talsec freeRASP, RootBeer, SQLCipher & Firestore Models
--keep class org.bouncycastle.crypto.generators.Argon2BytesGenerator { *; }
--keep class org.bouncycastle.crypto.params.Argon2Parameters* { *; }
--keep class com.google.crypto.tink.** { *; }
--keep class com.aheaditec.talsec.** { *; }
--keep class com.aheaditec.talsec_security.** { *; }
--keep class com.scottyab.rootbeer.** { *; }
--keep class com.example.data.model.** { *; }
+# 5. Keep Rules for Firebase Firestore Data Models (Required for deserialization on student devices)
+-keep class com.example.data.model.** {
+    public <init>();
+    public <fields>;
+    public <methods>;
+}
+-keepattributes Signature,InnerClasses,EnclosingMethod,*Annotation*
 -keepclassmembers class * {
     @kotlinx.serialization.Serializable *;
 }
+
+# 6. SQLCipher & Room Database Rules
 -keep class net.sqlcipher.** { *; }
 -keep class net.sqlcipher.database.** { *; }
 -keep class * extends androidx.room.RoomDatabase { *; }
 -keep @androidx.room.Entity class * { *; }
+-keep @androidx.room.Dao interface * { *; }
+-keepclassmembers class * extends androidx.room.RoomDatabase {
+    public <init>();
+}
+
+# 7. BouncyCastle, Tink, Talsec & RootBeer
+-keep class org.bouncycastle.** { *; }
+-keep class com.google.crypto.tink.** { *; }
+-keep class com.aheaditec.talsec.** { *; }
+-keep class com.aheaditec.talsec_security.** { *; }
+-keep class com.scottyab.rootbeer.** { *; }
+
 -dontwarn org.bouncycastle.**
 -dontwarn com.google.crypto.tink.**
 -dontwarn com.aheaditec.talsec.**

@@ -106,8 +106,22 @@ object TeeSecurityManager {
             specBuilder.setIsStrongBoxBacked(false)
         }
 
-        keyGenerator.init(specBuilder.build())
-        return keyGenerator.generateKey()
+        return runCatching {
+            keyGenerator.init(specBuilder.build())
+            keyGenerator.generateKey()
+        }.recoverCatching {
+            // Re-init with basic non-user-auth TEE parameters if biometric or OEM keystore threw
+            val fallbackBuilder = KeyGenParameterSpec.Builder(
+                TEE_KEY_ALIAS,
+                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+            )
+                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                .setKeySize(256)
+                .setRandomizedEncryptionRequired(true)
+            keyGenerator.init(fallbackBuilder.build())
+            keyGenerator.generateKey()
+        }.getOrThrow()
     }
 
     /**

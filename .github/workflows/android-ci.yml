@@ -181,3 +181,47 @@ jobs:
           path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error
           retention-days: 30
+
+  deploy-firebase-hosting:
+    name: Deploy Verification Portal to Firebase Hosting
+    needs: build-and-test
+    if: success() && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: firebase-hosting-deploy-gen-lang-client-0309263247
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Verify Firebase Hosting Configuration & Credentials
+        env:
+          HAS_PRIMARY_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
+          HAS_PROJECT_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GEN_LANG_CLIENT_0309263247 != '' }}
+        run: |
+          if [ ! -f "firebase.json" ] || [ ! -f ".firebaserc" ]; then
+            echo "ERROR: Missing firebase.json or .firebaserc."
+            exit 1
+          fi
+          if [ ! -f "firebase/hosting-prod/verify/index.html" ] || [ ! -f "firebase/hosting-prod/404.html" ]; then
+            echo "ERROR: Missing Certificate Verification Portal production files in firebase/hosting-prod."
+            exit 1
+          fi
+          if grep -rnE "AUTH_FLOW_TEST_COOKIE_NAME|<title>Cookie check</title>" firebase/hosting-prod/; then
+            echo "ERROR: Template or cookie-check HTML detected inside firebase/hosting-prod. Aborting Hosting deployment."
+            exit 1
+          fi
+          if [ "$HAS_PRIMARY_SA" != "true" ] && [ "$HAS_PROJECT_SA" != "true" ]; then
+            echo "ERROR: Missing Firebase Hosting deployment secret (FIREBASE_SERVICE_ACCOUNT or FIREBASE_SERVICE_ACCOUNT_GEN_LANG_CLIENT_0309263247)."
+            exit 1
+          fi
+
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT || secrets.FIREBASE_SERVICE_ACCOUNT_GEN_LANG_CLIENT_0309263247 }}
+          channelId: live
+          projectId: gen-lang-client-0309263247

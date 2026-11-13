@@ -284,15 +284,29 @@ object HardwareKeystoreVault {
             .setRandomizedEncryptionRequired(true)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && hasStrongBox(context)) {
-            runCatching {
+            val generated = runCatching {
                 builder.setIsStrongBoxBacked(true)
                 keyGenerator.init(builder.build())
-                return@runCatching keyGenerator.generateKey()
-            }
-            // Fallback to TEE if StrongBox key generation fails on specific OEM firmware
+                keyGenerator.generateKey()
+            }.getOrNull()
+            if (generated != null) return@runCatching generated
+            // Reset StrongBox and fallback to standard TEE Keymaster
             builder.setIsStrongBoxBacked(false)
         }
         keyGenerator.init(builder.build())
+        keyGenerator.generateKey()
+    }.recoverCatching {
+        // If AndroidKeyStore threw KeyStoreException / StrongBoxUnavailableException, attempt standard TEE key
+        val keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE)
+        val fallbackBuilder = KeyGenParameterSpec.Builder(
+            KEY_ALIAS_MASTER,
+            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+        )
+            .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+            .setKeySize(256)
+            .setRandomizedEncryptionRequired(true)
+        keyGenerator.init(fallbackBuilder.build())
         keyGenerator.generateKey()
     }.getOrNull()
 
@@ -327,15 +341,24 @@ object HardwareKeystoreVault {
 
     fun openEncryptedPreferences(context: Context): SharedPreferences {
         return runCatching {
-            val masterKeyBuilder = MasterKey.Builder(context.applicationContext)
-                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-            if (hasStrongBox(context)) {
-                runCatching { masterKeyBuilder.setRequestStrongBoxBacked(true) }
+            val masterKey = runCatching {
+                val masterKeyBuilder = MasterKey.Builder(context.applicationContext)
+                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                if (hasStrongBox(context)) {
+                    runCatching { masterKeyBuilder.setRequestStrongBoxBacked(true) }
+                }
+                masterKeyBuilder.build()
+            }.getOrElse {
+                MasterKey.Builder(context.applicationContext)
+                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                    .setRequestStrongBoxBacked(false)
+                    .build()
             }
+
             EncryptedSharedPreferences.create(
                 context.applicationContext,
                 ENCRYPTED_PREFS_NAME,
-                masterKeyBuilder.build(),
+                masterKey,
                 EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                 EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
             )
