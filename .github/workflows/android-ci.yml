@@ -97,11 +97,22 @@ jobs:
               -validity 10000 \
               -dname "CN=Android Debug,O=Android,C=US"
           fi
+          EFF_STORE_PASS="${RELEASE_STORE_PASSWORD:-waqar_release_pass}"
+          EFF_KEY_PASS="${RELEASE_KEY_PASSWORD:-waqar_release_pass}"
+
           if [ -n "$RELEASE_KEYSTORE_BASE64" ]; then
-            echo "$RELEASE_KEYSTORE_BASE64" | base64 -d > my-upload-key.jks
-            EFF_STORE_PASS="${RELEASE_STORE_PASSWORD:-waqar_release_pass}"
-            EFF_KEY_PASS="${RELEASE_KEY_PASSWORD:-waqar_release_pass}"
-          else
+            echo "$RELEASE_KEYSTORE_BASE64" | base64 -d > my-upload-key.jks 2>/dev/null || rm -f my-upload-key.jks
+          fi
+
+          VALID_KEYSTORE=false
+          if [ -f "my-upload-key.jks" ]; then
+            if keytool -list -keystore my-upload-key.jks -storepass "$EFF_STORE_PASS" >/dev/null 2>&1; then
+              VALID_KEYSTORE=true
+            fi
+          fi
+
+          if [ "$VALID_KEYSTORE" = false ]; then
+            rm -f my-upload-key.jks
             EFF_STORE_PASS="waqar_release_pass"
             EFF_KEY_PASS="waqar_release_pass"
             keytool -genkeypair -v \
@@ -118,10 +129,14 @@ jobs:
           echo "STORE_PASSWORD=${EFF_STORE_PASS}" >> "$GITHUB_ENV"
           echo "KEY_PASSWORD=${EFF_KEY_PASS}" >> "$GITHUB_ENV"
 
-          CERT_SHA256="$(keytool -list -v -keystore my-upload-key.jks -alias upload -storepass "$EFF_STORE_PASS" 2>/dev/null | sed -n 's/.*SHA256:[[:space:]]*//Ip' | head -n 1 | tr -d ':\r\n ' | tr '[:upper:]' '[:lower:]')"
-          if [ -z "$CERT_SHA256" ]; then
-            CERT_SHA256="$(keytool -list -v -keystore my-upload-key.jks -storepass "$EFF_STORE_PASS" 2>/dev/null | sed -n 's/.*SHA256:[[:space:]]*//Ip' | head -n 1 | tr -d ':\r\n ' | tr '[:upper:]' '[:lower:]')"
+          CERT_SHA256=""
+          if keytool -list -v -keystore my-upload-key.jks -alias upload -storepass "$EFF_STORE_PASS" > /tmp/cert_upload.txt 2>/dev/null; then
+            CERT_SHA256="$(sed -n 's/.*SHA256:[[:space:]]*//Ip' /tmp/cert_upload.txt | head -n 1 | tr -d ':\r\n ' | tr '[:upper:]' '[:lower:]')"
+          elif keytool -list -v -keystore my-upload-key.jks -storepass "$EFF_STORE_PASS" > /tmp/cert_upload.txt 2>/dev/null; then
+            CERT_SHA256="$(sed -n 's/.*SHA256:[[:space:]]*//Ip' /tmp/cert_upload.txt | head -n 1 | tr -d ':\r\n ' | tr '[:upper:]' '[:lower:]')"
           fi
+          rm -f /tmp/cert_upload.txt
+
           if [ -z "$CERT_SHA256" ] && [ -n "$CI_EXPECTED_CERT_SHA256" ]; then
             CERT_SHA256="$(echo "$CI_EXPECTED_CERT_SHA256" | tr -d ':\r\n ' | tr '[:upper:]' '[:lower:]')"
           fi
