@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Enterprise Zero-Trust Network Security Policy:
+         1. Strictly blocks all unencrypted HTTP cleartext traffic across the entire application.
+         2. Enforces system Certificate Authority trust anchors only (rejects user-installed MITM proxy CAs
+            such as Charles Proxy, Fiddler, Burp Suite, and HttpCanary).
+         3. Enforces Certificate Transparency (CT) log verification and SPKI SHA-256 backup pins. -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">googleapis.com</domain>
+        <domain includeSubdomains="true">firebaseio.com</domain>
+        <domain includeSubdomains="true">firebaseinstallations.googleapis.com</domain>
+        <domain includeSubdomains="true">firestore.googleapis.com</domain>
+        <domain includeSubdomains="true">identitytoolkit.googleapis.com</domain>
+        <domain includeSubdomains="true">securetoken.googleapis.com</domain>
+        <certificateTransparency enabled="true" />
+        <pin-set expiration="2028-12-31">
+            <pin digest="SHA-256">hxqRlPTu1bMS/0DITB1SSu0vd4u/8l8TjPgfaAp63Gc=</pin>
+            <pin digest="SHA-256">Vfd95BwDeSQo+NUYxVEEIlvkOlWY2SalKK1lPhzOx78=</pin>
+            <pin digest="SHA-256">f8NnEFZxQ4ExFOhSN7EiFWtiudZQVD2oY60uauV/n78=</pin>
+            <pin digest="SHA-256">YPtHaftLw6/0vnc2BnNKGF54xiCA28WFcccjkA4ypCM=</pin>
+        </pin-set>
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </domain-config>
+</network-security-config>

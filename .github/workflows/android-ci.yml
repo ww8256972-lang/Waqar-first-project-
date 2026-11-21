@@ -1,0 +1,308 @@
+name: Android CI — Waqar Computer Institute
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  JAVA_TOOL_OPTIONS: "-Dfile.encoding=UTF-8 -Djava.awt.headless=true"
+
+jobs:
+  build-and-test:
+    name: Build, Lint, Test & Package Debug + Release APKs
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      # 1. Checkout repository
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2. Set up compatible JDK (Temurin 21 for AGP 9.1.1 & Gradle 9.3.1)
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      # 3. Configure Android SDK (Explicitly override default 'packages: tools platform-tools' to prevent obsolete 'tools' package failure)
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: 11076708
+          packages: 'cmdline-tools;latest platform-tools'
+          accept-android-sdk-licenses: true
+
+      # 4 & 5. Accept Android SDK licenses & install required SDK platforms and build-tools
+      - name: Accept SDK Licenses & Install Required Android SDK Packages
+        run: |
+          export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          export ANDROID_HOME="$ANDROID_SDK_ROOT"
+          echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}" >> "$GITHUB_ENV"
+          echo "ANDROID_HOME=${ANDROID_HOME}" >> "$GITHUB_ENV"
+          SDKMANAGER="${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER="$(which sdkmanager)"
+          fi
+          yes | "$SDKMANAGER" --sdk_root="$ANDROID_SDK_ROOT" --licenses > /dev/null || true
+          "$SDKMANAGER" --sdk_root="$ANDROID_SDK_ROOT" \
+            "platform-tools" \
+            "platforms;android-36" \
+            "platforms;android-36.1" \
+            "build-tools;36.0.0" \
+            "cmake;3.22.1" \
+            "ndk;27.0.12077973"
+
+      # 6. Validate Gradle Wrapper & Prepare Debug + Release Signing Keystores
+      - name: Validate Gradle Wrapper & Prepare Signing Keystores
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          CI_EXPECTED_CERT_SHA256: ${{ secrets.EXPECTED_CERT_SHA256 }}
+          CI_EXPECTED_DEX_CRC32: ${{ secrets.EXPECTED_DEX_CRC32 }}
+          CI_AGORA_APP_ID: ${{ secrets.AGORA_APP_ID }}
+          CI_EXAM_ANSWER_HMAC_PEPPER: ${{ secrets.EXAM_ANSWER_HMAC_PEPPER }}
+          CI_EXAM_GRADING_ENDPOINT_URL: ${{ secrets.EXAM_GRADING_ENDPOINT_URL }}
+          CI_PORTAL_AUTH_TOKEN_ENDPOINT_URL: ${{ secrets.PORTAL_AUTH_TOKEN_ENDPOINT_URL }}
+          CI_GROK_API_KEY: ${{ secrets.GROK_API_KEY || secrets.XAI_API_KEY }}
+          CI_GROK_API_URL: ${{ secrets.GROK_API_URL }}
+          CI_AI_PROXY_ENDPOINT_URL: ${{ secrets.AI_PROXY_ENDPOINT_URL }}
+          AUTO_GITHUB_OTA_OWNER: ${{ github.repository_owner }}
+          AUTO_GITHUB_OTA_REPO: ${{ github.event.repository.name }}
+        run: |
+          if [ -f "gradle/wrapper/gradle-wrapper.properties" ]; then
+            echo "Verified gradle-wrapper.properties:"
+            cat gradle/wrapper/gradle-wrapper.properties
+          fi
+          if [ -f "gradlew" ]; then
+            chmod +x gradlew
+          fi
+          if [ ! -f debug.keystore ] && [ -f debug.keystore.base64 ]; then
+            base64 -d debug.keystore.base64 > debug.keystore
+          elif [ ! -f debug.keystore ]; then
+            keytool -genkeypair -v \
+              -keystore debug.keystore \
+              -storepass android \
+              -alias androiddebugkey \
+              -keypass android \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+          fi
+          if [ -n "$RELEASE_KEYSTORE_BASE64" ]; then
+            echo "$RELEASE_KEYSTORE_BASE64" | base64 -d > my-upload-key.jks
+            EFF_STORE_PASS="${RELEASE_STORE_PASSWORD:-waqar_release_pass}"
+            EFF_KEY_PASS="${RELEASE_KEY_PASSWORD:-waqar_release_pass}"
+          else
+            EFF_STORE_PASS="waqar_release_pass"
+            EFF_KEY_PASS="waqar_release_pass"
+            keytool -genkeypair -v \
+              -keystore my-upload-key.jks \
+              -storepass "$EFF_STORE_PASS" \
+              -alias upload \
+              -keypass "$EFF_KEY_PASS" \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -dname "CN=Waqar Computer Institute,OU=ERP,O=WCI,L=Lucknow,S=UP,C=IN"
+          fi
+          echo "KEYSTORE_PATH=${GITHUB_WORKSPACE}/my-upload-key.jks" >> "$GITHUB_ENV"
+          echo "STORE_PASSWORD=${EFF_STORE_PASS}" >> "$GITHUB_ENV"
+          echo "KEY_PASSWORD=${EFF_KEY_PASS}" >> "$GITHUB_ENV"
+
+          CERT_SHA256="$(keytool -list -v -keystore my-upload-key.jks -alias upload -storepass "$EFF_STORE_PASS" 2>/dev/null | sed -n 's/.*SHA256:[[:space:]]*//Ip' | head -n 1 | tr -d ':\r\n ' | tr '[:upper:]' '[:lower:]')"
+          if [ -z "$CERT_SHA256" ]; then
+            CERT_SHA256="$(keytool -list -v -keystore my-upload-key.jks -storepass "$EFF_STORE_PASS" 2>/dev/null | sed -n 's/.*SHA256:[[:space:]]*//Ip' | head -n 1 | tr -d ':\r\n ' | tr '[:upper:]' '[:lower:]')"
+          fi
+          if [ -z "$CERT_SHA256" ] && [ -n "$CI_EXPECTED_CERT_SHA256" ]; then
+            CERT_SHA256="$(echo "$CI_EXPECTED_CERT_SHA256" | tr -d ':\r\n ' | tr '[:upper:]' '[:lower:]')"
+          fi
+          EFF_CERT_SHA256="${CERT_SHA256:-2a92dc2ca40d67a8edbe6740e3ddcd288a0f7c3e5b7a62e0133a2ce986f111d5}"
+          EFF_DEX_CRC32="${CI_EXPECTED_DEX_CRC32:-AUTO_BASELINE}"
+          EFF_HMAC_PEPPER="${CI_EXAM_ANSWER_HMAC_PEPPER:-WCI_EXAM_BLIND_PEPPER_2026_V1}"
+          EFF_GRADING_URL="${CI_EXAM_GRADING_ENDPOINT_URL:-https://asia-east1-gen-lang-client-0309263247.cloudfunctions.net/gradeExamSubmission}"
+          EFF_PORTAL_TOKEN_URL="${CI_PORTAL_AUTH_TOKEN_ENDPOINT_URL:-https://asia-east1-gen-lang-client-0309263247.cloudfunctions.net/issuePortalCustomToken}"
+          EFF_OTA_OWNER="${AUTO_GITHUB_OTA_OWNER:-ww8256972}"
+          EFF_OTA_REPO="${AUTO_GITHUB_OTA_REPO:-Waqar-first-project-}"
+          EFF_AGORA_ID="${CI_AGORA_APP_ID:-802667ef48b4460784c048aaf9bfe8e1}"
+          EFF_GROK_KEY="${CI_GROK_API_KEY:-}"
+          EFF_GROK_URL="${CI_GROK_API_URL:-https://api.x.ai/v1/chat/completions}"
+          EFF_AI_PROXY_URL="${CI_AI_PROXY_ENDPOINT_URL:-https://asia-east1-gen-lang-client-0309263247.cloudfunctions.net/streamInstituteAiTutor}"
+
+          {
+            echo "EXPECTED_CERT_SHA256=${EFF_CERT_SHA256}"
+            echo "EXPECTED_DEX_CRC32=${EFF_DEX_CRC32}"
+            echo "EXAM_ANSWER_HMAC_PEPPER=${EFF_HMAC_PEPPER}"
+            echo "EXAM_GRADING_ENDPOINT_URL=${EFF_GRADING_URL}"
+            echo "PORTAL_AUTH_TOKEN_ENDPOINT_URL=${EFF_PORTAL_TOKEN_URL}"
+            echo "GITHUB_OTA_OWNER=${EFF_OTA_OWNER}"
+            echo "GITHUB_OTA_REPO=${EFF_OTA_REPO}"
+            echo "AGORA_APP_ID=${EFF_AGORA_ID}"
+            echo "AI_PROXY_ENDPOINT_URL=${EFF_AI_PROXY_URL}"
+            echo "GROK_API_URL=${EFF_GROK_URL}"
+          } >> "$GITHUB_ENV"
+
+          {
+            printf "AGORA_APP_ID=%s\n" "${EFF_AGORA_ID}"
+            printf "AGORA_TEMP_TOKEN=%s\n" "AGORA_TEMP_TOKEN_DEFAULT_VALUE"
+            printf "EXPECTED_CERT_SHA256=%s\n" "${EFF_CERT_SHA256}"
+            printf "EXPECTED_DEX_CRC32=%s\n" "${EFF_DEX_CRC32}"
+            printf "EXAM_ANSWER_HMAC_PEPPER=%s\n" "${EFF_HMAC_PEPPER}"
+            printf "EXAM_GRADING_ENDPOINT_URL=%s\n" "${EFF_GRADING_URL}"
+            printf "PORTAL_AUTH_TOKEN_ENDPOINT_URL=%s\n" "${EFF_PORTAL_TOKEN_URL}"
+            printf "AI_PROXY_ENDPOINT_URL=%s\n" "${EFF_AI_PROXY_URL}"
+            printf "GROK_API_URL=%s\n" "${EFF_GROK_URL}"
+            if [ -n "$EFF_GROK_KEY" ]; then
+              printf "GROK_API_KEY=%s\n" "${EFF_GROK_KEY}"
+            fi
+            printf "GITHUB_OTA_OWNER=%s\n" "${EFF_OTA_OWNER}"
+            printf "GITHUB_OTA_REPO=%s\n" "${EFF_OTA_REPO}"
+          } > .env
+
+      # 7. Set up Gradle 9.3.1 with build caching
+      - name: Set up Gradle 9.3.1 with Caching
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.3.1'
+          cache-read-only: false
+
+      # 8. Validate Gradle project configuration
+      - name: Validate Project Configuration
+        run: |
+          gradle help --stacktrace
+
+      # 9. Run KSP & Kotlin compilation (with explicit compiler error diagnostics)
+      - name: Compile Debug Kotlin Sources
+        run: |
+          set -o pipefail
+          gradle :app:kspDebugKotlin :app:compileDebugKotlin --stacktrace 2>&1 | tee kotlin-compile.log || {
+            echo "=== FIRST KOTLIN / KSP COMPILER ERRORS ==="
+            grep -E "^e: |Unresolved reference|Type mismatch|Cannot find symbol|Exception in thread|OutOfMemoryError" kotlin-compile.log || true
+            exit 1
+          }
+
+      # 10. Run Android Lint check
+      - name: Run Android Lint
+        run: |
+          gradle :app:lintDebug --stacktrace
+
+      # 11. Run Unit Tests
+      - name: Run Unit Tests
+        run: |
+          gradle :app:testDebugUnitTest --stacktrace
+
+      # 12. Assemble Debug APK & Signed Release APK
+      - name: Assemble Debug & Release APKs
+        run: |
+          gradle :app:assembleDebug :app:assembleRelease -PenableNativeCxxBuild=true --stacktrace
+
+      # 13. Verify Debug & Release APKs exist on disk
+      - name: Verify Generated Debug APK Exists
+        run: |
+          DEBUG_APK="app/build/outputs/apk/debug/app-debug.apk"
+          RELEASE_APK="app/build/outputs/apk/release/app-release.apk"
+          if [ ! -f "$DEBUG_APK" ]; then
+            echo "ERROR: Expected Debug APK not found at $DEBUG_APK"
+            exit 1
+          fi
+          if [ ! -f "$RELEASE_APK" ]; then
+            echo "ERROR: Expected Release APK not found at $RELEASE_APK"
+            exit 1
+          fi
+          ls -lh "$DEBUG_APK" "$RELEASE_APK"
+
+      # 14. Upload Debug APK Artifact
+      - name: Upload Debug APK Artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: waqar-institute-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      # 15. Upload Signed Release APK Artifact
+      - name: Upload Release APK Artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: waqar-institute-release-apk
+          path: app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      # 16. Cleanup Temporary Keystores & .env Secrets
+      - name: Cleanup Keystores & .env Secrets
+        if: always()
+        run: |
+          for secret_file in my-upload-key.jks debug.keystore .env kotlin-compile.log; do
+            if [ -f "$secret_file" ]; then
+              shred -u "$secret_file" 2>/dev/null || rm -f "$secret_file"
+            fi
+          done
+
+  deploy-firebase-hosting:
+    name: Deploy Verification Portal to Firebase Hosting
+    needs: build-and-test
+    if: success() && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: firebase-hosting-deploy-gen-lang-client-0309263247
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Verify Firebase Hosting Configuration & Credentials
+        id: check_hosting
+        env:
+          HAS_PRIMARY_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
+          HAS_PROJECT_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GEN_LANG_CLIENT_0309263247 != '' }}
+          HAS_FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN != '' }}
+        run: |
+          if [ ! -f "firebase.json" ] || [ ! -f ".firebaserc" ]; then
+            echo "ERROR: Missing firebase.json or .firebaserc."
+            exit 1
+          fi
+          if [ ! -f "firebase/hosting-prod/verify/index.html" ] || [ ! -f "firebase/hosting-prod/404.html" ]; then
+            echo "ERROR: Missing Certificate Verification Portal production files in firebase/hosting-prod."
+            exit 1
+          fi
+          if grep -rnE "AUTH_FLOW_TEST_COOKIE_NAME|<title>Cookie check</title>" firebase/hosting-prod/; then
+            echo "ERROR: Template or cookie-check HTML detected inside firebase/hosting-prod. Aborting Hosting deployment."
+            exit 1
+          fi
+          if [ "$HAS_PRIMARY_SA" = "true" ] || [ "$HAS_PROJECT_SA" = "true" ]; then
+            echo "auth_mode=service_account" >> "$GITHUB_OUTPUT"
+          elif [ "$HAS_FIREBASE_TOKEN" = "true" ]; then
+            echo "auth_mode=firebase_token" >> "$GITHUB_OUTPUT"
+          else
+            echo "auth_mode=none" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Firebase Hosting Secret Not Configured::Skipping live Firebase Hosting deployment because FIREBASE_SERVICE_ACCOUNT, FIREBASE_SERVICE_ACCOUNT_GEN_LANG_CLIENT_0309263247, or FIREBASE_TOKEN is not set in GitHub Repository Secrets (Settings -> Secrets and variables -> Actions)."
+          fi
+
+      - name: Deploy to Firebase Hosting (Service Account)
+        if: steps.check_hosting.outputs.auth_mode == 'service_account'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT || secrets.FIREBASE_SERVICE_ACCOUNT_GEN_LANG_CLIENT_0309263247 }}
+          channelId: live
+          projectId: gen-lang-client-0309263247
+
+      - name: Deploy to Firebase Hosting (CLI Token)
+        if: steps.check_hosting.outputs.auth_mode == 'firebase_token'
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          npx --yes firebase-tools deploy --only hosting --project gen-lang-client-0309263247 --non-interactive

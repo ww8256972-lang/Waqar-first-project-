@@ -1,0 +1,1032 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================================================================
+    // GLOBAL HELPER FUNCTIONS (Strict Zero-Trust — ZERO request.auth == null)
+    // =========================================================================
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAuthenticated() {
+      return isSignedIn();
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function role() {
+      return (isSignedIn() && 'role' in request.auth.token && request.auth.token.role is string)
+        ? request.auth.token.role.lower()
+        : '';
+    }
+
+    function isBootstrappedAdminEmail() {
+      return isSignedIn() &&
+        'email' in request.auth.token &&
+        request.auth.token.email is string && (
+          (request.auth.token.email == 'samdkhan8256972@gmail.com' &&
+           'email_verified' in request.auth.token &&
+           request.auth.token.email_verified == true) ||
+          request.auth.token.email == 'waqar@portal.waqarinstitute.in'
+        );
+    }
+
+    function userDocExists() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function currentUserRole() {
+      return role() != ''
+        ? role()
+        : (isBootstrappedAdminEmail()
+            ? 'admin'
+            : (userDocExists() && ('role' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data)
+                ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role.lower()
+                : 'student'));
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        role() == 'admin' ||
+        isBootstrappedAdminEmail() ||
+        (userDocExists() && (
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('isAdmin', false) == true ||
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', '') == 'admin'
+        ))
+      );
+    }
+
+    function isTeacher() {
+      return isSignedIn() && (
+        isAdmin() ||
+        role() == 'teacher' ||
+        currentUserRole() == 'teacher'
+      );
+    }
+
+    function isStaff() {
+      return isAdmin() || isTeacher();
+    }
+
+    function isStaffOrAdmin() {
+      return isStaff();
+    }
+
+    function linkedEntityId() {
+      return (isSignedIn() && 'linkedEntityId' in request.auth.token && request.auth.token.linkedEntityId is string && request.auth.token.linkedEntityId != '')
+        ? request.auth.token.linkedEntityId
+        : (userDocExists() && ('linkedEntityId' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.linkedEntityId is string
+            ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.linkedEntityId
+            : '');
+    }
+
+    function matchesAuthenticatedIdentity(entityOrUid) {
+      return isSignedIn() && entityOrUid is string && entityOrUid.size() > 0 && (
+        request.auth.uid == entityOrUid ||
+        (linkedEntityId() != '' && linkedEntityId() == entityOrUid)
+      );
+    }
+
+    function isValidString(val, minLen, maxLen) {
+      return val is string && val.size() >= minLen && val.size() <= maxLen;
+    }
+
+    function isValidOptionalString(data, field, maxLen) {
+      return !(field in data) || (data[field] is string && data[field].size() <= maxLen);
+    }
+
+    // Server Timestamp Clock-Drift Lock
+    function isValidTimestamp(ts) {
+      return (ts is timestamp && ts <= request.time + duration.value(5, 'm')) ||
+        (ts is int && ts >= (request.time.toMillis() - 300000) && ts <= (request.time.toMillis() + 300000));
+    }
+
+    function isNonNegativeInt(val) {
+      return val is int && val >= 0 && val <= 100000000000;
+    }
+
+    function hasExactKeys(data, keys) {
+      return data.keys().hasAll(keys) && data.keys().hasOnly(keys);
+    }
+
+    // =========================================================================
+    // COLLECTION SCHEMA VALIDATORS
+    // =========================================================================
+
+    function isValidUserProfile(data) {
+      let requiredKeys = ['uid', 'email', 'displayName', 'role', 'username', 'phone', 'mfaEnabled', 'totpSecret', 'linkedEntityId', 'createdAt'];
+      let allowedKeys = ['uid', 'email', 'displayName', 'role', 'username', 'phone', 'mfaEnabled', 'totpSecret', 'linkedEntityId', 'isStudent', 'isTeacher', 'isParent', 'isAdmin', 'portalRoles', 'activeSessionToken', 'activeDeviceId', 'lastActiveTimestamp', 'createdAt'];
+      return data.keys().hasAll(requiredKeys) &&
+        data.keys().hasOnly(allowedKeys) &&
+        isValidString(data.uid, 1, 128) &&
+        isValidString(data.email, 0, 150) &&
+        isValidString(data.displayName, 1, 100) &&
+        data.role in ['admin', 'student', 'teacher', 'parent'] &&
+        isValidString(data.username, 0, 80) &&
+        isValidString(data.phone, 0, 30) &&
+        data.mfaEnabled is bool &&
+        isValidString(data.totpSecret, 0, 128) &&
+        isValidString(data.linkedEntityId, 0, 128) &&
+        (!('isStudent' in data) || data.isStudent is bool) &&
+        (!('isTeacher' in data) || data.isTeacher is bool) &&
+        (!('isParent' in data) || data.isParent is bool) &&
+        (!('isAdmin' in data) || data.isAdmin is bool) &&
+        (!('portalRoles' in data) || (data.portalRoles is list && data.portalRoles.size() <= 8)) &&
+        isValidOptionalString(data, 'activeSessionToken', 128) &&
+        isValidOptionalString(data, 'activeDeviceId', 128) &&
+        (!('lastActiveTimestamp' in data) || data.lastActiveTimestamp == null || isValidTimestamp(data.lastActiveTimestamp)) &&
+        isValidTimestamp(data.createdAt);
+    }
+
+    function isValidUsernameAlias(data) {
+      let keys = ['username', 'uid', 'role', 'email', 'createdAt'];
+      return hasExactKeys(data, keys) &&
+        isValidString(data.username, 2, 80) &&
+        isValidString(data.uid, 1, 128) &&
+        data.role in ['admin', 'student', 'teacher', 'parent'] &&
+        isValidString(data.email, 0, 150) &&
+        isValidTimestamp(data.createdAt);
+    }
+
+    function isValidPortalCredential(data) {
+      let requiredKeys = ['username', 'passwordHash', 'passwordSalt', 'role', 'linkedEntityId', 'displayName', 'assignedByUid', 'active', 'createdAt'];
+      let allowedKeys = ['username', 'passwordHash', 'passwordSalt', 'pbkdf2ParityHash', 'pbkdf2ParitySalt', 'portalUid', 'role', 'linkedEntityId', 'displayName', 'assignedByUid', 'active', 'isStudent', 'isTeacher', 'isParent', 'isAdmin', 'portalRoles', 'createdAt'];
+      return data.keys().hasAll(requiredKeys) &&
+        data.keys().hasOnly(allowedKeys) &&
+        isValidString(data.username, 2, 80) &&
+        isValidString(data.passwordHash, 16, 256) &&
+        isValidString(data.passwordSalt, 8, 128) &&
+        isValidOptionalString(data, 'pbkdf2ParityHash', 256) &&
+        isValidOptionalString(data, 'pbkdf2ParitySalt', 128) &&
+        isValidOptionalString(data, 'portalUid', 128) &&
+        data.role in ['admin', 'student', 'teacher', 'parent'] &&
+        isValidString(data.linkedEntityId, 1, 128) &&
+        isValidString(data.displayName, 1, 100) &&
+        isValidString(data.assignedByUid, 1, 128) &&
+        data.active is bool &&
+        (!('isStudent' in data) || data.isStudent is bool) &&
+        (!('isTeacher' in data) || data.isTeacher is bool) &&
+        (!('isParent' in data) || data.isParent is bool) &&
+        (!('isAdmin' in data) || data.isAdmin is bool) &&
+        (!('portalRoles' in data) || (data.portalRoles is list && data.portalRoles.size() <= 8)) &&
+        isValidTimestamp(data.createdAt);
+    }
+
+    function isValidCourseRecord(data) {
+      let allowedKeys = ['id', 'code', 'title', 'category', 'durationMonths', 'totalFeePaise', 'feePaise', 'fee', 'syllabusSummary', 'syllabusModules', 'totalModules', 'instructorName', 'enrolledCount', 'active', 'ownerUid', 'createdAt'];
+      return data.keys().hasAll(['id', 'code', 'title', 'category', 'durationMonths', 'syllabusSummary', 'active', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
+        isValidString(data.id, 1, 80) &&
+        isValidString(data.code, 2, 24) &&
+        isValidString(data.title, 2, 120) &&
+        isValidString(data.category, 2, 60) &&
+        data.durationMonths is int && data.durationMonths >= 1 && data.durationMonths <= 60 &&
+        isValidString(data.syllabusSummary, 0, 2000) &&
+        data.active is bool &&
+        isValidTimestamp(data.createdAt);
+    }
+
+    function isValidBatchRecord(data) {
+      let allowedKeys = ['id', 'code', 'name', 'courseId', 'courseName', 'teacherId', 'teacherName', 'batchAdminTeacherId', 'batchAdminTeacherName', 'canBatchAdminTakeAttendance', 'canBatchAdminScheduleExams', 'roomName', 'daysOfWeek', 'startTime', 'endTime', 'schedule', 'capacity', 'enrolledCount', 'studentCount', 'status', 'ownerUid', 'createdAt'];
+      return data.keys().hasAll(['id', 'code', 'name', 'courseName', 'roomName', 'daysOfWeek', 'startTime', 'endTime', 'capacity', 'enrolledCount', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
+        isValidString(data.id, 1, 80) &&
+        isValidString(data.code, 2, 30) &&
+        isValidString(data.name, 2, 100) &&
+        isValidString(data.courseName, 1, 120) &&
+        isValidString(data.roomName, 1, 60) &&
+        isValidString(data.daysOfWeek, 1, 60) &&
+        isValidString(data.startTime, 1, 20) &&
+        isValidString(data.endTime, 1, 20) &&
+        data.capacity is int && data.capacity >= 1 && data.capacity <= 500 &&
+        isNonNegativeInt(data.enrolledCount) &&
+        isValidTimestamp(data.createdAt);
+    }
+
+    function isValidStudentRecord(data) {
+      let keys = ['id', 'enrollmentNo', 'fullName', 'email', 'phone', 'guardianName', 'guardianPhone', 'courseId', 'courseName', 'batchId', 'batchName', 'status', 'totalFeePaise', 'paidFeePaise', 'attendancePercent', 'photoUri', 'attachmentName', 'ownerUid', 'createdAt'];
+      return data.keys().hasAll(['id', 'enrollmentNo', 'fullName', 'email', 'phone', 'guardianName', 'guardianPhone', 'courseId', 'courseName', 'batchId', 'batchName', 'status', 'totalFeePaise', 'paidFeePaise', 'attendancePercent', 'ownerUid', 'createdAt']) &&
+        data.keys().hasOnly(keys) &&
+        isValidString(data.id, 1, 80) &&
+        isValidString(data.enrollmentNo, 2, 40) &&
+        isValidString(data.fullName, 2, 100) &&
+        isValidString(data.email, 0, 150) &&
+        isValidString(data.phone, 0, 30) &&
+        isValidString(data.guardianName, 0, 100) &&
+        isValidString(data.guardianPhone, 0, 30) &&
+        isValidString(data.courseId, 0, 80) &&
+        isValidString(data.courseName, 1, 120) &&
+        isValidString(data.batchId, 0, 80) &&
+        isValidString(data.batchName, 0, 100) &&
+        data.status in ['ACTIVE', 'ON_LEAVE', 'ALUMNI', 'DROPPED', 'INACTIVE', 'GRADUATED', 'SUSPENDED', 'SUSPENDED_SECURITY'] &&
+        isNonNegativeInt(data.totalFeePaise) &&
+        isNonNegativeInt(data.paidFeePaise) &&
+        data.attendancePercent is int && data.attendancePercent >= 0 && data.attendancePercent <= 100 &&
+        isValidOptionalString(data, 'photoUri', 100000) &&
+        isValidOptionalString(data, 'attachmentName', 500) &&
+        isValidString(data.ownerUid, 1, 128) &&
+        isValidTimestamp(data.createdAt);
+    }
+
+    function isValidEnquiryRecord(data) {
+      let allowedKeys = ['id', 'applicantName', 'prospectName', 'phone', 'email', 'interestedCourse', 'source', 'stage', 'status', 'counsellorName', 'assignedTo', 'followUpDate', 'notes', 'ownerUid', 'createdAt'];
+      return data.keys().hasAll(['id', 'phone', 'email', 'interestedCourse', 'source', 'stage', 'notes', 'followUpDate', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
+        isValidString(data.id, 1, 80) &&
+        isValidString(data.phone, 3, 30) &&
+        isValidString(data.email, 0, 150) &&
+        isValidString(data.interestedCourse, 1, 120) &&
+        isValidString(data.source, 1, 60) &&
+        data.stage in ['NEW', 'CONTACTED', 'COUNSELED', 'DEMO_SCHEDULED', 'CONVERTED', 'LOST'] &&
+        isValidString(data.notes, 0, 1000) &&
+        isValidString(data.followUpDate, 0, 30) &&
+        isValidTimestamp(data.createdAt);
+    }
+
+    function isValidAttendanceRecord(data) {
+      let keys = ['id', 'targetType', 'targetId', 'targetName', 'batchId', 'batchName', 'dateIso', 'status', 'method', 'remarks', 'markedByUid', 'createdAt'];
+      return hasExactKeys(data, keys) &&
+        isValidString(data.id, 1, 80) &&
+        data.targetType in ['STUDENT', 'STAFF'] &&
+        isValidString(data.targetId, 1, 80) &&
+        isValidString(data.targetName, 1, 100) &&
+        isValidString(data.batchId, 0, 80) &&
+        isValidString(data.batchName, 0, 100) &&
+        isValidString(data.dateIso, 4, 25) &&
+        data.status in ['PRESENT', 'ABSENT', 'LATE', 'LEAVE'] &&
+        data.method in ['MANUAL', 'QR_SCAN', 'BIOMETRIC', 'QR', 'RFID', 'GEOFENCE', 'BATCH_ROSTER'] &&
+        isValidString(data.remarks, 0, 300) &&
+        isValidString(data.markedByUid, 1, 128) &&
+        isValidTimestamp(data.createdAt);
+    }
+
+    function isValidFeeInvoice(data) {
+      let allowedKeys = ['id', 'receiptNo', 'studentId', 'studentUid', 'studentName', 'courseName', 'title', 'installmentLabel', 'totalAmountPaise', 'paidAmountPaise', 'discountPaise', 'finePaise', 'paymentMode', 'status', 'dueDateIso', 'paidAtIso', 'ownerUid', 'createdByUid', 'createdAt'];
+      return data.keys().hasAll(['id', 'receiptNo', 'studentId', 'studentName', 'courseName', 'totalAmountPaise', 'paidAmountPaise', 'discountPaise', 'finePaise', 'paymentMode', 'status', 'dueDateIso', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
+        isValidString(data.id, 1, 80) &&
+        isValidString(data.receiptNo, 2, 40) &&
+        isValidString(data.studentId, 1, 80) &&
+        isValidString(data.studentName, 1, 100) &&
+        isValidString(data.courseName, 1, 120) &&
+        isNonNegativeInt(data.totalAmountPaise) &&
+        isNonNegativeInt(data.paidAmountPaise) &&
+        isNonNegativeInt(data.discountPaise) &&
+        isNonNegativeInt(data.finePaise) &&
+        data.paymentMode in ['UPI', 'CASH', 'CARD', 'BANK_TRANSFER', 'SCHOLARSHIP'] &&
+        data.status in ['PAID', 'PARTIAL', 'PENDING', 'DUE', 'OVERDUE'] &&
+        isValidString(data.dueDateIso, 0, 25) &&
+        isValidTimestamp(data.createdAt);
+    }
+
+    function isValidLedgerEntry(data) {
+      let allowedKeys = ['id', 'entryType', 'type', 'category', 'title', 'vendorOrParty', 'amountPaise', 'amount', 'paymentMode', 'referenceNo', 'notes', 'description', 'dateIso', 'recordedByUid', 'ownerUid', 'createdAt'];
+      return data.keys().hasAll(['id', 'category', 'title', 'amountPaise', 'paymentMode', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
+        isValidString(data.id, 1, 80) &&
+        isValidString(data.title, 2, 140) &&
+        isValidString(data.category, 2, 60) &&
+        isNonNegativeInt(data.amountPaise) &&
+        isValidString(data.paymentMode, 1, 40) &&
+        isValidTimestamp(data.createdAt);
+    }
+
+    function isValidExamPaper(data) {
+      let allowedKeys = ['id', 'title', 'courseId', 'courseName', 'batchId', 'batchName', 'examType', 'durationMinutes', 'durationSeconds', 'startTime24h', 'scheduledStartEpochMs', 'autoAssignLabPcSeats', 'createdByRole', 'totalMarks', 'passingMarks', 'scheduledDateIso', 'questionsJson', 'status', 'published', 'ownerUid', 'createdAt'];
+      return data.keys().hasAll(['id', 'title', 'courseName', 'batchName', 'durationMinutes', 'totalMarks', 'passingMarks', 'scheduledDateIso', 'questionsJson', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
+        isValidString(data.id, 1, 80) &&
+        isValidString(data.title, 2, 140) &&
+        isValidString(data.courseName, 1, 120) &&
+        isValidString(data.batchName, 0, 100) &&
+        data.durationMinutes is int && data.durationMinutes >= 0 && data.durationMinutes <= 360 &&
+        (!('durationSeconds' in data) || (data.durationSeconds is int && data.durationSeconds >= 0 && data.durationSeconds <= 21600)) &&
+        data.totalMarks is int && data.totalMarks >= 1 && data.totalMarks <= 1000 &&
+        data.passingMarks is int && data.passingMarks >= 0 && data.passingMarks <= data.totalMarks &&
+        isValidString(data.scheduledDateIso, 0, 30) &&
+        isValidString(data.questionsJson, 2, 250000) &&
+        isValidTimestamp(data.createdAt);
+    }
+
+    function isValidExamSubmission(data) {
+      let allowedKeys = ['id', 'examId', 'examTitle', 'studentId', 'studentName', 'marksObtained', 'totalMarks', 'exactPercentage', 'formattedPercentage', 'correctCount', 'totalQuestions', 'grade', 'rank', 'status', 'remarks', 'violationCount', 'paperWatermark', 'hashChainHead', 'ownerUid', 'submittedAt', 'gradedAt', 'createdAt'];
+      return data.keys().hasAll(['id', 'examId', 'examTitle', 'studentId', 'studentName', 'marksObtained', 'totalMarks', 'grade', 'rank']) &&
+        data.keys().hasOnly(allowedKeys) &&
+        isValidString(data.id, 1, 80) &&
+        isValidString(data.examId, 1, 80) &&
+        isValidString(data.examTitle, 1, 140) &&
+        isValidString(data.studentId, 1, 80) &&
+        isValidString(data.studentName, 1, 100) &&
+        data.marksObtained is int && data.marksObtained >= -100 && data.marksObtained <= 1000 &&
+        data.totalMarks is int && data.totalMarks >= 1 && data.totalMarks <= 1000 &&
+        isValidString(data.grade, 1, 10) &&
+        data.rank is int && data.rank >= 0;
+    }
+
+    function isValidStudyMaterial(data) {
+      let allowedKeys = ['id', 'title', 'courseName', 'batchName', 'moduleName', 'materialType', 'contentUrlOrBody', 'contentBody', 'externalUrl', 'dueDateIso', 'maxMarks', 'downloadsCount', 'drmProtected', 'attachmentUri', 'uploadedBy', 'ownerUid', 'createdAt'];
+      return data.keys().hasAll(['id', 'title', 'courseName', 'materialType', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
+        isValidString(data.id, 1, 80) &&
+        isValidString(data.title, 2, 140) &&
+        isValidString(data.courseName, 1, 120) &&
+        isValidTimestamp(data.createdAt);
+    }
+
+    function isValidCertificateRecord(data) {
+      let allowedKeys = ['id', 'serialNo', 'certificateNo', 'certType', 'studentId', 'studentName', 'courseName', 'grade', 'issueDateIso', 'verificationHash', 'revoked', 'ownerUid', 'createdAt'];
+      return data.keys().hasAll(['id', 'studentId', 'studentName', 'courseName', 'grade', 'issueDateIso', 'verificationHash', 'revoked', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
+        isValidString(data.id, 1, 80) &&
+        isValidString(data.studentId, 1, 80) &&
+        isValidString(data.studentName, 2, 100) &&
+        isValidString(data.courseName, 2, 120) &&
+        isValidString(data.grade, 1, 15) &&
+        isValidString(data.issueDateIso, 4, 25) &&
+        isValidString(data.verificationHash, 6, 128) &&
+        data.revoked is bool &&
+        isValidTimestamp(data.createdAt);
+    }
+
+    function isValidStaffMember(data) {
+      let allowedKeys = ['id', 'employeeCode', 'fullName', 'email', 'phone', 'designation', 'department', 'monthlySalaryPaise', 'paidThisMonthPaise', 'attendancePercent', 'joiningDateIso', 'status', 'active', 'photoUri', 'teacherUsername', 'ownerUid', 'createdAt'];
+      return data.keys().hasAll(['id', 'employeeCode', 'fullName', 'designation', 'department', 'phone', 'email', 'monthlySalaryPaise', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
+        isValidString(data.id, 1, 80) &&
+        isValidString(data.employeeCode, 2, 40) &&
+        isValidString(data.fullName, 2, 100) &&
+        isValidString(data.designation, 2, 80) &&
+        isValidString(data.department, 2, 80) &&
+        isValidString(data.phone, 0, 30) &&
+        isValidString(data.email, 0, 150) &&
+        isNonNegativeInt(data.monthlySalaryPaise) &&
+        isValidOptionalString(data, 'photoUri', 100000) &&
+        isValidOptionalString(data, 'teacherUsername', 80) &&
+        isValidTimestamp(data.createdAt);
+    }
+
+    function isValidGuardianPtmNote(data) {
+      let allowedKeys = ['id', 'guardianName', 'guardianPhone', 'phone', 'email', 'relation', 'studentId', 'studentName', 'ptmNotes', 'meetingSummary', 'teacherRemarks', 'followUpAction', 'consentSigned', 'parentUsername', 'isStudent', 'isTeacher', 'isParent', 'isAdmin', 'portalRoles', 'ownerUid', 'createdAt'];
+      return data.keys().hasAll(['id', 'guardianName', 'studentId', 'studentName', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
+        isValidString(data.id, 1, 80) &&
+        isValidString(data.studentId, 1, 80) &&
+        isValidString(data.studentName, 1, 100) &&
+        isValidString(data.guardianName, 1, 100) &&
+        isValidOptionalString(data, 'parentUsername', 80) &&
+        (!('isStudent' in data) || data.isStudent is bool) &&
+        (!('isTeacher' in data) || data.isTeacher is bool) &&
+        (!('isParent' in data) || data.isParent is bool) &&
+        (!('isAdmin' in data) || data.isAdmin is bool) &&
+        (!('portalRoles' in data) || (data.portalRoles is list && data.portalRoles.size() <= 8)) &&
+        isValidTimestamp(data.createdAt);
+    }
+
+    function isValidNoticeBroadcast(data) {
+      let allowedKeys = ['id', 'title', 'body', 'messageBody', 'targetAudience', 'channel', 'priority', 'senderName', 'ownerUid', 'createdAt'];
+      return data.keys().hasAll(['id', 'title', 'targetAudience', 'channel', 'priority', 'senderName', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
+        isValidString(data.id, 1, 80) &&
+        isValidString(data.title, 2, 140) &&
+        isValidString(data.senderName, 1, 100) &&
+        isValidTimestamp(data.createdAt);
+    }
+
+    function isValidLiveClassSession(data) {
+      let allowedKeys = ['id', 'title', 'topic', 'courseName', 'batchName', 'teacherName', 'instructorName', 'meetingCode', 'meetingUrl', 'scheduledTimeIso', 'scheduledTime', 'durationMinutes', 'status', 'attendeeCount', 'activePollQuestion', 'recordingAvailable', 'ownerUid', 'createdAt'];
+      return data.keys().hasAll(['id', 'batchName', 'status', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
+        isValidString(data.id, 1, 80) &&
+        isValidTimestamp(data.createdAt);
+    }
+
+    function isValidInventoryAsset(data) {
+      let allowedKeys = ['id', 'assetCode', 'assetTag', 'name', 'itemName', 'category', 'locationLab', 'quantity', 'conditionStatus', 'assignedTo', 'purchaseCostPaise', 'unitValuePaise', 'ownerUid', 'createdAt'];
+      return data.keys().hasAll(['id', 'category', 'locationLab', 'conditionStatus', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
+        isValidString(data.id, 1, 80) &&
+        isValidTimestamp(data.createdAt);
+    }
+
+    function isValidSupportTicket(data) {
+      let allowedKeys = ['id', 'ticketNo', 'subject', 'description', 'category', 'priority', 'status', 'requesterUid', 'requesterName', 'requesterRole', 'resolutionNotes', 'npsScore', 'createdAt'];
+      return data.keys().hasAll(['id', 'requesterUid', 'requesterName', 'category', 'subject', 'description', 'priority', 'status', 'resolutionNotes', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
+        isValidString(data.id, 1, 80) &&
+        isValidString(data.requesterUid, 1, 128) &&
+        isValidString(data.requesterName, 1, 100) &&
+        isValidString(data.category, 1, 60) &&
+        isValidString(data.subject, 2, 150) &&
+        isValidString(data.description, 2, 2000) &&
+        data.priority in ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] &&
+        data.status in ['OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'] &&
+        isValidString(data.resolutionNotes, 0, 1000) &&
+        isValidTimestamp(data.createdAt);
+    }
+
+    function isValidSecurityAuditLog(data) {
+      let allowedKeys = ['id', 'actorUid', 'actorEmail', 'actorName', 'action', 'eventType', 'module', 'targetId', 'severity', 'details', 'createdAt'];
+      return data.keys().hasAll(['id', 'actorUid', 'severity', 'details', 'createdAt']) &&
+        data.keys().hasOnly(allowedKeys) &&
+        isValidString(data.id, 1, 80) &&
+        isValidString(data.actorUid, 1, 128) &&
+        data.severity in ['INFO', 'WARNING', 'HIGH', 'HIGH_INTEGRITY', 'CRITICAL'] &&
+        isValidString(data.details, 1, 1000) &&
+        isValidTimestamp(data.createdAt);
+    }
+
+    function isValidSecurityAlert(data) {
+      return data.keys().size() >= 2 &&
+        data.keys().size() <= 16 &&
+        (!('type' in data) || isValidString(data.type, 1, 80)) &&
+        (!('severity' in data) || isValidString(data.severity, 1, 40)) &&
+        (!('details' in data) || isValidString(data.details, 0, 1000));
+    }
+
+    function isValidImmutableLedgerEntry(data) {
+      return data.keys().size() >= 3 &&
+        data.keys().size() <= 20 &&
+        (!('eventType' in data) || isValidString(data.eventType, 1, 80)) &&
+        (!('actorId' in data) || isValidString(data.actorId, 1, 128)) &&
+        (!('currentEventHash' in data) || isValidString(data.currentEventHash, 8, 256));
+    }
+
+    // =========================================================================
+    // COLLECTION ACCESS RULES (Strict Zero-Trust — JWT Role Claims Enforced)
+    // =========================================================================
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isStaffOrAdmin();
+      allow list: if isStaffOrAdmin();
+      allow create: if isSignedIn() && isValidUserProfile(request.resource.data) && (
+        isAdmin() ||
+        (isOwner(userId) &&
+          request.resource.data.uid == request.auth.uid &&
+          request.resource.data.role in ['student', 'parent'] &&
+          request.resource.data.get('isAdmin', false) == false &&
+          request.resource.data.get('isTeacher', false) == false)
+      );
+      allow update: if isSignedIn() && isValidUserProfile(request.resource.data) && (
+        isAdmin() ||
+        (isOwner(userId) &&
+          request.resource.data.uid == request.auth.uid &&
+          request.resource.data.role == resource.data.role &&
+          request.resource.data.get('isAdmin', false) == false &&
+          request.resource.data.get('isTeacher', false) == resource.data.get('isTeacher', false) &&
+          (resource.data.linkedEntityId == '' || request.resource.data.linkedEntityId == resource.data.linkedEntityId))
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /usernames/{username} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() && isValidUsernameAlias(request.resource.data) &&
+        request.resource.data.username == username &&
+        (isAdmin() || isOwner(request.resource.data.uid));
+      allow delete: if isAdmin();
+    }
+
+    // Strictly Admin-only: Login verification is handled server-side by `issuePortalCustomToken`.
+    match /portalCredentials/{username} {
+      allow read: if isAdmin();
+      allow create, update: if isAdmin() &&
+        isValidPortalCredential(request.resource.data) &&
+        request.resource.data.username == username;
+      allow delete: if isAdmin();
+    }
+
+    // Dedicated Admin-only biometric face vault (replaces bundled APK JPG & open teachers collection)
+    match /adminFaces/{adminUid} {
+      allow read, write: if isAdmin();
+    }
+
+    match /sessions/{sessionId} {
+      allow read: if isStaffOrAdmin() || (isSignedIn() && (
+        sessionId == request.auth.uid ||
+        (resource != null && (resource.data.get('uid', '') == request.auth.uid || resource.data.get('userId', '') == request.auth.uid))
+      ));
+      allow create, update: if isSignedIn() && (
+        isAdmin() ||
+        request.resource.data.get('uid', '') == request.auth.uid ||
+        request.resource.data.get('userId', '') == request.auth.uid
+      ) && (
+        request.resource.data.keys().hasAll(['uid', 'actorId', 'username', 'role', 'expiresAt']) ||
+        request.resource.data.keys().hasAll(['sessionId', 'uid', 'deviceName', 'platform', 'active', 'createdAt']) ||
+        request.resource.data.keys().hasAll(['userId', 'role', 'activeDeviceToken', 'deviceModel', 'updatedAt']) ||
+        request.resource.data.keys().hasAll(['sessionId', 'uid', 'activeSessionToken', 'activeDeviceId', 'active'])
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /nonces/{nonceId} {
+      allow get, list: if false;
+      allow create: if isSignedIn()
+        && !exists(/databases/$(database)/documents/nonces/$(nonceId))
+        && request.resource.data.uid == request.auth.uid
+        && isValidTimestamp(request.resource.data.createdAt);
+      allow update, delete: if false;
+    }
+
+    match /courses/{courseId} {
+      allow read: if isSignedIn();
+      allow create, update: if isStaffOrAdmin() && isValidCourseRecord(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /batches/{batchId} {
+      allow read: if isSignedIn();
+      allow create, update: if isStaffOrAdmin() && isValidBatchRecord(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /students/{studentId} {
+      allow read: if isStaffOrAdmin() || (isSignedIn() && (
+        request.auth.uid == studentId ||
+        matchesAuthenticatedIdentity(studentId) ||
+        resource.data.get('ownerUid', '') == request.auth.uid
+      ));
+      allow create: if isStaffOrAdmin() && isValidStudentRecord(request.resource.data);
+      allow update: if isStaffOrAdmin() && isValidStudentRecord(request.resource.data) && (
+        isAdmin() ||
+        (isTeacher() && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['totalFeePaise', 'paidFeePaise', 'ownerUid']))
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /enquiries/{enquiryId} {
+      allow read: if isStaffOrAdmin();
+      allow create, update: if isStaffOrAdmin() && isValidEnquiryRecord(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /attendance/{attendanceId} {
+      allow read: if isStaffOrAdmin() || (isSignedIn() && (
+        matchesAuthenticatedIdentity(resource.data.get('targetId', '')) ||
+        resource.data.get('markedByUid', '') == request.auth.uid
+      ));
+      allow create, update: if isSignedIn() && isValidAttendanceRecord(request.resource.data) && (
+        isStaffOrAdmin() ||
+        (request.resource.data.method in ['QR', 'QR_SCAN'] && request.resource.data.markedByUid == request.auth.uid)
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /fees/{invoiceId} {
+      allow read: if isStaffOrAdmin() || (isSignedIn() && (
+        matchesAuthenticatedIdentity(resource.data.get('studentId', '')) ||
+        resource.data.get('studentUid', '') == request.auth.uid ||
+        resource.data.get('ownerUid', '') == request.auth.uid
+      ));
+      allow create, update: if isAdmin() && isValidFeeInvoice(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /feeInvoices/{invoiceId} {
+      allow read: if isStaffOrAdmin() || (isSignedIn() && (
+        resource.data.get('studentUid', '') == request.auth.uid ||
+        matchesAuthenticatedIdentity(resource.data.get('studentId', ''))
+      ));
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /feeTransactions/{txnId} {
+      allow read: if isStaffOrAdmin() || (isSignedIn() && (
+        resource.data.get('studentUid', '') == request.auth.uid ||
+        matchesAuthenticatedIdentity(resource.data.get('studentId', ''))
+      ));
+      allow create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    match /ledger/{entryId} {
+      allow read: if isAdmin();
+      allow create, update: if isAdmin() && isValidLedgerEntry(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /exams/{examId} {
+      allow read: if isSignedIn();
+      allow create, update: if isStaffOrAdmin() && isValidExamPaper(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /examResults/{submissionId} {
+      allow read: if isStaffOrAdmin() || (isSignedIn() && (
+        resource.data.get('studentId', '') == request.auth.uid ||
+        resource.data.get('ownerUid', '') == request.auth.uid ||
+        matchesAuthenticatedIdentity(resource.data.get('studentId', ''))
+      ));
+      // Authoritative grading via Cloud Function OR one-time authenticated student submission on Spark Plan
+      allow create: if isValidExamSubmission(request.resource.data) && (
+        isStaffOrAdmin() ||
+        (isSignedIn() &&
+          !exists(/databases/$(database)/documents/examResults/$(submissionId)) &&
+          submissionId == request.resource.data.examId + '_' + request.auth.uid &&
+          request.resource.data.id == submissionId &&
+          request.resource.data.ownerUid == request.auth.uid &&
+          (request.resource.data.studentId == request.auth.uid ||
+            matchesAuthenticatedIdentity(request.resource.data.studentId)))
+      );
+      allow update: if isStaffOrAdmin() && isValidExamSubmission(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /examMarks/{markId} {
+      allow read: if isStaffOrAdmin() || (isSignedIn() && matchesAuthenticatedIdentity(resource.data.get('studentId', '')));
+      allow create, update: if isStaffOrAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /materials/{materialId} {
+      allow read: if isSignedIn();
+      allow create, update: if isStaffOrAdmin() && isValidStudyMaterial(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /certificates/{certificateId} {
+      allow get: if true; // Public QR verification by exact ID ONLY
+      allow list: if isAdmin();
+      allow create, update: if isAdmin() && isValidCertificateRecord(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /staff/{staffId} {
+      allow read: if isStaffOrAdmin();
+      allow create, update: if isAdmin() && isValidStaffMember(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /payroll/{payrollId} {
+      allow read: if isStaffOrAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /teachers/{teacherId} {
+      allow read: if isStaffOrAdmin();
+      allow create, update: if isAdmin() && (
+        !('faceEmbedding' in request.resource.data) ||
+        (request.resource.data.faceEmbedding is list &&
+         request.resource.data.faceEmbedding.size() >= 12 &&
+         request.resource.data.faceEmbedding.size() <= 256)
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /guardians/{noteId} {
+      allow read: if isStaffOrAdmin() || (isSignedIn() && (
+        matchesAuthenticatedIdentity(resource.data.get('studentId', '')) ||
+        resource.data.get('ownerUid', '') == request.auth.uid
+      ));
+      allow create, update: if isStaffOrAdmin() && isValidGuardianPtmNote(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /announcements/{announcementId} {
+      allow read: if isSignedIn();
+      allow create, update: if isStaffOrAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /notices/{noticeId} {
+      allow read: if isSignedIn();
+      allow create, update: if isStaffOrAdmin() && isValidNoticeBroadcast(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn();
+      allow create, update: if isStaffOrAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /liveClasses/{sessionId} {
+      allow read: if isSignedIn();
+      allow create, update: if isStaffOrAdmin() && isValidLiveClassSession(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /assets/{assetId} {
+      allow read: if isStaffOrAdmin();
+      allow create, update: if isAdmin() && isValidInventoryAsset(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /inventory/{assetId} {
+      allow read: if isStaffOrAdmin();
+      allow create, update: if isAdmin() && isValidInventoryAsset(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /tickets/{ticketId} {
+      allow read: if isStaffOrAdmin() || (isSignedIn() && resource.data.get('requesterUid', '') == request.auth.uid);
+      allow create, update: if isSignedIn() && isValidSupportTicket(request.resource.data) && (
+        isStaffOrAdmin() ||
+        request.resource.data.requesterUid == request.auth.uid
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /aiLogs/{logId} {
+      allow read: if isStaffOrAdmin() || (isSignedIn() && resource.data.get('userId', '') == request.auth.uid);
+      allow create, update: if isSignedIn() && (isStaffOrAdmin() || request.resource.data.get('userId', '') == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    match /backups/{backupId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn() && isValidSecurityAuditLog(request.resource.data) &&
+        (isAdmin() || request.resource.data.actorUid == request.auth.uid);
+      allow update, delete: if false;
+    }
+
+    match /securityAlerts/{alertId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn() && isValidSecurityAlert(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /feesLedger/{ledgerId} {
+      allow read: if isStaffOrAdmin() || (isSignedIn() && matchesAuthenticatedIdentity(resource.data.get('studentId', '')));
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /staffPayroll/{payrollId} {
+      allow read: if isStaffOrAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /teacherAttendance/{recordId} {
+      allow read: if isStaffOrAdmin();
+      allow create, update: if isStaffOrAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /immutableLedger/{eventId} {
+      allow read: if isStaffOrAdmin();
+      allow create: if isSignedIn() && isValidImmutableLedgerEntry(request.resource.data) &&
+        (isAdmin() || request.resource.data.get('actorId', '') == request.auth.uid);
+      allow update, delete: if false;
+    }
+
+    match /rateLimits/{bucketId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ===============================================================
+    // Zero-Fee Direct UPI Intent + 4-Month Overdue Auto-EMI Rules
+    // ===============================================================
+
+    function isValidUpiTransaction(data) {
+      return data.keys().hasAll([
+        'id', 'student_id', 'student_name', 'course_name',
+        'amount', 'amount_paise', 'payment_type',
+        'tr_ref', 'tn_note', 'signal_nonce', 'intent_hash',
+        'utr_number', 'upi_package', 'device_fingerprint', 'apk_signature_sha256',
+        'timestamp', 'expires_at_ms', 'status', 'verified_by_uid', 'createdAt'
+      ]) &&
+      isValidString(data.id, 3, 120) &&
+      isValidString(data.student_id, 1, 120) &&
+      isValidOptionalString(data, 'student_uid', 128) &&
+      isValidString(data.student_name, 1, 160) &&
+      isValidString(data.course_name, 0, 140) &&
+      (data.amount is int || data.amount is float) && data.amount > 0 &&
+      data.amount_paise is int && data.amount_paise > 0 && data.amount_paise <= 1000000000 &&
+      data.payment_type in ['MONTHLY_FEE', 'AUTO_EMI', 'FULL_FEE'] &&
+      isValidString(data.tr_ref, 6, 120) &&
+      isValidString(data.tn_note, 4, 240) &&
+      isValidString(data.signal_nonce, 6, 128) &&
+      isValidString(data.intent_hash, 16, 128) &&
+      isValidString(data.utr_number, 0, 80) &&
+      isValidString(data.upi_package, 0, 140) &&
+      isValidString(data.device_fingerprint, 4, 160) &&
+      isValidString(data.apk_signature_sha256, 8, 128) &&
+      data.timestamp is int && data.timestamp > 0 &&
+      data.expires_at_ms is int && data.expires_at_ms >= data.timestamp &&
+      data.status in ['CHALLENGE_ISSUED', 'DISPATCHED', 'PENDING_APPROVAL', 'VERIFIED_PAID', 'REJECTED_FRAUD', 'EXPIRED'] &&
+      isValidString(data.verified_by_uid, 0, 128) &&
+      data.createdAt is timestamp;
+    }
+
+    function isValidStudentFeesLedger(data) {
+      return data.keys().hasAll([
+        'id', 'student_id', 'student_name', 'enrollment_no',
+        'course_name', 'batch_name',
+        'total_fee_paise', 'paid_fee_paise', 'monthly_fee_paise', 'emi_installment_paise',
+        'monthly_payment_status', 'overdue_months', 'auto_emi_active', 'emi_billing_date',
+        'next_due_date_iso', 'last_emi_notice_iso', 'last_utr_number',
+        'owner_uid', 'updatedAt', 'createdAt'
+      ]) &&
+      isValidString(data.id, 1, 120) &&
+      isValidString(data.student_id, 1, 120) &&
+      isValidString(data.student_name, 1, 160) &&
+      isValidString(data.enrollment_no, 0, 80) &&
+      isValidString(data.course_name, 0, 140) &&
+      isValidString(data.batch_name, 0, 140) &&
+      data.total_fee_paise is int && data.total_fee_paise >= 0 &&
+      data.paid_fee_paise is int && data.paid_fee_paise >= 0 &&
+      data.monthly_fee_paise is int && data.monthly_fee_paise >= 0 &&
+      data.emi_installment_paise is int && data.emi_installment_paise >= 0 &&
+      data.monthly_payment_status in ['PAID', 'PENDING', 'OVERDUE', 'EMI_ACTIVE'] &&
+      data.overdue_months is int && data.overdue_months >= 0 && data.overdue_months <= 120 &&
+      data.auto_emi_active is bool &&
+      data.emi_billing_date is int && data.emi_billing_date >= 1 && data.emi_billing_date <= 28 &&
+      isValidString(data.next_due_date_iso, 0, 40) &&
+      isValidString(data.last_emi_notice_iso, 0, 160) &&
+      isValidString(data.last_utr_number, 0, 80) &&
+      isValidString(data.owner_uid, 1, 128) &&
+      data.updatedAt is int && data.updatedAt >= 0 &&
+      data.createdAt is timestamp;
+    }
+
+    function isValidInstituteAuditLog(data) {
+      return data.keys().hasAll([
+        'id', 'actor_uid', 'actor_name', 'student_id',
+        'event_type', 'severity', 'utr_number', 'intent_hash',
+        'device_fingerprint', 'details', 'timestamp', 'createdAt'
+      ]) &&
+      isValidString(data.id, 3, 120) &&
+      isValidString(data.actor_uid, 1, 128) &&
+      isValidString(data.actor_name, 0, 160) &&
+      isValidString(data.student_id, 0, 120) &&
+      isValidString(data.event_type, 2, 120) &&
+      data.severity in ['INFO', 'WARNING', 'CRITICAL'] &&
+      isValidString(data.utr_number, 0, 80) &&
+      isValidString(data.intent_hash, 0, 128) &&
+      isValidString(data.device_fingerprint, 0, 160) &&
+      isValidString(data.details, 1, 2000) &&
+      data.timestamp is int && data.timestamp > 0 &&
+      data.createdAt is timestamp;
+    }
+
+    match /upi_transactions/{txnId} {
+      allow read: if isAdmin() || (isSignedIn() && (
+        resource.data.get('student_uid', '') == request.auth.uid ||
+        matchesAuthenticatedIdentity(resource.data.get('student_id', ''))
+      ));
+      allow create: if isSignedIn() &&
+        isValidUpiTransaction(request.resource.data) &&
+        request.resource.data.id == txnId &&
+        (
+          isAdmin() ||
+          (
+            request.resource.data.status in ['CHALLENGE_ISSUED', 'DISPATCHED', 'PENDING_APPROVAL'] &&
+            (
+              request.resource.data.get('student_uid', '') == request.auth.uid ||
+              matchesAuthenticatedIdentity(request.resource.data.student_id)
+            )
+          )
+        );
+      allow update: if isSignedIn() &&
+        isValidUpiTransaction(request.resource.data) &&
+        request.resource.data.id == resource.data.id &&
+        request.resource.data.student_id == resource.data.student_id &&
+        request.resource.data.amount_paise == resource.data.amount_paise &&
+        request.resource.data.tr_ref == resource.data.tr_ref &&
+        request.resource.data.intent_hash == resource.data.intent_hash &&
+        (
+          isAdmin() ||
+          (
+            (
+              resource.data.get('student_uid', '') == request.auth.uid ||
+              matchesAuthenticatedIdentity(resource.data.student_id)
+            ) &&
+            resource.data.status in ['CHALLENGE_ISSUED', 'DISPATCHED'] &&
+            request.resource.data.status in ['DISPATCHED', 'PENDING_APPROVAL', 'EXPIRED'] &&
+            request.resource.data.utr_number.size() >= 0
+          )
+        );
+      allow delete: if isAdmin();
+    }
+
+    match /used_utr_locks/{utrNumber} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() &&
+        !exists(/databases/$(database)/documents/used_utr_locks/$(utrNumber)) &&
+        utrNumber.size() >= 6 && utrNumber.size() <= 64 &&
+        request.resource.data.keys().hasAll(['utr_number', 'txn_id', 'student_id', 'amount_paise', 'locked_at_ms']) &&
+        request.resource.data.utr_number == utrNumber &&
+        request.resource.data.txn_id is string && request.resource.data.txn_id.size() >= 3 &&
+        request.resource.data.student_id is string && request.resource.data.student_id.size() >= 1 &&
+        request.resource.data.amount_paise is int && request.resource.data.amount_paise > 0 &&
+        request.resource.data.locked_at_ms is int && request.resource.data.locked_at_ms > 0;
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+
+    match /student_fees_ledger/{studentId} {
+      allow read: if isStaffOrAdmin() || (isSignedIn() && (
+        matchesAuthenticatedIdentity(studentId) ||
+        resource.data.get('owner_uid', '') == request.auth.uid
+      ));
+      allow create, update: if isStaffOrAdmin() && isValidStudentFeesLedger(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /institute_audit_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn() && isValidInstituteAuditLog(request.resource.data) &&
+        (isAdmin() || request.resource.data.actor_uid == request.auth.uid);
+      allow update, delete: if false;
+    }
+
+    // ===============================================================
+    // [A5] Server/Admin-Only Exam Master Answer Keys (Strictly Denied to Students)
+    // ===============================================================
+    function isValidExamAnswerKeyDoc(data) {
+      let allowedKeys = ['id', 'examId', 'examTitle', 'batchId', 'answersByMasterQId', 'questionCount', 'ownerUid', 'updatedAt', 'createdAt'];
+      return data.keys().hasAll(['id', 'examId', 'answersByMasterQId', 'ownerUid']) &&
+        data.keys().hasOnly(allowedKeys) &&
+        isValidString(data.id, 1, 80) &&
+        isValidString(data.examId, 1, 80) &&
+        data.answersByMasterQId is map &&
+        isValidString(data.ownerUid, 1, 128);
+    }
+
+    match /examAnswerKeys/{examId} {
+      allow read: if isStaffOrAdmin();
+      allow create, update: if isStaffOrAdmin() &&
+        isValidExamAnswerKeyDoc(request.resource.data) &&
+        request.resource.data.examId == examId;
+      allow delete: if isAdmin();
+    }
+
+    // ===============================================================
+    // [ZERO-BILL AI TUTOR] Shared Cache, Authoritative Quotas & 24h Security Cage Locks
+    // Cloud Functions update via Admin SDK; clients obey strict Zero-Trust RBAC.
+    // ===============================================================
+    match /ai_shared_cache/{hash} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+
+    match /ai_student_quotas/{uid} {
+      allow read: if isAdmin() || (request.auth != null && request.auth.uid == uid);
+      allow write: if isAdmin();
+    }
+
+    match /ai_tutor_locks/{uid} {
+      allow read: if isAdmin() || (request.auth != null && request.auth.uid == uid);
+      allow write: if isAdmin();
+    }
+
+    // ===============================================================
+    // [ELITE SECURITY LAYERS] Hardware DPoP, Exam Sessions, Device Kill-Switch & Server Audit Hash-Chain
+    // ZERO request.auth == null rules.
+    // ===============================================================
+
+    match /device_pubkeys/{keyId} {
+      allow read: if isAdmin() || (isSignedIn() && (
+        keyId.matches('^' + request.auth.uid + '_.*') ||
+        (resource != null && resource.data.get('uid', '') == request.auth.uid)
+      ));
+      allow create, update: if isSignedIn() && (
+        isAdmin() || (
+          keyId.matches('^' + request.auth.uid + '_.*') &&
+          request.resource.data.get('uid', '') == request.auth.uid &&
+          isValidString(request.resource.data.get('deviceFp', ''), 4, 128) &&
+          isValidString(request.resource.data.get('spkiBase64', ''), 32, 1024)
+        )
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /dpop_nonces/{jti} {
+      allow read, write: if false;
+    }
+
+    match /examSessions/{sessionId} {
+      allow read: if isStaffOrAdmin() || (isSignedIn() && (
+        resource.data.get('studentUid', '') == request.auth.uid ||
+        matchesAuthenticatedIdentity(resource.data.get('studentUid', ''))
+      ));
+      allow write: if isStaffOrAdmin();
+    }
+
+    match /revoked_devices/{deviceFp} {
+      allow get: if isSignedIn();
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /server_audit_hash_chain/{seq} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    match /server_audit_chain_meta/{docId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+  }
+}
+

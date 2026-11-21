@@ -1,0 +1,2537 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [ 7 0 R 9 0 R 11 0 R 13 0 R 15 0 R 17 0 R 19 0 R 21 0 R 23 0 R 25 0 R 27 0 R 29 0 R 31 0 R 33 0 R 35 0 R 37 0 R 39 0 R 41 0 R 43 0 R 45 0 R 47 0 R 49 0 R 51 0 R 53 0 R 55 0 R ] /Count 25 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+6 0 obj
+<< /Length 4684 >>
+stream
+0.04 0.08 0.22 rg
+0 772 612 70 re f
+0.00 0.90 1.00 rg
+0 769 612 3 re f
+BT /F2 9 Tf 0.70 0.88 1.00 rg 36 822 Td (WAQAR COMPUTER INSTITUTE ERP  |  UNIFIED MOBILE APP & LIQUID GLASS WEBSITE PRD) Tj ET
+BT /F2 12 Tf 1 1 1 rg 36 798 Td (PAGE 1: EXECUTIVE SUMMARY & PROJECT GOAL) Tj ET
+BT /F1 8 Tf 0.75 0.82 0.96 rg 36 780 Td (Project ID: gen-lang-client-0309263247  |  DB: ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1) Tj ET
+0.92 0.94 0.98 rg
+0 0 612 32 re f
+0.15 0.22 0.42 rg
+BT /F2 8.5 Tf 36 12 Td (Page 1 of 25   |   Waqar Computer Institute ERP Architecture & Code Logic Blueprint) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 742.0 Td (1.1 Vision & Objective) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 728.0 Td (Waqar Computer Institute ERP unifies the Native Android Application \(Kotlin, Jetpack) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 715.8 Td (Compose, C++20 JNI, SQLCipher Room\) with a Liquid Glass UI Web Admin & Public) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 703.6 Td (Certificate Verification Portal over a single shared real-time database. Any record) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 691.4 Td (created, modified, or revoked on the Website Admin Portal reflects in < 100ms on 10,000+) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 679.2 Td (student, teacher, and parent Android devices-and vice versa.) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 657.0 Td (1.2 Seven Core Architectural Pillars) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 643.0 Td (1. Unified Backend & API Layer: Shared Firestore v1 REST/WebSockets & Cloud) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 630.8 Td (Functions endpoints \(/api/v1/login, /api/v1/students, /api/v1/teachers,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 618.6 Td (/api/v1/batches, /api/v1/attendance, /api/v1/fees, /api/v1/exams, /api/v1/notes,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 606.4 Td (/api/v1/certificates, /api/v1/verify\) with a single canonical base URL) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 594.2 Td (\(https://waqar-institute-erp.web.app\).) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 582.0 Td (2. Shared Authentication & Identical Password Encryption: Unified portalCredentials) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 569.8 Td (store using identical PBKDF2-HMAC-SHA256 \(12,000 iterations, 256-bit key, 16-byte) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 557.6 Td (CSPRNG hex salt\) + Argon2id \(WCI$ARGON2ID$v19$...\) + RFC 6238 TOTP 2FA + Firebase) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 545.4 Td (Auth Session Binding so the exact same Admin, Teacher, Student, and Parent) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 533.2 Td (credentials work on both Mobile and Web.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 521.0 Td (3. Strict Role-Based Access Control \(RBAC\): Identical role permissions \(admin,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 508.8 Td (teacher, student, parent\) enforced at both UI router level and server-side) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 496.6 Td (firestore.rules.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 484.4 Td (4. Identical Data Structure, Date Format & Validation: Canonical JSON field names,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 472.2 Td (Paise integer currency \(totalFeePaise, paidFeePaise\), dual display/ISO date) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 460.0 Td (standardization \(DD-MM-YYYY UI display with YYYY-MM-DD / Firestore Timestamp) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 447.8 Td (storage\), and identical regex/length validators.) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 435.6 Td (5. Common Cloud Storage Bucket: Shared Firebase Cloud Storage \(gen-lang-) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 423.4 Td (client-0309263247.firebasestorage.app\) and inline Base64 data-URI support for) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 411.2 Td (student photos, PDF marksheets, study notes, and diploma certificates.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 399.0 Td (6. Real-Time Sync & Instant Notifications: Bi-directional Firestore onSnapshot) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 386.8 Td (WebSockets + Firebase Cloud Messaging \(FCM\) push notifications +) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 374.6 Td (IdempotentSyncManager SHA-256 deduplication.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 362.4 Td (7. Liquid Glass UI \(4-Workspace Consolidated Web Architecture\): Ultra-modern Apple) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 350.2 Td (VisionOS-style Liquid Glass interface organizing all 22 ERP modules into a Login) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 338.0 Td (Portal + 4 Consolidated Multi-Tab Workspaces + Public Live QR Verification Portal) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 325.8 Td (\(/verify\).) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 6 0 R >>
+endobj
+8 0 obj
+<< /Length 7620 >>
+stream
+0.04 0.08 0.22 rg
+0 772 612 70 re f
+0.00 0.90 1.00 rg
+0 769 612 3 re f
+BT /F2 9 Tf 0.70 0.88 1.00 rg 36 822 Td (WAQAR COMPUTER INSTITUTE ERP  |  UNIFIED MOBILE APP & LIQUID GLASS WEBSITE PRD) Tj ET
+BT /F2 12 Tf 1 1 1 rg 36 798 Td (PAGE 2: SYSTEM ARCHITECTURE & TOPOLOGY DIAGRAM) Tj ET
+BT /F1 8 Tf 0.75 0.82 0.96 rg 36 780 Td (Project ID: gen-lang-client-0309263247  |  DB: ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1) Tj ET
+0.92 0.94 0.98 rg
+0 0 612 32 re f
+0.15 0.22 0.42 rg
+BT /F2 8.5 Tf 36 12 Td (Page 2 of 25   |   Waqar Computer Institute ERP Architecture & Code Logic Blueprint) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 742.0 Td (2.1 High-Level End-to-End Topology) Tj ET
+0.94 0.96 0.99 rg
+34 721.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 724.0 Td (+-------------------------------------------------------------------------------------------) Tj ET
+0.94 0.96 0.99 rg
+34 711.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 713.5 Td (--------+) Tj ET
+0.94 0.96 0.99 rg
+34 700.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 703.0 Td (|                           PRESENTATION LAYER \(MOBILE & LIQUID GLASS WEB\)) Tj ET
+0.94 0.96 0.99 rg
+34 690.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 692.5 Td (                          |) Tj ET
+0.94 0.96 0.99 rg
+34 679.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 682.0 Td (+-------------------------------------------------+-----------------------------------------) Tj ET
+0.94 0.96 0.99 rg
+34 669.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 671.5 Td (--------+) Tj ET
+0.94 0.96 0.99 rg
+34 658.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 661.0 Td (|  ANDROID NATIVE APP \(Kotlin + Jetpack Compose\)  |  LIQUID GLASS WEB PORTAL \(HTML5/TS + ) Tj ET
+0.94 0.96 0.99 rg
+34 648.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 650.5 Td (WebCrypto\) |) Tj ET
+0.94 0.96 0.99 rg
+34 637.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 640.0 Td (|  * Admin / Teacher / Student / Parent Portals   |  * Page 1: /login \(Same as App Login + ) Tj ET
+0.94 0.96 0.99 rg
+34 627.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 629.5 Td (2FA\)     |) Tj ET
+0.94 0.96 0.99 rg
+34 616.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 619.0 Td (|  * 128-D ML Kit Live Blink Biometric Gate       |  * Page 2: /admin \(Unified 22-Module ) Tj ET
+0.94 0.96 0.99 rg
+34 606.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 608.5 Td (Workspace\) |) Tj ET
+0.94 0.96 0.99 rg
+34 595.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 598.0 Td (|  * Room v3 + 256-bit AES SQLCipher Offline DB   |  * Page 3: /operations ) Tj ET
+0.94 0.96 0.99 rg
+34 585.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 587.5 Td (\(Academics/Fees/Exams\)   |) Tj ET
+0.94 0.96 0.99 rg
+34 574.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 577.0 Td (|  * C++20 JNI RASP + Hybrid PQ KEM \(ML-KEM-768\)  |  * Page 4: /verify \(Google Lens & Live ) Tj ET
+0.94 0.96 0.99 rg
+34 564.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 566.5 Td (QR Scan\) |) Tj ET
+0.94 0.96 0.99 rg
+34 553.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 556.0 Td (+------------------------+------------------------+------------------------+----------------) Tj ET
+0.94 0.96 0.99 rg
+34 543.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 545.5 Td (--------+) Tj ET
+0.94 0.96 0.99 rg
+34 532.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 535.0 Td (                         |  WSS \(Firestore onSnapshot\) / HTTPS REST v1     |) Tj ET
+0.94 0.96 0.99 rg
+34 522.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 524.5 Td (                         v                                                 v) Tj ET
+0.94 0.96 0.99 rg
+34 511.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 514.0 Td (+-------------------------------------------------------------------------------------------) Tj ET
+0.94 0.96 0.99 rg
+34 501.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 503.5 Td (--------+) Tj ET
+0.94 0.96 0.99 rg
+34 490.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 493.0 Td (|                         UNIFIED SECURITY, AUTH & API GATEWAY LAYER) Tj ET
+0.94 0.96 0.99 rg
+34 480.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 482.5 Td (                                |) Tj ET
+0.94 0.96 0.99 rg
+34 469.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 472.0 Td (|  * PBKDF2-HMAC-SHA256 \(12,000 iter, 256-bit\) & Argon2id Constant-Time Verifier) Tj ET
+0.94 0.96 0.99 rg
+34 459.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 461.5 Td (                    |) Tj ET
+0.94 0.96 0.99 rg
+34 448.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 451.0 Td (|  * Firebase Auth Custom/Email Session Token + RFC 9449 DPoP Proof + App Check ) Tj ET
+0.94 0.96 0.99 rg
+34 438.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 440.5 Td (\(Debug/Recaptcha\)   |) Tj ET
+0.94 0.96 0.99 rg
+34 427.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 430.0 Td (|  * Single-Device Session Lock \(`sessions/single_dev_{username}`\)) Tj ET
+0.94 0.96 0.99 rg
+34 417.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 419.5 Td (                                  |) Tj ET
+0.94 0.96 0.99 rg
+34 406.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 409.0 Td (+-------------------------------------------------+-----------------------------------------) Tj ET
+0.94 0.96 0.99 rg
+34 396.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 398.5 Td (--------+) Tj ET
+0.94 0.96 0.99 rg
+34 385.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 388.0 Td (                                                  |) Tj ET
+0.94 0.96 0.99 rg
+34 375.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 377.5 Td (                                                  v) Tj ET
+0.94 0.96 0.99 rg
+34 364.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 367.0 Td (+-------------------------------------------------------------------------------------------) Tj ET
+0.94 0.96 0.99 rg
+34 354.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 356.5 Td (--------+) Tj ET
+0.94 0.96 0.99 rg
+34 343.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 346.0 Td (|                  SHARED PERSISTENCE & STORAGE LAYER \(`gen-lang-client-0309263247`\)) Tj ET
+0.94 0.96 0.99 rg
+34 333.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 335.5 Td (                |) Tj ET
+0.94 0.96 0.99 rg
+34 322.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 325.0 Td (|  * Named Firestore DB: `ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1`) Tj ET
+0.94 0.96 0.99 rg
+34 312.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 314.5 Td (          |) Tj ET
+0.94 0.96 0.99 rg
+34 301.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 304.0 Td (|  * 24 Collections Protected by Zero-Trust `firestore.rules` \(753 lines\)) Tj ET
+0.94 0.96 0.99 rg
+34 291.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 293.5 Td (                           |) Tj ET
+0.94 0.96 0.99 rg
+34 280.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 283.0 Td (|  * Shared Cloud Storage: `gs://gen-lang-client-0309263247.firebasestorage.app`) Tj ET
+0.94 0.96 0.99 rg
+34 270.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 272.5 Td (                    |) Tj ET
+0.94 0.96 0.99 rg
+34 259.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 262.0 Td (|  * FCM Topic/Token Push Engine + Immutable SHA-256 Hash-Chained Audit Ledger ) Tj ET
+0.94 0.96 0.99 rg
+34 249.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 251.5 Td (\(`immutableLedger`\)  |) Tj ET
+0.94 0.96 0.99 rg
+34 238.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 241.0 Td (+-------------------------------------------------------------------------------------------) Tj ET
+0.94 0.96 0.99 rg
+34 228.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 230.5 Td (--------+) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 8 0 R >>
+endobj
+10 0 obj
+<< /Length 4534 >>
+stream
+0.04 0.08 0.22 rg
+0 772 612 70 re f
+0.00 0.90 1.00 rg
+0 769 612 3 re f
+BT /F2 9 Tf 0.70 0.88 1.00 rg 36 822 Td (WAQAR COMPUTER INSTITUTE ERP  |  UNIFIED MOBILE APP & LIQUID GLASS WEBSITE PRD) Tj ET
+BT /F2 12 Tf 1 1 1 rg 36 798 Td (PAGE 3: LIQUID GLASS UI & 4-PAGE CONSOLIDATED WEBSITE DESIGN) Tj ET
+BT /F1 8 Tf 0.75 0.82 0.96 rg 36 780 Td (Project ID: gen-lang-client-0309263247  |  DB: ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1) Tj ET
+0.92 0.94 0.98 rg
+0 0 612 32 re f
+0.15 0.22 0.42 rg
+BT /F2 8.5 Tf 36 12 Td (Page 3 of 25   |   Waqar Computer Institute ERP Architecture & Code Logic Blueprint) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 742.0 Td (3.1 Why a 4-Page Consolidated Liquid Glass Architecture?) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 728.0 Td (To ensure the website looks like a world-class enterprise SaaS application-fast,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 715.8 Td (clutter-free, and cohesive-the web portal uses 4 Consolidated Core Pages with instant) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 703.6 Td (glassmorphic sub-tabs rather than 25 disconnected reloads:) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 691.4 Td (1. Page 1 - /login \(Unified Portal Login Screen\):) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 679.2 Td (- Mirrors the Android Login Screen 1:1: Role Selector Pills \(Admin, Teacher,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 667.0 Td (Student, Parent\), @username & Password fields, Show/Hide Password toggle, Google) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 654.8 Td (Sign-In button for Admin, and 6-digit RFC 6238 TOTP MFA modal.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 642.6 Td (2. Page 2 - /admin \(Executive Command & People Workspace\):) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 630.4 Td (- Houses M01 Director Dashboard, M02 Student Admission & Credential Provisioning,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 618.2 Td (M03 Faculty Directory, Biometric Status & Payroll, M04 Courses & Batches, M14 Parent) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 606.0 Td (Guardian Links, and M21 Admission Enquiries CRM.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 593.8 Td (3. Page 3 - /operations \(Academic, Finance, AI & Security Workspace\):) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 581.6 Td (- Houses M05 Timetable & Live Classes, M06 Real-Time Attendance, M07 Online Exams &) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 569.4 Td (Results, M08 Homework, M09 Fees, GST Invoices & Immutable Ledger, M11 Study Notes,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 557.2 Td (M12 Broadcast Announcements, M15 QR Certificates & ID Cards, M16 AI Tutor Logs, M18) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 545.0 Td (WhatsApp Automation, M19 Analytics, M20 Inventory, M22 Helpdesk, M23 Security Audit,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 532.8 Td (and M24 Settings & 10K User Credential Manager.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 520.6 Td (4. Page 4 - /verify \(Public QR Certificate Scanner & Google Lens Verification Page\):) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 508.4 Td (- Publicly accessible without login; auto-verifies any ?cert_id=...&sig=... scanned) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 496.2 Td (from Google Lens and includes an embedded WebRTC Live Camera QR Scanner.) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 474.0 Td (3.2 Liquid Glass CSS Design Tokens) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 460.0 Td (- Primary Canvas: Radial cosmic gradient radial-gradient\(circle at 15% 15%, #1D2D6B) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 447.8 Td (0%, #070B1E 55%, #040714 100%\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 435.6 Td (- Liquid Glass Surface: background: rgba\(18, 27, 70, 0.72\); backdrop-filter:) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 423.4 Td (blur\(24px\) saturate\(180%\); border: 1px solid rgba\(255, 255, 255, 0.16\); box-shadow:) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 411.2 Td (0 24px 60px rgba\(0, 0, 0, 0.55\), inset 0 1px 0 rgba\(255, 255, 255, 0.22\); border-) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 399.0 Td (radius: 24px;) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 386.8 Td (- Role Accent Palettes:) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 374.6 Td (- Admin: #7C4DFF -> #00E5FF \(Electric Indigo to Cyan\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 362.4 Td (- Teacher: #00E5FF -> #14F195 \(Cyan to Emerald\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 350.2 Td (- Student: #FF6B9D -> #A855F7 \(Neon Rose to Violet\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 338.0 Td (- Parent: #FFB547 -> #00E5FF \(Amber Gold to Cyan\)) Tj ET
+endstream
+endobj
+11 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 10 0 R >>
+endobj
+12 0 obj
+<< /Length 6775 >>
+stream
+0.04 0.08 0.22 rg
+0 772 612 70 re f
+0.00 0.90 1.00 rg
+0 769 612 3 re f
+BT /F2 9 Tf 0.70 0.88 1.00 rg 36 822 Td (WAQAR COMPUTER INSTITUTE ERP  |  UNIFIED MOBILE APP & LIQUID GLASS WEBSITE PRD) Tj ET
+BT /F2 12 Tf 1 1 1 rg 36 798 Td (PAGE 4: POINT-WISE FUNCTIONS LIST - ADMIN PORTAL \(APP & WEBSITE PARITY, PART 1: M0) Tj ET
+BT /F1 8 Tf 0.75 0.82 0.96 rg 36 780 Td (Project ID: gen-lang-client-0309263247  |  DB: ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1) Tj ET
+0.92 0.94 0.98 rg
+0 0 612 32 re f
+0.15 0.22 0.42 rg
+BT /F2 8.5 Tf 36 12 Td (Page 4 of 25   |   Waqar Computer Institute ERP Architecture & Code Logic Blueprint) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 746.0 Td (Every function below exists in the Android Admin Portal and is replicated 1:1 on the) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 733.8 Td (Website Admin Portal:) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 711.6 Td (Module M01: Director Executive Dashboard) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 697.6 Td (1. Live KPI Counter Cards: Real-time active student count, faculty count, total fee) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 685.4 Td (collection \(paidFeePaise / 100\), pending fee dues, and today's attendance) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 673.2 Td (percentage.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 661.0 Td (2. Revenue & Attendance Trend Charts: Monthly fee collection bar/area chart and) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 648.8 Td (batch-wise attendance ring gauges.) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 636.6 Td (3. Teacher 10:30 AM Cutoff Auto-Absent Trigger: Automatically evaluates) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 624.4 Td (evaluateDailyCutoffAndAutoMarkAbsent\(cutoffHour24 = 10, cutoffMinute = 30\) and flags) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 612.2 Td (unverified teachers.) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 600.0 Td (4. Quick Action Launcher: One-click modals for New Student Admission, Collect Fee) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 587.8 Td (Receipt, Issue Certificate, Broadcast Notice, and Provision Credentials.) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 565.6 Td (Module M02: Students Admission, Profile & Credential Management) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 551.6 Td (5. Admit New Student \(addOrUpdateStudent\): Creates students/{id} with enrollment) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 539.4 Td (number \(WCI-2026-XXX\), full name, phone, email, guardian name/phone, course, batch,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 527.2 Td (total fee, paid fee, photo \(photoUri\), and document attachment \(attachmentName\).) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 515.0 Td (6. Instant Student & Parent Credential Provisioning: Simultaneously hashes and) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 502.8 Td (writes portalCredentials/{studentUsername} \(role = "student"\) and) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 490.6 Td (portalCredentials/{parentUsername} \(role = "parent"\) plus guardians/{linkId}.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 478.4 Td (7. Batch & Status Filtering + 100K Search: Instant search by name, roll number, or) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 466.2 Td (phone number, and filter by ACTIVE, COMPLETED, or SUSPENDED_SECURITY.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 454.0 Td (8. 12-D Student Exam Biometric Enrollment: Extracts and stores student facial) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 441.8 Td (signature from the admission photo for exam proctoring.) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 419.6 Td (Module M03: Teachers / Faculty & Payroll Management) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 405.6 Td (9. Add / Edit Faculty \(addOrUpdateStaff\): Manages staff/{id} with employee code,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 393.4 Td (designation, qualification, specialization, salary in Paise, joining date, and) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 381.2 Td (profile photo.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 369.0 Td (10. Teacher Login Credential Provisioning: Creates) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 356.8 Td (portalCredentials/{teacherUsername} \(role = "teacher", linkedEntityId = staff.id\) so) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 344.6 Td (the teacher can immediately sign in and complete their First-Time 128-D Live Blink) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 332.4 Td (Face Enrollment.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 320.2 Td (11. Faculty Payroll Ledger \(payroll/{id}\): Processes monthly salary disbursements,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 308.0 Td (payment status \(PAID / PENDING\), and payslip export.) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 285.8 Td (Module M04: Courses & Batches Management) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 271.8 Td (12. Course Catalog CRUD \(courses/{id}\): Creates courses \(ADCA, DCA, CCC, Tally) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 259.6 Td (Prime, Python, Web Dev\) with code, duration in months, total fee, syllabus summary,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 247.4 Td (and module count.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 235.2 Td (13. Batch Scheduling & Teacher Assignment \(batches/{id}\): Links a batch to a) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 223.0 Td (courseId, teacherId, teacherName, timing slot, room number, and student capacity.) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 200.8 Td (Module M05: Timetable & Live Classes) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 186.8 Td (14. Weekly Batch Timetable \(timetableSlots/{id}\): Schedules day-of-week, start/end) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 174.6 Td (time, subject, room, and faculty member with conflict detection.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 162.4 Td (15. Live Class Broadcast \(liveClasses/{id}\): Publishes interactive live class room) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 150.2 Td (tokens/links visible to students of that batch in real time.) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 128.0 Td (Module M06: Real-Time Attendance \(Students & Teachers\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 114.0 Td (16. Batch Student Attendance Marking \(attendance/{id}\): Marks PRESENT, ABSENT, or) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 101.8 Td (LATE per student per date \(DD-MM-YYYY UI / YYYY-MM-DD ISO key\) with instant parent) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 89.6 Td (notification.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 77.4 Td (17. Teacher Biometric Attendance Monitor \(teacher_attendance/{id}\): Displays live) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 65.2 Td (teacher check-in timestamps, 128-D cosine similarity score, and liveness confidence.) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 53.0 Td (18. QR ID Card Attendance Scanner: Scans student ID card QR codes via mobile camera) Tj ET
+endstream
+endobj
+13 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 12 0 R >>
+endobj
+14 0 obj
+<< /Length 6633 >>
+stream
+0.04 0.08 0.22 rg
+0 772 612 70 re f
+0.00 0.90 1.00 rg
+0 769 612 3 re f
+BT /F2 9 Tf 0.70 0.88 1.00 rg 36 822 Td (WAQAR COMPUTER INSTITUTE ERP  |  UNIFIED MOBILE APP & LIQUID GLASS WEBSITE PRD) Tj ET
+BT /F2 12 Tf 1 1 1 rg 36 798 Td (PAGE 5: POINT-WISE FUNCTIONS LIST - ADMIN PORTAL \(APP & WEBSITE PARITY, PART 2: M0) Tj ET
+BT /F1 8 Tf 0.75 0.82 0.96 rg 36 780 Td (Project ID: gen-lang-client-0309263247  |  DB: ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1) Tj ET
+0.92 0.94 0.98 rg
+0 0 612 32 re f
+0.15 0.22 0.42 rg
+BT /F2 8.5 Tf 36 12 Td (Page 5 of 25   |   Waqar Computer Institute ERP Architecture & Code Logic Blueprint) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 736.0 Td (Module M07: Online Examinations & Marks Registry) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 722.0 Td (19. Exam Paper Creation \(exams/{id}\): Authors MCQ/subjective question banks,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 709.8 Td (duration, total marks, passing marks, and scheduled date.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 697.6 Td (20. Exam Results & Rank Publishing \(examResults/{id}\): Evaluates submissions,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 685.4 Td (computes percentage/grade \(A+, A, B, C\), and publishes marksheets.) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 663.2 Td (Module M08: Homework & Assignments) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 649.2 Td (21. Batch Homework Assignment \(homework/{id}\): Assigns daily/weekly practical tasks) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 637.0 Td (with due dates and attachment links.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 624.8 Td (22. Submission Review \(homeworkSubmissions/{id}\): Tracks student completion status) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 612.6 Td (and teacher remarks.) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 590.4 Td (Module M09: Fees, Receipts & Immutable Financial Ledger) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 576.4 Td (23. Fee Invoice & Installment Collection \(fees/{id}\): Records fee payments \(CASH,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 564.2 Td (UPI, CARD, BANK_TRANSFER\), discounts, late fines, and auto-updates) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 552.0 Td (students/{id}.paidFeePaise.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 539.8 Td (24. Cryptographic Fee Receipt \(RCPT-2026-XXXX\): Generates printable/PDF fee receipts) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 527.6 Td (and appends an unalterable SHA-256 hash-chained event to immutableLedger/{eventId}.) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 505.4 Td (Module M11 & M12: Study Materials & Broadcast Announcements) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 491.4 Td (25. Digital Library Upload \(materials/{id}\): Uploads course-scoped PDF notes,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 479.2 Td (e-books, and video lecture links stored in Firebase Cloud Storage.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 467.0 Td (26. Institute-Wide Notice Broadcast \(announcements/{id} & notices/{id}\): Pushes) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 454.8 Td (high-priority banners to ALL, STUDENTS, TEACHERS, or PARENTS.) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 432.6 Td (Module M14 & M15: Parent Portal Links, ID Cards & QR Certificates) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 418.6 Td (27. Parent-Student Guardian Mapping \(guardians/{id}\): Links one parent login to one) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 406.4 Td (or more children \(studentIds\) and logs PTM notes.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 394.2 Td (28. ISO/IEC 18004 QR Diploma Certificate Issuance \(certificates/{id}\): Generates) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 382.0 Td (serial number \(WCI-CERT-2026-XXXXX\), computes SHA256:<16_HEX> canonical verification) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 369.8 Td (hash, embeds the scannable /verify?cert_id=... QR code, exports high-res PDF, and) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 357.6 Td (supports instant certificate revocation \(revoked = true\).) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 335.4 Td (Module M16, M17 & M18: AI Tutor, Biometric Vault & WhatsApp Automation) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 321.4 Td (29. AI Tutor Telemetry & Rate-Limit Control \(aiLogs/{id}\): Monitors Gemini 2.5 Flash) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 309.2 Td (student doubt queries and daily token quotas.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 297.0 Td (30. Biometric Face Vault \(teachers/{id}\): Displays enrolled teacher 128-D face) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 284.8 Td (status and allows Admin re-enrollment or reset.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 272.6 Td (31. Automated WhatsApp Fee & Absence Alerts \(whatsappLogs/{id}\): Triggers pre-) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 260.4 Td (formatted WhatsApp notifications for absent students and pending fee reminders.) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 238.2 Td (Module M19, M20, M21 & M22: Analytics, Inventory, CRM & Helpdesk) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 224.2 Td (32. Financial & Academic Analytics \(M19\): Exports CSV/PDF audit reports for) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 212.0 Td (admissions, fee recovery, and batch performance.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 199.8 Td (33. Lab Asset & Inventory Tracker \(assets/{id}\): Tracks computer lab PCs, UPS units,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 187.6 Td (projectors, serial numbers, and maintenance status.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 175.4 Td (34. Admission Enquiries CRM \(enquiries/{id}\): Tracks walk-in/phone leads, follow-up) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 163.2 Td (dates, counselor notes, and 1-click conversion to admitted student.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 151.0 Td (35. Student/Parent Support Helpdesk \(tickets/{id}\): Manages support tickets with) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 138.8 Td (priority \(HIGH, NORMAL\) and resolution workflow.) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 116.6 Td (Module M23 & M24: Security Audit Center, 10K Credential Provisioning & Cloud Backup) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 102.6 Td (36. Zero-Trust Security Incident Monitor \(auditLogs/{id}\): Real-time stream of) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 90.4 Td (logins, root/Frida tamper alerts, and 1-click) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 78.2 Td (suspendStudentAccountForSecurityViolation.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 66.0 Td (37. 10,000-User Bulk & Individual Credential Provisioning) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 53.8 Td (\(portalCredentials/{username}\): Create, reset, or deactivate any Admin, Teacher,) Tj ET
+endstream
+endobj
+15 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 14 0 R >>
+endobj
+16 0 obj
+<< /Length 4939 >>
+stream
+0.04 0.08 0.22 rg
+0 772 612 70 re f
+0.00 0.90 1.00 rg
+0 769 612 3 re f
+BT /F2 9 Tf 0.70 0.88 1.00 rg 36 822 Td (WAQAR COMPUTER INSTITUTE ERP  |  UNIFIED MOBILE APP & LIQUID GLASS WEBSITE PRD) Tj ET
+BT /F2 12 Tf 1 1 1 rg 36 798 Td (PAGE 6: UNIFIED BACKEND API SPECIFICATION & ENDPOINT MAPPING) Tj ET
+BT /F1 8 Tf 0.75 0.82 0.96 rg 36 780 Td (Project ID: gen-lang-client-0309263247  |  DB: ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1) Tj ET
+0.92 0.94 0.98 rg
+0 0 612 32 re f
+0.15 0.22 0.42 rg
+BT /F2 8.5 Tf 36 12 Td (Page 6 of 25   |   Waqar Computer Institute ERP Architecture & Code Logic Blueprint) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 746.0 Td (Both the Android App and the Liquid Glass Website communicate with the exact same) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 733.8 Td (Firestore database \(ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1\) via) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 721.6 Td (the Firebase SDK \(onSnapshot WebSockets\) and unified REST/HTTPS endpoints under the same) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 709.4 Td (canonical Base URL:) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 691.2 Td (- Canonical Web & API Base URL: https://waqar-institute-erp.web.app \(and) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 679.0 Td (https://gen-lang-client-0309263247.web.app\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 666.8 Td (- Direct Firestore REST v1 Base URL:) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 654.6 Td (https://firestore.googleapis.com/v1/projects/gen-lang-client-0309263247/databases/ai-) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 642.4 Td (studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1/documents) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 624.2 Td (| Unified Logical Endpoint | Firestore Collection Path | Supported Methods | Purpose & Real-) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 614.0 Td (Time Behavior |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 603.8 Td (| :--- | :--- | :--- | :--- |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 593.6 Td (| `POST /api/v1/login` | `/portalCredentials/{username}` + `/sessions/single_dev_{username}` |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 583.4 Td (`GET`, `PATCH` | Verifies PBKDF2/Argon2id hash, binds 1-Account-1-Device token, returns role &) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 573.2 Td (`linkedEntityId`. |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 563.0 Td (| `GET/POST /api/v1/students` | `/students/{studentId}` | `GET`, `POST`, `PATCH`, `DELETE`,) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 552.8 Td (`WSS` | Full student admission CRUD, photo/attachment sync, batch assignment. |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 542.6 Td (| `GET/POST /api/v1/teachers` | `/staff/{staffId}` & `/teachers/{teacherId}` | `GET`, `POST`,) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 532.4 Td (`PATCH`, `DELETE`, `WSS` | Faculty profile CRUD, payroll config, and 128-D biometric embedding) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 522.2 Td (storage. |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 512.0 Td (| `GET/POST /api/v1/courses` | `/courses/{courseId}` & `/batches/{batchId}` | `GET`, `POST`,) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 501.8 Td (`PATCH`, `DELETE`, `WSS` | Course catalog and batch schedule with `teacherId` binding. |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 491.6 Td (| `GET/POST /api/v1/attendance` | `/attendance/{attId}` & `/teacher_attendance/{id}` | `GET`,) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 481.4 Td (`POST`, `PATCH`, `WSS` | Student daily attendance and teacher biometric check-in logs. |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 471.2 Td (| `GET/POST /api/v1/fees` | `/fees/{invoiceId}` & `/immutableLedger/{evtId}` | `GET`, `POST`,) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 461.0 Td (`PATCH`, `WSS` | Fee invoice creation, receipt generation, and SHA-256 Merkle ledger append. |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 450.8 Td (| `GET/POST /api/v1/exams` | `/exams/{examId}` & `/examResults/{subId}` | `GET`, `POST`,) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 440.6 Td (`PATCH`, `DELETE`, `WSS` | Exam question banks and student marksheet submissions. |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 430.4 Td (| `GET/POST /api/v1/notes` | `/materials/{materialId}` & `/announcements/{id}` | `GET`,) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 420.2 Td (`POST`, `PATCH`, `DELETE`, `WSS` | Study PDFs/videos and institute-wide broadcast notices. |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 410.0 Td (| `GET/POST /api/v1/certificates` | `/certificates/{certSerialNo}` | `GET`, `POST`, `PATCH`,) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 399.8 Td (`DELETE`, `WSS` | Diploma certificate issuance, QR URL signing, and revocation. |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 389.6 Td (| `GET /verify?cert_id=...` | `/certificates/{certSerialNo}` | `GET` \(Public Zero-Auth\) |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 379.4 Td (Public Google Lens & WebRTC QR verification portal. |) Tj ET
+endstream
+endobj
+17 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 16 0 R >>
+endobj
+18 0 obj
+<< /Length 8185 >>
+stream
+0.04 0.08 0.22 rg
+0 772 612 70 re f
+0.00 0.90 1.00 rg
+0 769 612 3 re f
+BT /F2 9 Tf 0.70 0.88 1.00 rg 36 822 Td (WAQAR COMPUTER INSTITUTE ERP  |  UNIFIED MOBILE APP & LIQUID GLASS WEBSITE PRD) Tj ET
+BT /F2 12 Tf 1 1 1 rg 36 798 Td (PAGE 7: SHARED AUTHENTICATION & PASSWORD ENCRYPTION PARITY \(KOTLIN <-> WEBCRYPTO\)) Tj ET
+BT /F1 8 Tf 0.75 0.82 0.96 rg 36 780 Td (Project ID: gen-lang-client-0309263247  |  DB: ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1) Tj ET
+0.92 0.94 0.98 rg
+0 0 612 32 re f
+0.15 0.22 0.42 rg
+BT /F2 8.5 Tf 36 12 Td (Page 7 of 25   |   Waqar Computer Institute ERP Architecture & Code Logic Blueprint) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 742.0 Td (7.1 Identical Cryptographic Specification) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 728.0 Td (To guarantee that a username and password created on the Website Admin Portal logs in on) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 715.8 Td (the Android App in < 1ms \(and vice versa\), both platforms implement the exact same) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 703.6 Td (cryptographic parameters:) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 685.4 Td (| Parameter | Android App \(`FirebaseAuthServiceProvider.kt`\) | Website Portal \(`Web Crypto) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 675.2 Td (API`\) |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 665.0 Td (| :--- | :--- | :--- |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 654.8 Td (| **Algorithm** | `PBKDF2WithHmacSHA256` | `PBKDF2` with `hash: "SHA-256"` |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 644.6 Td (| **Iteration Count** | `12,000` \(`PBKDF2_ITERATIONS = 12_000`\) | `12,000` |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 634.4 Td (| **Derived Key Length** | `256 bits` \(`32 bytes` = `64 lowercase hex chars`\) | `256 bits`) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 624.2 Td (\(`32 bytes` = `64 lowercase hex chars`\) |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 614.0 Td (| **Salt Format** | `16 random bytes` encoded as `32 lowercase hex chars` | `16 random bytes`) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 603.8 Td (encoded as `32 lowercase hex chars` |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 593.6 Td (| **Salt Byte Conversion** | `saltHex.toByteArray\(Charsets.UTF_8\)` | `new) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 583.4 Td (TextEncoder\(\).encode\(saltHex\)` |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 573.2 Td (| **Comparison** | Constant-time XOR accumulator \(`diff == 0`\) | Constant-time XOR accumulator) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 563.0 Td (\(`diff === 0`\) |) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 542.8 Td (7.2 Exact Kotlin Implementation \(Already in `FirebaseAuthServiceProvider.kt`\)) Tj ET
+0.94 0.96 0.99 rg
+34 522.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 524.8 Td (private const val PBKDF2_ALGORITHM = "PBKDF2WithHmacSHA256") Tj ET
+0.94 0.96 0.99 rg
+34 511.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 514.3 Td (private const val PBKDF2_ITERATIONS = 12_000) Tj ET
+0.94 0.96 0.99 rg
+34 501.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 503.8 Td (private const val PBKDF2_KEY_BITS = 256) Tj ET
+0.94 0.96 0.99 rg
+34 484.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 487.3 Td (fun hashPasswordPbkdf2\(passwordChars: CharArray, saltHex: String\): String {) Tj ET
+0.94 0.96 0.99 rg
+34 474.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 476.8 Td (    val saltBytes = saltHex.toByteArray\(Charsets.UTF_8\)) Tj ET
+0.94 0.96 0.99 rg
+34 463.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 466.3 Td (    val spec = PBEKeySpec\(passwordChars, saltBytes, PBKDF2_ITERATIONS, PBKDF2_KEY_BITS\)) Tj ET
+0.94 0.96 0.99 rg
+34 453.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 455.8 Td (    val skf = SecretKeyFactory.getInstance\(PBKDF2_ALGORITHM\)) Tj ET
+0.94 0.96 0.99 rg
+34 442.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 445.3 Td (    val encoded = skf.generateSecret\(spec\).encoded) Tj ET
+0.94 0.96 0.99 rg
+34 432.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 434.8 Td (    return encoded.joinToString\(""\) { "%02x".format\(it\) }) Tj ET
+0.94 0.96 0.99 rg
+34 421.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 424.3 Td (}) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 399.8 Td (7.3 Exact JavaScript / TypeScript Implementation for the Website Portal) Tj ET
+0.94 0.96 0.99 rg
+34 379.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 381.8 Td (export function generateSaltHex\(\) {) Tj ET
+0.94 0.96 0.99 rg
+34 368.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 371.3 Td (  const bytes = new Uint8Array\(16\);) Tj ET
+0.94 0.96 0.99 rg
+34 358.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 360.8 Td (  window.crypto.getRandomValues\(bytes\);) Tj ET
+0.94 0.96 0.99 rg
+34 347.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 350.3 Td (  return Array.from\(bytes, \(b\) => b.toString\(16\).padStart\(2, "0"\)\).join\(""\);) Tj ET
+0.94 0.96 0.99 rg
+34 337.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 339.8 Td (}) Tj ET
+0.94 0.96 0.99 rg
+34 320.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 323.3 Td (export async function hashPasswordPbkdf2Web\(rawPassword, saltHex\) {) Tj ET
+0.94 0.96 0.99 rg
+34 310.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 312.8 Td (  const enc = new TextEncoder\(\);) Tj ET
+0.94 0.96 0.99 rg
+34 299.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 302.3 Td (  const keyMaterial = await window.crypto.subtle.importKey\() Tj ET
+0.94 0.96 0.99 rg
+34 289.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 291.8 Td (    "raw",) Tj ET
+0.94 0.96 0.99 rg
+34 278.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 281.3 Td (    enc.encode\(rawPassword\),) Tj ET
+0.94 0.96 0.99 rg
+34 268.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 270.8 Td (    { name: "PBKDF2" },) Tj ET
+0.94 0.96 0.99 rg
+34 257.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 260.3 Td (    false,) Tj ET
+0.94 0.96 0.99 rg
+34 247.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 249.8 Td (    ["deriveBits"]) Tj ET
+0.94 0.96 0.99 rg
+34 236.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 239.3 Td (  \);) Tj ET
+0.94 0.96 0.99 rg
+34 226.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 228.8 Td (  // CRITICAL: Encode saltHex as UTF-8 bytes to match Kotlin ) Tj ET
+0.94 0.96 0.99 rg
+34 215.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 218.3 Td (saltHex.toByteArray\(Charsets.UTF_8\)) Tj ET
+0.94 0.96 0.99 rg
+34 205.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 207.8 Td (  const derivedBits = await window.crypto.subtle.deriveBits\() Tj ET
+0.94 0.96 0.99 rg
+34 194.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 197.3 Td (    {) Tj ET
+0.94 0.96 0.99 rg
+34 184.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 186.8 Td (      name: "PBKDF2",) Tj ET
+0.94 0.96 0.99 rg
+34 173.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 176.3 Td (      salt: enc.encode\(saltHex\),) Tj ET
+0.94 0.96 0.99 rg
+34 163.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 165.8 Td (      iterations: 12000,) Tj ET
+0.94 0.96 0.99 rg
+34 152.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 155.3 Td (      hash: "SHA-256",) Tj ET
+0.94 0.96 0.99 rg
+34 142.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 144.8 Td (    },) Tj ET
+0.94 0.96 0.99 rg
+34 131.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 134.3 Td (    keyMaterial,) Tj ET
+0.94 0.96 0.99 rg
+34 121.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 123.8 Td (    256) Tj ET
+0.94 0.96 0.99 rg
+34 110.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 113.3 Td (  \);) Tj ET
+0.94 0.96 0.99 rg
+34 100.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 102.8 Td (  const hashArray = Array.from\(new Uint8Array\(derivedBits\)\);) Tj ET
+0.94 0.96 0.99 rg
+34 89.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 92.3 Td (  return hashArray.map\(\(b\) => b.toString\(16\).padStart\(2, "0"\)\).join\(""\);) Tj ET
+0.94 0.96 0.99 rg
+34 79.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 81.8 Td (}) Tj ET
+0.94 0.96 0.99 rg
+34 62.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 65.3 Td (export function verifyHashConstantTimeWeb\(computedHex, storedHex\) {) Tj ET
+0.94 0.96 0.99 rg
+34 52.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 54.8 Td (  if \(!computedHex || !storedHex || computedHex.length !== storedHex.length\) return false;) Tj ET
+endstream
+endobj
+19 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 18 0 R >>
+endobj
+20 0 obj
+<< /Length 3476 >>
+stream
+0.04 0.08 0.22 rg
+0 772 612 70 re f
+0.00 0.90 1.00 rg
+0 769 612 3 re f
+BT /F2 9 Tf 0.70 0.88 1.00 rg 36 822 Td (WAQAR COMPUTER INSTITUTE ERP  |  UNIFIED MOBILE APP & LIQUID GLASS WEBSITE PRD) Tj ET
+BT /F2 12 Tf 1 1 1 rg 36 798 Td (PAGE 8: ENVELOPE ENCRYPTION \(AES-256-GCM\), HYBRID PQ-KEM & TOTP 2FA PARITY) Tj ET
+BT /F1 8 Tf 0.75 0.82 0.96 rg 36 780 Td (Project ID: gen-lang-client-0309263247  |  DB: ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1) Tj ET
+0.92 0.94 0.98 rg
+0 0 612 32 re f
+0.15 0.22 0.42 rg
+BT /F2 8.5 Tf 36 12 Td (Page 8 of 25   |   Waqar Computer Institute ERP Architecture & Code Logic Blueprint) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 742.0 Td (8.1 Shared AES-256-GCM Authenticated Envelope Encryption) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 728.0 Td (For sensitive payloads \(such as encrypted cloud backups in backups/{id} and secure token) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 715.8 Td (envelopes in :security module SecureEnvelope.kt\):) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 703.6 Td (- Cipher: AES/GCM/NoPadding \(AES-GCM in WebCrypto\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 691.4 Td (- IV / Nonce Size: 12 bytes \(96 bits\) prepended to the ciphertext) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 679.2 Td (- Authentication Tag Length: 128 bits \(16 bytes\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 667.0 Td (- Additional Authenticated Data \(AAD\): UTF-8 encoded context header \("WCI-ERP-V1|" +) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 654.8 Td (actorUid\)) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 632.6 Td (8.2 RFC 6238 TOTP Two-Factor Authentication Parity) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 618.6 Td (Both the Android App \(Rfc6238TotpValidator.kt\) and the Website Admin Login use:) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 606.4 Td (- Secret Encoding: Base32 \(JBSWY3DPEHPK3PXP or dynamically provisioned 20-byte) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 594.2 Td (Base32 secret stored in users/{uid}.totpSecret\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 582.0 Td (- Step Window: 30 seconds \(floor\(epochMillis / 30000\)\) with +/-1 step clock-drift) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 569.8 Td (tolerance) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 557.6 Td (- HMAC Algorithm: HmacSHA1 dynamic truncation to 6 digits) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 535.4 Td (8.3 Single-Device Concurrent Session Lock \(`1-Account-1-Device`\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 521.4 Td (When a user logs in on either Mobile or Web:) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 509.2 Td (1. A random UUID sessionToken and deviceId are written to) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 497.0 Td (sessions/single_dev_{username} and users/cred_{username}.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 484.8 Td (2. Any other device listening to sessions/single_dev_{username} immediately detects) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 472.6 Td (remoteToken != localSessionToken and triggers an instant forced sign-out) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 460.4 Td (\(SessionManager.kt\).) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 448.2 Td (3. Note: Admin \(role == "admin"\) can optionally allow simultaneous Web + Mobile) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 436.0 Td (command center sessions or use dedicated admin usernames \(waqar on Mobile, admin on) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 423.8 Td (Web\) so both stay active simultaneously without kicking each other out.) Tj ET
+endstream
+endobj
+21 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 20 0 R >>
+endobj
+22 0 obj
+<< /Length 4445 >>
+stream
+0.04 0.08 0.22 rg
+0 772 612 70 re f
+0.00 0.90 1.00 rg
+0 769 612 3 re f
+BT /F2 9 Tf 0.70 0.88 1.00 rg 36 822 Td (WAQAR COMPUTER INSTITUTE ERP  |  UNIFIED MOBILE APP & LIQUID GLASS WEBSITE PRD) Tj ET
+BT /F2 12 Tf 1 1 1 rg 36 798 Td (PAGE 9: ROLE-BASED ACCESS CONTROL \(RBAC\) MATRIX \(APP & WEB\)) Tj ET
+BT /F1 8 Tf 0.75 0.82 0.96 rg 36 780 Td (Project ID: gen-lang-client-0309263247  |  DB: ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1) Tj ET
+0.92 0.94 0.98 rg
+0 0 612 32 re f
+0.15 0.22 0.42 rg
+BT /F2 8.5 Tf 36 12 Td (Page 9 of 25   |   Waqar Computer Institute ERP Architecture & Code Logic Blueprint) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 746.0 Td (Both the Android App \(PortalShellScreen.kt + InstituteViewModel.kt\) and the Website) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 733.8 Td (Portal enforce the exact same 4-role permission matrix:) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 715.6 Td (| ERP Module / Capability | `ADMIN` \(Director\) | `TEACHER` \(Faculty\) | `STUDENT` | `PARENT`) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 705.4 Td (\(Guardian\) | Public \(`/verify`\) |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 695.2 Td (| :--- | :---: | :---: | :---: | :---: | :---: |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 685.0 Td (| **M01 Executive Dashboard** | Full Institute KPIs | Assigned Batch KPIs | Own Progress KPIs) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 674.8 Td (| Child Progress KPIs | None |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 664.6 Td (| **M02 Students Directory** | Full CRUD + Credentials | Read Assigned Batches | Read Own) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 654.4 Td (Profile | Read Linked Child | None |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 644.2 Td (| **M03 Teachers & Payroll** | Full CRUD + Payroll | Read Own Profile | None | None | None |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 634.0 Td (| **M04 Courses & Batches** | Full CRUD | Read Assigned Batches | Read Enrolled Batch | Read) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 623.8 Td (Child Batch | None |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 613.6 Td (| **M05 Timetable & Live Class** | Full CRUD | Read/Host Assigned | Read/Join Batch | Read) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 603.4 Td (Child Schedule | None |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 593.2 Td (| **M06 Attendance** | Full CRUD \(All\) | Mark Assigned Batch + Own Biometric | Read Own) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 583.0 Td (Attendance | Read Child Attendance | None |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 572.8 Td (| **M07 Exams & Marks** | Full CRUD + Publish | Create/Grade Batch | Attempt Exam \(Face Gate\)) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 562.6 Td (| Read Child Marks | None |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 552.4 Td (| **M08 Homework** | Full CRUD | Assign/Review Batch | Submit Homework | Read Child Homework |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 542.2 Td (None |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 532.0 Td (| **M09 Fees & Receipts** | Collect, Edit, Ledger | None | Read Own Invoices | Read/Pay Child) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 521.8 Td (Fees | None |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 511.6 Td (| **M11 Study Materials** | Upload/Delete All | Upload for Batch | Download/View | None | None) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 501.4 Td (|) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 491.2 Td (| **M12 Announcements** | Broadcast All | Broadcast Batch | Read Notices | Read Notices | None) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 481.0 Td (|) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 470.8 Td (| **M15 QR Certificates** | Issue, Sign, Revoke | None | View/Download Own | View Child Cert |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 460.6 Td (**Verify by QR/ID** |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 450.4 Td (| **M16 AI Tutor** | View Logs & Quotas | Use AI Assistant | Ask Doubts \(Multimodal\) | None |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 440.2 Td (None |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 430.0 Td (| **M17 Biometric Face Gate** | Manage All Templates | **Mandatory 128-D Live Blink** |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 419.8 Td (**Mandatory Exam Selfie** | None | None |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 409.6 Td (| **M23/M24 Security & Creds** | **Full 10K User Provisioning** | Change Own Password | Change) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 399.4 Td (Own Password | Change Own Password | None |) Tj ET
+endstream
+endobj
+23 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 22 0 R >>
+endobj
+24 0 obj
+<< /Length 7801 >>
+stream
+0.04 0.08 0.22 rg
+0 772 612 70 re f
+0.00 0.90 1.00 rg
+0 769 612 3 re f
+BT /F2 9 Tf 0.70 0.88 1.00 rg 36 822 Td (WAQAR COMPUTER INSTITUTE ERP  |  UNIFIED MOBILE APP & LIQUID GLASS WEBSITE PRD) Tj ET
+BT /F2 12 Tf 1 1 1 rg 36 798 Td (PAGE 10: IDENTICAL DATA STRUCTURES, JSON SCHEMAS & VALIDATION RULES \(PART 1\)) Tj ET
+BT /F1 8 Tf 0.75 0.82 0.96 rg 36 780 Td (Project ID: gen-lang-client-0309263247  |  DB: ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1) Tj ET
+0.92 0.94 0.98 rg
+0 0 612 32 re f
+0.15 0.22 0.42 rg
+BT /F2 8.5 Tf 36 12 Td (Page 10 of 25   |   Waqar Computer Institute ERP Architecture & Code Logic Blueprint) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 746.0 Td (To guarantee zero data mismatch between Kotlin data classes \(ErpModels.kt\) and Website) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 733.8 Td (JavaScript objects, every document written by the Website MUST obey these exact field) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 721.6 Td (schemas and firestore.rules constraints:) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 699.4 Td (10.1 Date & Currency Standardization Rules) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 685.4 Td (- Display Date Format \(UI Input/Output on App & Web\): DD-MM-YYYY \(e.g., 14-11-2026\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 673.2 Td (- Sortable ISO Date Key \(Firestore String Fields dateIso, issueDateIso, dueDateIso\):) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 661.0 Td (YYYY-MM-DD \(converted automatically via helper toIsoDate\("14-11-2026"\) ->) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 648.8 Td ("2026-11-14" and toDisplayDate\("2026-11-14"\) -> "14-11-2026"\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 636.6 Td (- Server Audit Timestamp \(createdAt, lastActiveTimestamp\): Firestore Timestamp) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 624.4 Td (object \(Timestamp.now\(\), validated by request.resource.data.createdAt <=) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 612.2 Td (request.time + duration.value\(5, 'm'\)\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 600.0 Td (- Currency Representation: Stored in Paise \(Long / Number\) \(1 INR = 100 Paise, e.g.,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 587.8 Td (INR 12,000 = 1200000\) to prevent floating-point rounding errors.) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 565.6 Td (10.2 Collection 1: `portalCredentials/{username}`) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 551.6 Td (- Document ID: Lowercase normalized username \(^[a-z0-9_.-]{3,64}$\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 539.4 Td (- Required Keys \(isValidPortalCredential in firestore.rules line 147\):) Tj ET
+0.94 0.96 0.99 rg
+34 520.7 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 523.2 Td ({) Tj ET
+0.94 0.96 0.99 rg
+34 510.2 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 512.7 Td (  "username": "aarav_wci",) Tj ET
+0.94 0.96 0.99 rg
+34 499.7 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 502.2 Td (  "passwordHash": "64-char-hex-pbkdf2-hmac-sha256",) Tj ET
+0.94 0.96 0.99 rg
+34 489.2 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 491.7 Td (  "passwordSalt": "32-char-hex-csprng-salt",) Tj ET
+0.94 0.96 0.99 rg
+34 478.7 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 481.2 Td (  "role": "student",) Tj ET
+0.94 0.96 0.99 rg
+34 468.2 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 470.7 Td (  "linkedEntityId": "stu_1763110000_ab12",) Tj ET
+0.94 0.96 0.99 rg
+34 457.7 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 460.2 Td (  "displayName": "Aarav Verma",) Tj ET
+0.94 0.96 0.99 rg
+34 447.2 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 449.7 Td (  "assignedByUid": "admin_waqar",) Tj ET
+0.94 0.96 0.99 rg
+34 436.7 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 439.2 Td (  "active": true,) Tj ET
+0.94 0.96 0.99 rg
+34 426.2 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 428.7 Td (  "isStudent": true,) Tj ET
+0.94 0.96 0.99 rg
+34 415.7 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 418.2 Td (  "isTeacher": false,) Tj ET
+0.94 0.96 0.99 rg
+34 405.2 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 407.7 Td (  "isParent": false,) Tj ET
+0.94 0.96 0.99 rg
+34 394.7 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 397.2 Td (  "isAdmin": false,) Tj ET
+0.94 0.96 0.99 rg
+34 384.2 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 386.7 Td (  "portalRoles": ["student"],) Tj ET
+0.94 0.96 0.99 rg
+34 373.7 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 376.2 Td (  "createdAt": "Firestore.Timestamp") Tj ET
+0.94 0.96 0.99 rg
+34 363.2 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 365.7 Td (}) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 351.2 Td (- Validation Rules: username \(2..80 chars\), passwordHash \(16..256 chars\),) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 339.0 Td (passwordSalt \(8..128 chars\), role in ['admin', 'student', 'teacher', 'parent'],) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 326.8 Td (linkedEntityId \(1..128 chars\), raw password minimum 6 characters before hashing.) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 304.6 Td (10.3 Collection 2: `students/{studentId}`) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 290.6 Td (- Required & Allowed Keys \(isValidStudentRecord in firestore.rules line 183\):) Tj ET
+0.94 0.96 0.99 rg
+34 271.9 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 274.4 Td ({) Tj ET
+0.94 0.96 0.99 rg
+34 261.4 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 263.9 Td (  "id": "stu_1763110000_ab12",) Tj ET
+0.94 0.96 0.99 rg
+34 250.9 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 253.4 Td (  "enrollmentNo": "WCI-2026-101",) Tj ET
+0.94 0.96 0.99 rg
+34 240.4 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 242.9 Td (  "fullName": "Aarav Verma",) Tj ET
+0.94 0.96 0.99 rg
+34 229.9 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 232.4 Td (  "email": "aarav@example.com",) Tj ET
+0.94 0.96 0.99 rg
+34 219.4 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 221.9 Td (  "phone": "+919811122233",) Tj ET
+0.94 0.96 0.99 rg
+34 208.9 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 211.4 Td (  "guardianName": "Rajesh Verma",) Tj ET
+0.94 0.96 0.99 rg
+34 198.4 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 200.9 Td (  "guardianPhone": "+919811122234",) Tj ET
+0.94 0.96 0.99 rg
+34 187.9 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 190.4 Td (  "courseId": "crs_adca",) Tj ET
+0.94 0.96 0.99 rg
+34 177.4 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 179.9 Td (  "courseName": "Advanced Diploma in Computer Applications \(ADCA\)",) Tj ET
+0.94 0.96 0.99 rg
+34 166.9 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 169.4 Td (  "batchId": "bat_adca_m1",) Tj ET
+0.94 0.96 0.99 rg
+34 156.4 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 158.9 Td (  "batchName": "ADCA Morning 9AM",) Tj ET
+0.94 0.96 0.99 rg
+34 145.9 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 148.4 Td (  "status": "ACTIVE",) Tj ET
+0.94 0.96 0.99 rg
+34 135.4 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 137.9 Td (  "totalFeePaise": 1800000,) Tj ET
+0.94 0.96 0.99 rg
+34 124.9 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 127.4 Td (  "paidFeePaise": 600000,) Tj ET
+0.94 0.96 0.99 rg
+34 114.4 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 116.9 Td (  "attendancePercent": 95,) Tj ET
+0.94 0.96 0.99 rg
+34 103.9 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 106.4 Td (  "photoUri": "data:image/jpeg;base64,...",) Tj ET
+0.94 0.96 0.99 rg
+34 93.4 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 95.9 Td (  "attachmentName": "Aadhar_Marksheet.pdf \(140 KB\)",) Tj ET
+0.94 0.96 0.99 rg
+34 82.9 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 85.4 Td (  "ownerUid": "admin_waqar",) Tj ET
+0.94 0.96 0.99 rg
+34 72.4 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 74.9 Td (  "createdAt": "Firestore.Timestamp") Tj ET
+0.94 0.96 0.99 rg
+34 61.9 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 64.4 Td (}) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 49.9 Td (- Validation Rules: status MUST be in ['ACTIVE', 'COMPLETED', 'DROPPED', 'ON_LEAVE',) Tj ET
+endstream
+endobj
+25 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 24 0 R >>
+endobj
+26 0 obj
+<< /Length 7491 >>
+stream
+0.04 0.08 0.22 rg
+0 772 612 70 re f
+0.00 0.90 1.00 rg
+0 769 612 3 re f
+BT /F2 9 Tf 0.70 0.88 1.00 rg 36 822 Td (WAQAR COMPUTER INSTITUTE ERP  |  UNIFIED MOBILE APP & LIQUID GLASS WEBSITE PRD) Tj ET
+BT /F2 12 Tf 1 1 1 rg 36 798 Td (PAGE 11: IDENTICAL DATA STRUCTURES, JSON SCHEMAS & VALIDATION RULES \(PART 2\)) Tj ET
+BT /F1 8 Tf 0.75 0.82 0.96 rg 36 780 Td (Project ID: gen-lang-client-0309263247  |  DB: ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1) Tj ET
+0.92 0.94 0.98 rg
+0 0 612 32 re f
+0.15 0.22 0.42 rg
+BT /F2 8.5 Tf 36 12 Td (Page 11 of 25   |   Waqar Computer Institute ERP Architecture & Code Logic Blueprint) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 736.0 Td (11.1 Collection 3: `staff/{staffId}` & `teachers/{teacherId}`) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 722.0 Td (- staff/{staffId} Schema \(isValidStaffMember in firestore.rules line 322\):) Tj ET
+0.94 0.96 0.99 rg
+34 703.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 705.8 Td ({) Tj ET
+0.94 0.96 0.99 rg
+34 692.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 695.3 Td (  "id": "stf_ravi_01",) Tj ET
+0.94 0.96 0.99 rg
+34 682.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 684.8 Td (  "employeeCode": "EMP-WCI-01",) Tj ET
+0.94 0.96 0.99 rg
+34 671.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 674.3 Td (  "fullName": "Prof. Ravi Kumar",) Tj ET
+0.94 0.96 0.99 rg
+34 661.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 663.8 Td (  "designation": "Senior Python & Tally Faculty",) Tj ET
+0.94 0.96 0.99 rg
+34 650.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 653.3 Td (  "phone": "+919822233344",) Tj ET
+0.94 0.96 0.99 rg
+34 640.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 642.8 Td (  "email": "ravi@waqarinstitute.edu",) Tj ET
+0.94 0.96 0.99 rg
+34 629.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 632.3 Td (  "salaryPaise": 2500000,) Tj ET
+0.94 0.96 0.99 rg
+34 619.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 621.8 Td (  "paidSalaryPaise": 2500000,) Tj ET
+0.94 0.96 0.99 rg
+34 608.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 611.3 Td (  "joiningDateIso": "2026-01-15",) Tj ET
+0.94 0.96 0.99 rg
+34 598.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 600.8 Td (  "active": true,) Tj ET
+0.94 0.96 0.99 rg
+34 587.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 590.3 Td (  "photoUri": "data:image/jpeg;base64,...",) Tj ET
+0.94 0.96 0.99 rg
+34 577.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 579.8 Td (  "teacherUsername": "ravi_sir",) Tj ET
+0.94 0.96 0.99 rg
+34 566.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 569.3 Td (  "ownerUid": "admin_waqar",) Tj ET
+0.94 0.96 0.99 rg
+34 556.3 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 558.8 Td (  "createdAt": "Firestore.Timestamp") Tj ET
+0.94 0.96 0.99 rg
+34 545.8 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 548.3 Td (}) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 533.8 Td (- teachers/{teacherId} Biometric Vault Schema \(firestore.rules line 636\):) Tj ET
+0.94 0.96 0.99 rg
+34 515.1 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 517.6 Td ({) Tj ET
+0.94 0.96 0.99 rg
+34 504.6 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 507.1 Td (  "id": "stf_ravi_01",) Tj ET
+0.94 0.96 0.99 rg
+34 494.1 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 496.6 Td (  "name": "Prof. Ravi Kumar",) Tj ET
+0.94 0.96 0.99 rg
+34 483.6 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 486.1 Td (  "photoUri": "data:image/jpeg;base64,...",) Tj ET
+0.94 0.96 0.99 rg
+34 473.1 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 475.6 Td (  "enrolledByAdminUid": "admin_live_enrollment_stf_ravi_01",) Tj ET
+0.94 0.96 0.99 rg
+34 462.6 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 465.1 Td (  "faceEmbedding": [0.0812, -0.1142, "... 128 floats ..."],) Tj ET
+0.94 0.96 0.99 rg
+34 452.1 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 454.6 Td (  "biometricEnrolled": true,) Tj ET
+0.94 0.96 0.99 rg
+34 441.6 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 444.1 Td (  "biometricEnrolledAt": 1763112000000) Tj ET
+0.94 0.96 0.99 rg
+34 431.1 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 433.6 Td (}) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 409.1 Td (11.2 Collection 4: `courses/{courseId}` & `batches/{batchId}`) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 395.1 Td (- courses/{courseId} \(isValidCourseRecord\): id, code, title, category,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 382.9 Td (durationMonths \(1..60\), totalFeePaise, syllabusSummary, totalModules, active,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 370.7 Td (ownerUid, createdAt.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 358.5 Td (- batches/{batchId} \(isValidBatchRecord\): id, code, name, courseId, courseName,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 346.3 Td (teacherId, teacherName, timing, roomNo, capacity \(1..5000\), enrolledCount, active,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 334.1 Td (ownerUid, createdAt.) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 311.9 Td (11.3 Collection 5: `fees/{invoiceId}` & `immutableLedger/{eventId}`) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 297.9 Td (- fees/{invoiceId} \(isValidFeeInvoice\): id, receiptNo, studentId, studentName,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 285.7 Td (courseName, title, totalAmountPaise, paidAmountPaise, discountPaise, finePaise,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 273.5 Td (paymentMode \('CASH' | 'UPI' | 'CARD' | 'BANK_TRANSFER' | 'CHEQUE'\), status \('PAID' |) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 261.3 Td ('PARTIAL' | 'PENDING' | 'OVERDUE'\), dueDateIso, paidAtIso, ownerUid, createdAt.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 249.1 Td (- immutableLedger/{eventId} \(isValidLedgerEntry\): sequenceIndex, eventType, actorId,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 236.9 Td (prevEventHash, currentEventHash \(16..128 hex chars\), payloadSummary, createdAt.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 224.7 Td (\(Append-only: allow update, delete: if false;\).) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 202.5 Td (11.4 Collection 6: `certificates/{certificateId}`) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 188.5 Td (- certificates/{certificateId} \(isValidCertificateRecord in firestore.rules line) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 176.3 Td (306\):) Tj ET
+0.94 0.96 0.99 rg
+34 157.6 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 160.1 Td ({) Tj ET
+0.94 0.96 0.99 rg
+34 147.1 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 149.6 Td (  "id": "WCI-CERT-2026-10042",) Tj ET
+0.94 0.96 0.99 rg
+34 136.6 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 139.1 Td (  "serialNo": "WCI-CERT-2026-10042",) Tj ET
+0.94 0.96 0.99 rg
+34 126.1 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 128.6 Td (  "studentId": "WCI-2026-101",) Tj ET
+0.94 0.96 0.99 rg
+34 115.6 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 118.1 Td (  "studentName": "Aarav Verma",) Tj ET
+0.94 0.96 0.99 rg
+34 105.1 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 107.6 Td (  "courseName": "Advanced Diploma in Computer Applications \(ADCA\)",) Tj ET
+0.94 0.96 0.99 rg
+34 94.6 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 97.1 Td (  "grade": "A+",) Tj ET
+0.94 0.96 0.99 rg
+34 84.1 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 86.6 Td (  "percentage": 92,) Tj ET
+0.94 0.96 0.99 rg
+34 73.6 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 76.1 Td (  "issueDateIso": "2026-11-14",) Tj ET
+0.94 0.96 0.99 rg
+34 63.1 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 65.6 Td (  "verificationHash": "SHA256:8F3A19C04E2B7D11",) Tj ET
+0.94 0.96 0.99 rg
+34 52.6 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 55.1 Td (  "revoked": false,) Tj ET
+endstream
+endobj
+27 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 26 0 R >>
+endobj
+28 0 obj
+<< /Length 3317 >>
+stream
+0.04 0.08 0.22 rg
+0 772 612 70 re f
+0.00 0.90 1.00 rg
+0 769 612 3 re f
+BT /F2 9 Tf 0.70 0.88 1.00 rg 36 822 Td (WAQAR COMPUTER INSTITUTE ERP  |  UNIFIED MOBILE APP & LIQUID GLASS WEBSITE PRD) Tj ET
+BT /F2 12 Tf 1 1 1 rg 36 798 Td (PAGE 12: COMMON CLOUD STORAGE ARCHITECTURE \(PHOTOS, PDFS, NOTES & CERTIFICATES\)) Tj ET
+BT /F1 8 Tf 0.75 0.82 0.96 rg 36 780 Td (Project ID: gen-lang-client-0309263247  |  DB: ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1) Tj ET
+0.92 0.94 0.98 rg
+0 0 612 32 re f
+0.15 0.22 0.42 rg
+BT /F2 8.5 Tf 36 12 Td (Page 12 of 25   |   Waqar Computer Institute ERP Architecture & Code Logic Blueprint) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 742.0 Td (12.1 Shared Storage Bucket & Dual-Mode Asset Strategy) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 728.0 Td (Both the Android App and the Website Portal share:) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 715.8 Td (- Firebase Storage Bucket: gs://gen-lang-client-0309263247.firebasestorage.app) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 703.6 Td (- Unified Bucket Folder Hierarchy:) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 691.4 Td (- /students/photos/{studentId}.jpg - Student admission passport photos \(with) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 679.2 Td (compressed < 150 KB Base64 photoUri mirror in Firestore for instant sub-millisecond) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 667.0 Td (offline rendering\).) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 654.8 Td (- /students/documents/{studentId}/{fileName} - Uploaded Aadhaar, previous) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 642.6 Td (marksheets, and admission forms.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 630.4 Td (- /teachers/photos/{teacherId}.jpg - Faculty profile photos.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 618.2 Td (- /materials/{courseId}/{materialId}.pdf - Course study notes, practical) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 606.0 Td (assignments, and PDF e-books.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 593.8 Td (- /certificates/pdf/{certSerialNo}.pdf - Official exported diploma certificates with) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 581.6 Td (embedded QR codes.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 569.4 Td (- /receipts/pdf/{receiptNo}.pdf - Fee installment receipts.) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 547.2 Td (12.2 Image Compression & Upload Pipeline \(Web & Mobile Parity\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 533.2 Td (1. When an Admin selects a student or teacher photo on the Website \(<input) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 521.0 Td (type="file" accept="image/*" />\), an HTML5 <canvas> resizes the image to max 480x480) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 508.8 Td (px at 0.78 JPEG quality \(data:image/jpeg;base64,...\), matching the Android) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 496.6 Td (Bitmap.compress\(Bitmap.CompressFormat.JPEG, 78, out\) pipeline in) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 484.4 Td (DashboardAndPeopleModules.kt.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 472.2 Td (2. This guarantees that photos uploaded from the Website immediately render inside) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 460.0 Td (the Android App's AsyncImage / decodeDataUriToBitmap composables without CORS or) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 447.8 Td (broken URL issues.) Tj ET
+endstream
+endobj
+29 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 28 0 R >>
+endobj
+30 0 obj
+<< /Length 3214 >>
+stream
+0.04 0.08 0.22 rg
+0 772 612 70 re f
+0.00 0.90 1.00 rg
+0 769 612 3 re f
+BT /F2 9 Tf 0.70 0.88 1.00 rg 36 822 Td (WAQAR COMPUTER INSTITUTE ERP  |  UNIFIED MOBILE APP & LIQUID GLASS WEBSITE PRD) Tj ET
+BT /F2 12 Tf 1 1 1 rg 36 798 Td (PAGE 13: REAL-TIME SYNC, WEBSOCKETS \(`onSnapshot`\) & FCM PUSH NOTIFICATIONS) Tj ET
+BT /F1 8 Tf 0.75 0.82 0.96 rg 36 780 Td (Project ID: gen-lang-client-0309263247  |  DB: ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1) Tj ET
+0.92 0.94 0.98 rg
+0 0 612 32 re f
+0.15 0.22 0.42 rg
+BT /F2 8.5 Tf 36 12 Td (Page 13 of 25   |   Waqar Computer Institute ERP Architecture & Code Logic Blueprint) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 742.0 Td (13.1 Bi-Directional Sub-100ms WebSocket Sync) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 728.0 Td (Cloud Firestore maintains persistent multiplexed WebSocket/gRPC connections across both) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 715.8 Td (Web and Android clients:) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 703.6 Td (1. Website -> Android Instant Sync:) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 691.4 Td (- When the Admin updates a student record, marks attendance, or issues a fee receipt) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 679.2 Td (on the Website, Firestore pushes the delta over the open stream to) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 667.0 Td (InstituteRepository.observeStudents\(\), observeAttendance\(\), and observeFeeInvoices\(\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 654.8 Td (on the student/teacher Android phone.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 642.6 Td (- The Android InstituteViewModel immediately updates its StateFlow<InstituteUiState>) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 630.4 Td (and writes the updated rows into the encrypted local Room v3 + SQLCipher cache) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 618.2 Td (\(CachedStudentEntity, CachedTimetableSlotEntity\).) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 606.0 Td (2. Android -> Website Instant Sync:) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 593.8 Td (- When a Teacher passes the 128-D Live Blink Biometric Gate on their phone,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 581.6 Td (TeacherAttendanceSyncManager.markTeacherPresentOnBiometricPass\(\) writes to) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 569.4 Td (teacher_attendance/{teacherUid}_{YYYY-MM-DD}.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 557.2 Td (- The Website Admin Portal's onSnapshot\(collection\(db, "teacher_attendance"\)\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 545.0 Td (listener immediately lights up the teacher's status badge as PRESENT * BIOMETRIC) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 532.8 Td (VERIFIED [OK] on the Director's screen.) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 510.6 Td (13.2 Idempotent Mutation & Conflict Resolution \(`IdempotentSyncManager`\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 496.6 Td (Both platforms compute a deterministic canonical SHA-256 payload digest over sorted keys) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 484.4 Td (\(id, paidAmountPaise, status, etc.\) and compare mutationTimestampMs so out-of-order) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 472.2 Td (offline retries never overwrite newer records.) Tj ET
+endstream
+endobj
+31 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 30 0 R >>
+endobj
+32 0 obj
+<< /Length 4830 >>
+stream
+0.04 0.08 0.22 rg
+0 772 612 70 re f
+0.00 0.90 1.00 rg
+0 769 612 3 re f
+BT /F2 9 Tf 0.70 0.88 1.00 rg 36 822 Td (WAQAR COMPUTER INSTITUTE ERP  |  UNIFIED MOBILE APP & LIQUID GLASS WEBSITE PRD) Tj ET
+BT /F2 12 Tf 1 1 1 rg 36 798 Td (PAGE 14: QR CERTIFICATE GENERATOR, GOOGLE LENS & LIVE WEBSITE SCANNER WORKFLOW) Tj ET
+BT /F1 8 Tf 0.75 0.82 0.96 rg 36 780 Td (Project ID: gen-lang-client-0309263247  |  DB: ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1) Tj ET
+0.92 0.94 0.98 rg
+0 0 612 32 re f
+0.15 0.22 0.42 rg
+BT /F2 8.5 Tf 36 12 Td (Page 14 of 25   |   Waqar Computer Institute ERP Architecture & Code Logic Blueprint) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 742.0 Td (14.1 End-to-End Cryptographic QR Verification Lifecycle) Tj ET
+0.94 0.96 0.99 rg
+34 721.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 724.0 Td ([Admin App or Web Portal]) Tj ET
+0.94 0.96 0.99 rg
+34 711.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 713.5 Td (       |) Tj ET
+0.94 0.96 0.99 rg
+34 700.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 703.0 Td (       | 1. Issues Certificate \(Serial: WCI-CERT-2026-10042, Grade: A+, Roll: WCI-101\)) Tj ET
+0.94 0.96 0.99 rg
+34 690.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 692.5 Td (       | 2. Computes SHA-256 Seal: sha256ShortHex\("WCI-) Tj ET
+0.94 0.96 0.99 rg
+34 679.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 682.0 Td (CERT-2026-10042|WCI-101|Aarav|ADCA|A+|92|2026-11-14|Waqar"\)) Tj ET
+0.94 0.96 0.99 rg
+34 669.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 671.5 Td (       | 3. Saves document to Firestore `/certificates/WCI-CERT-2026-10042`) Tj ET
+0.94 0.96 0.99 rg
+34 658.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 661.0 Td (       | 4. Encodes ISO/IEC 18004 QR Code with URL:) Tj ET
+0.94 0.96 0.99 rg
+34 648.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 650.5 Td (       |    https://waqar-institute-erp.web.app/verify?cert_id=WCI-) Tj ET
+0.94 0.96 0.99 rg
+34 637.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 640.0 Td (CERT-2026-10042&roll=WCI-101&...&sig=8F3A19C04E2B7D11) Tj ET
+0.94 0.96 0.99 rg
+34 627.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 629.5 Td (       v) Tj ET
+0.94 0.96 0.99 rg
+34 616.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 619.0 Td ([Printed / PDF Diploma Certificate]) Tj ET
+0.94 0.96 0.99 rg
+34 606.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 608.5 Td (       |) Tj ET
+0.94 0.96 0.99 rg
+34 595.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 598.0 Td (       | 5. Employer / Student / Verifier scans QR using:) Tj ET
+0.94 0.96 0.99 rg
+34 585.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 587.5 Td (       |    \(A\) Google Lens / Phone Camera  OR  \(B\) In-Website Live QR Camera Scanner  OR  ) Tj ET
+0.94 0.96 0.99 rg
+34 574.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 577.0 Td (\(C\) In-App Scanner) Tj ET
+0.94 0.96 0.99 rg
+34 564.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 566.5 Td (       v) Tj ET
+0.94 0.96 0.99 rg
+34 553.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 556.0 Td ([Website `/verify` Portal Opens Automatically]) Tj ET
+0.94 0.96 0.99 rg
+34 543.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 545.5 Td (       |) Tj ET
+0.94 0.96 0.99 rg
+34 532.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 535.0 Td (       | 6. Queries Live Firestore `/certificates/WCI-CERT-2026-10042` + Recomputes ) Tj ET
+0.94 0.96 0.99 rg
+34 522.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 524.5 Td (WebCrypto SHA-256 Signature) Tj ET
+0.94 0.96 0.99 rg
+34 511.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 514.0 Td (       +---> If `revoked == true`  => Displays Red `REVOKED BY INSTITUTE` Badge) Tj ET
+0.94 0.96 0.99 rg
+34 501.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 503.5 Td (       +---> If Match & Valid Seal => Displays Green `OFFICIAL VERIFIED [OK]` Badge + Full ) Tj ET
+0.94 0.96 0.99 rg
+34 490.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 493.0 Td (Graduate Details) Tj ET
+0.94 0.96 0.99 rg
+34 480.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 482.5 Td (       +---> If Tampered URL/Fake  => Displays Red `UNVERIFIED / SIGNATURE MISMATCH` Alert) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 458.0 Td (14.2 Live WebRTC Camera QR Scanner on the Website) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 444.0 Td (In addition to passive URL verification via Google Lens, the Website's /verify and) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 431.8 Td (/attendance pages embed a Live Camera QR Scanner using the browser's native) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 419.6 Td (BarcodeDetector\({ formats: ['qr_code'] }\) API \(with jsQR / Html5Qrcode canvas fallback\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 407.4 Td (so the Admin or any verifier can click "Scan QR with Camera" directly on a laptop or) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 395.2 Td (mobile browser.) Tj ET
+endstream
+endobj
+33 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 32 0 R >>
+endobj
+34 0 obj
+<< /Length 3672 >>
+stream
+0.04 0.08 0.22 rg
+0 772 612 70 re f
+0.00 0.90 1.00 rg
+0 769 612 3 re f
+BT /F2 9 Tf 0.70 0.88 1.00 rg 36 822 Td (WAQAR COMPUTER INSTITUTE ERP  |  UNIFIED MOBILE APP & LIQUID GLASS WEBSITE PRD) Tj ET
+BT /F2 12 Tf 1 1 1 rg 36 798 Td (PAGE 15: TEACHER BIOMETRIC 128-D LIVE BLINK GATE & WEB MONITOR WORKFLOW) Tj ET
+BT /F1 8 Tf 0.75 0.82 0.96 rg 36 780 Td (Project ID: gen-lang-client-0309263247  |  DB: ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1) Tj ET
+0.92 0.94 0.98 rg
+0 0 612 32 re f
+0.15 0.22 0.42 rg
+BT /F2 8.5 Tf 36 12 Td (Page 15 of 25   |   Waqar Computer Institute ERP Architecture & Code Logic Blueprint) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 742.0 Td (15.1 How the Teacher Biometric Gate Works Across App & Web) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 728.0 Td (1. Admin Creates Teacher on Web or App \(/teachers\):) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 715.8 Td (- Admin creates the teacher record \(staff/{id}\) and assigns a teacherUsername and) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 703.6 Td (teacherPassword in portalCredentials/{teacherUsername} with linkedEntityId =) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 691.4 Td (staff.id.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 679.2 Td (2. Teacher First-Time Login on Android App:) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 667.0 Td (- Teacher enters their username and password on their phone.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 654.8 Td (- TeacherBiometricGateOverlay intercepts entry into the Teacher Portal, detects) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 642.6 Td (EnrollmentLookupResult.Missing, and displays "First-Time 128-D Live Blink Face) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 630.4 Td (Enrollment Mode".) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 618.2 Td (- Teacher looks at the front camera and blinks once \(leftEyeOpen > 0.65 -> < 0.35 ->) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 606.0 Td (> 0.65\).) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 593.8 Td (- FaceBiometricVerificationEngine.enrollOrVerifyTeacherLiveBlinkWithFaceObject) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 581.6 Td (extracts the 128-D normalized facial geometry vector, locks it in hardware-encrypted) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 569.4 Td (storage, and syncs it to Cloud Firestore teachers/{teacherId}.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 557.2 Td (3. Every Subsequent Teacher Login on Android App:) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 545.0 Td (- Because TeacherBiometricGateManager.clearLoginVerificationOnAuthChange\(\) clears) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 532.8 Td (session state on every login/sign-out, the teacher must perform a live eye blink on) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 520.6 Td (every login.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 508.4 Td (- The live 128-D vector is compared against the locked 128-D template) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 496.2 Td (\(cosineSimilarity >= 0.88f\). Upon match, the portal unlocks and) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 484.0 Td (TeacherAttendanceSyncManager marks the teacher PRESENT in real time.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 471.8 Td (4. Admin Monitoring & Reset on the Website:) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 459.6 Td (- On the Website's /teachers page, the Admin sees a live badge \(128-D Biometric) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 447.4 Td (Enrolled [OK] or Pending First-Time Blink\) and a "Reset Biometric Template" button) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 435.2 Td (\(deleteField\("faceEmbedding"\) on teachers/{teacherId}\) in case a teacher needs to) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 423.0 Td (re-enroll.) Tj ET
+endstream
+endobj
+35 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 34 0 R >>
+endobj
+36 0 obj
+<< /Length 2953 >>
+stream
+0.04 0.08 0.22 rg
+0 772 612 70 re f
+0.00 0.90 1.00 rg
+0 769 612 3 re f
+BT /F2 9 Tf 0.70 0.88 1.00 rg 36 822 Td (WAQAR COMPUTER INSTITUTE ERP  |  UNIFIED MOBILE APP & LIQUID GLASS WEBSITE PRD) Tj ET
+BT /F2 12 Tf 1 1 1 rg 36 798 Td (PAGE 16: EXACT ANDROID APP FILES & CONFIGURATION TOUCHPOINTS) Tj ET
+BT /F1 8 Tf 0.75 0.82 0.96 rg 36 780 Td (Project ID: gen-lang-client-0309263247  |  DB: ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1) Tj ET
+0.92 0.94 0.98 rg
+0 0 612 32 re f
+0.15 0.22 0.42 rg
+BT /F2 8.5 Tf 36 12 Td (Page 16 of 25   |   Waqar Computer Institute ERP Architecture & Code Logic Blueprint) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 742.0 Td (16.1 Do Existing Android App Files Need Major Changes?) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 728.0 Td (No. Your Android app \(InstituteRepository.kt, FirebaseAuthServiceProvider.kt,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 715.8 Td (InstituteViewModel.kt, ErpModels.kt\) is already architected around real-time Cloud) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 703.6 Td (Firestore streams. Only 1 constant needs to match your live Firebase Hosting domain:) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 685.4 Td (| File Path in Android Project | Current Code | Required Update When Hosting Domain Is) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 675.2 Td (Finalized |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 665.0 Td (| :--- | :--- | :--- |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 654.8 Td (| `/app/src/main/java/com/waqar/institute/certificate/CertificateQrGenerator.kt` \(Line 23\) |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 644.6 Td (`private const val VERIFY_BASE_URL = "https://waqar-institute-erp.web.app/verify"` | Keep as) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 634.4 Td (`https://waqar-institute-erp.web.app/verify` \(or set to `https://gen-lang-) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 624.2 Td (client-0309263247.web.app/verify` to match default Firebase Hosting site\). |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 614.0 Td (| `/app/src/main/java/com/example/security/AppCheckHelper.kt` | Uses) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 603.8 Td (`DebugAppCheckProviderFactory` for sideloaded APKs | **Already completed & verified** -) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 593.6 Td (sideloaded WhatsApp/Telegram APKs will never be blocked by Play Store checks. |) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 583.4 Td (| `/app/src/main/java/com/waqar/institute/biometric/TeacherBiometricGateManager.kt` | Enforces) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 573.2 Td (First-Time 128-D Live Blink Enrollment + Every-Login Blink | **Already completed & verified**.) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 563.0 Td (|) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 552.8 Td (| `/.github/workflows/android-release.yml` | Builds `assembleRelease` with) Tj ET
+0.12 0.18 0.30 rg
+BT /F3 7.3 Tf 36 542.6 Td (`-PenableNativeCxxBuild=true` | **Already completed & verified**. |) Tj ET
+endstream
+endobj
+37 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 36 0 R >>
+endobj
+38 0 obj
+<< /Length 6045 >>
+stream
+0.04 0.08 0.22 rg
+0 772 612 70 re f
+0.00 0.90 1.00 rg
+0 769 612 3 re f
+BT /F2 9 Tf 0.70 0.88 1.00 rg 36 822 Td (WAQAR COMPUTER INSTITUTE ERP  |  UNIFIED MOBILE APP & LIQUID GLASS WEBSITE PRD) Tj ET
+BT /F2 12 Tf 1 1 1 rg 36 798 Td (PAGE 17: FIRESTORE SECURITY RULES \(`firestore.rules`\) & `firebase.json` UPDATES FO) Tj ET
+BT /F1 8 Tf 0.75 0.82 0.96 rg 36 780 Td (Project ID: gen-lang-client-0309263247  |  DB: ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1) Tj ET
+0.92 0.94 0.98 rg
+0 0 612 32 re f
+0.15 0.22 0.42 rg
+BT /F2 8.5 Tf 36 12 Td (Page 17 of 25   |   Waqar Computer Institute ERP Architecture & Code Logic Blueprint) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 742.0 Td (17.1 How `firestore.rules` Protects Both Mobile App & Website) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 728.0 Td (Your existing /firestore.rules \(753 lines\) supports two authentication modes that the) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 715.8 Td (Website Admin Portal will use seamlessly:) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 703.6 Td (1. Firebase Auth Admin Session \(Recommended for Full Web CRUD including DELETE\):) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 691.4 Td (- When the Admin logs into the Website Portal, the Website verifies the Admin's) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 679.2 Td (portalCredentials hash AND signs into Firebase Auth in the background) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 667.0 Td (\(signInWithEmailAndPassword\(auth, "waqar@waqarinstitute.edu", ...\) or Google Sign-In) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 654.8 Td (with samdkhan8256972@gmail.com\).) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 642.6 Td (- Because isAdmin\(\) in firestore.rules \(line 45\) checks request.auth != null &&) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 630.4 Td (\(request.auth.token.email == 'samdkhan8256972@gmail.com' || request.auth.token.email) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 618.2 Td (== 'waqar@waqarinstitute.edu' || currentUserRole\(\) == 'admin'\), the Website) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 606.0 Td (immediately gets full create, update, and delete privileges across all 24) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 593.8 Td (collections without weakening a single security rule!) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 581.6 Td (2. Portal Credential Session UID \(ownerUid: "admin_waqar"\):) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 569.4 Td (- Even before Firebase Auth token exchange completes, firestore.rules allows create) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 557.2 Td (and update when ownerUid / assignedByUid matches ^admin_.*) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 545.0 Td (\(isAdminCredentialSessionUid\).) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 522.8 Td (17.2 Optional `firestore.rules` Enhancement \(If Admin Deletes Records via Credential-Onl) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 508.8 Td (If you ever want the Website or App to delete a student/course/batch without a Firebase) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 496.6 Td (Auth token \(using only portalCredentials\), only the allow delete lines in) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 484.4 Td (firestore.rules need to stay tied to isAdmin\(\) while the Website signs into Firebase) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 472.2 Td (Auth automatically on login. Thus zero weakening of firestore.rules is required.) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 450.0 Td (17.3 `firebase.json` Multi-Route Rewrite Configuration for the Website) Tj ET
+0.94 0.96 0.99 rg
+34 429.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 432.0 Td ({) Tj ET
+0.94 0.96 0.99 rg
+34 419.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 421.5 Td (  "firestore": {) Tj ET
+0.94 0.96 0.99 rg
+34 408.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 411.0 Td (    "database": "ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1",) Tj ET
+0.94 0.96 0.99 rg
+34 398.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 400.5 Td (    "rules": "firestore.rules") Tj ET
+0.94 0.96 0.99 rg
+34 387.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 390.0 Td (  },) Tj ET
+0.94 0.96 0.99 rg
+34 377.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 379.5 Td (  "hosting": {) Tj ET
+0.94 0.96 0.99 rg
+34 366.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 369.0 Td (    "public": "firebase/hosting-prod",) Tj ET
+0.94 0.96 0.99 rg
+34 356.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 358.5 Td (    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],) Tj ET
+0.94 0.96 0.99 rg
+34 345.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 348.0 Td (    "cleanUrls": true,) Tj ET
+0.94 0.96 0.99 rg
+34 335.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 337.5 Td (    "trailingSlash": false,) Tj ET
+0.94 0.96 0.99 rg
+34 324.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 327.0 Td (    "rewrites": [) Tj ET
+0.94 0.96 0.99 rg
+34 314.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 316.5 Td (      { "source": "/verify", "destination": "/verify/index.html" },) Tj ET
+0.94 0.96 0.99 rg
+34 303.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 306.0 Td (      { "source": "/verify/**", "destination": "/verify/index.html" },) Tj ET
+0.94 0.96 0.99 rg
+34 293.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 295.5 Td (      { "source": "/login", "destination": "/index.html" },) Tj ET
+0.94 0.96 0.99 rg
+34 282.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 285.0 Td (      { "source": "/admin/**", "destination": "/index.html" },) Tj ET
+0.94 0.96 0.99 rg
+34 272.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 274.5 Td (      { "source": "/operations/**", "destination": "/index.html" },) Tj ET
+0.94 0.96 0.99 rg
+34 261.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 264.0 Td (      { "source": "**", "destination": "/index.html" }) Tj ET
+0.94 0.96 0.99 rg
+34 251.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 253.5 Td (    ]) Tj ET
+0.94 0.96 0.99 rg
+34 240.5 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 243.0 Td (  }) Tj ET
+0.94 0.96 0.99 rg
+34 230.0 544 11 re f
+0.08 0.16 0.34 rg
+BT /F3 7.4 Tf 38 232.5 Td (}) Tj ET
+endstream
+endobj
+39 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 38 0 R >>
+endobj
+40 0 obj
+<< /Length 2435 >>
+stream
+0.04 0.08 0.22 rg
+0 772 612 70 re f
+0.00 0.90 1.00 rg
+0 769 612 3 re f
+BT /F2 9 Tf 0.70 0.88 1.00 rg 36 822 Td (WAQAR COMPUTER INSTITUTE ERP  |  UNIFIED MOBILE APP & LIQUID GLASS WEBSITE PRD) Tj ET
+BT /F2 12 Tf 1 1 1 rg 36 798 Td (PAGE 18: COMPLETE WEBSITE LOGIN PAGE \(`/login`\) SPECIFICATION & WORKFLOW) Tj ET
+BT /F1 8 Tf 0.75 0.82 0.96 rg 36 780 Td (Project ID: gen-lang-client-0309263247  |  DB: ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1) Tj ET
+0.92 0.94 0.98 rg
+0 0 612 32 re f
+0.15 0.22 0.42 rg
+BT /F2 8.5 Tf 36 12 Td (Page 18 of 25   |   Waqar Computer Institute ERP Architecture & Code Logic Blueprint) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 742.0 Td (18.1 Visual Layout \(Identical to Android Login Screen\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 728.0 Td (- Left / Top Branding Hero: Waqar Computer Institute 3D glowing crest, tagline) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 715.8 Td (*"Enterprise Academic, Biometric & Financial ERP"*, and live cloud connection) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 703.6 Td (indicator \(Connected to Cloud Firestore * Sub-ms Sync\).) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 691.4 Td (- Role Selector Tabs: Admin Portal, Teacher Portal, Student Portal, Parent Portal.) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 679.2 Td (- Credential Form:) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 667.0 Td (- @username input \(normalized lowercase, stripped of leading @\).) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 654.8 Td (- Password input \(minimum 6 characters\) with visibility toggle.) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 642.6 Td (- Primary CTA Button: Sign In to Portal \(executes PBKDF2-HMAC-SHA256 verification) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 630.4 Td (against portalCredentials/{username}\).) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 618.2 Td (- Secondary CTA Button \(Admin/Parent\): Continue with Google \(Director Verified\).) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 606.0 Td (- Brute-Force Rate Limiter: Matches InstituteViewModel.computeAuthLockoutDurationMs:) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 593.8 Td (5 failed attempts trigger a progressive 30-second exponential lockout timer.) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 581.6 Td (- 2FA TOTP Step-Up Modal: If userProfile.mfaEnabled == true, prompts for the 6-digit) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 569.4 Td (RFC 6238 authenticator code before unlocking /admin.) Tj ET
+endstream
+endobj
+41 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 40 0 R >>
+endobj
+42 0 obj
+<< /Length 3232 >>
+stream
+0.04 0.08 0.22 rg
+0 772 612 70 re f
+0.00 0.90 1.00 rg
+0 769 612 3 re f
+BT /F2 9 Tf 0.70 0.88 1.00 rg 36 822 Td (WAQAR COMPUTER INSTITUTE ERP  |  UNIFIED MOBILE APP & LIQUID GLASS WEBSITE PRD) Tj ET
+BT /F2 12 Tf 1 1 1 rg 36 798 Td (PAGE 19: WEBSITE WORKSPACE 1 \(`/admin`\) - DASHBOARD, STUDENTS, TEACHERS & BATCHES) Tj ET
+BT /F1 8 Tf 0.75 0.82 0.96 rg 36 780 Td (Project ID: gen-lang-client-0309263247  |  DB: ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1) Tj ET
+0.92 0.94 0.98 rg
+0 0 612 32 re f
+0.15 0.22 0.42 rg
+BT /F2 8.5 Tf 36 12 Td (Page 19 of 25   |   Waqar Computer Institute ERP Architecture & Code Logic Blueprint) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 742.0 Td (19.1 Tab 1: Executive Dashboard \(`M01`\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 728.0 Td (- 4 Liquid Glass Metric Cards: Total Active Students, Monthly Fee Revenue \(INR \),) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 715.8 Td (Today's Student Attendance \(%\), and Faculty Biometric Check-Ins \(X / Y Present\).) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 703.6 Td (- Live Activity Stream: Real-time feed of recent admissions, fee payments, and) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 691.4 Td (security audit events from auditLogs.) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 669.2 Td (19.2 Tab 2: Student Admission & Instant Login Generator \(`M02`\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 655.2 Td (- Unified Admission Modal:) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 643.0 Td (- Personal Details: Full Name, Enrollment/Roll No \(WCI-2026-XXX\), Phone \(+91...\),) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 630.8 Td (Email, Guardian Name, Guardian Phone.) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 618.6 Td (- Academic & Fee Mapping: Course dropdown \(populated live from courses\), Batch) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 606.4 Td (dropdown \(populated live from batches\), Total Fee \(INR \), Initial Paid Fee \(INR \).) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 594.2 Td (- Media Attachments: Passport Photo uploader \(auto-compressed Base64 + Storage\) &) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 582.0 Td (Document PDF attachment.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 569.8 Td (- Instant Credential Section \(Inside Same Modal\):) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 557.6 Td (- Student Login Username + Student Password) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 545.4 Td (- Parent Login Username + Parent Password) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 533.2 Td (- Single-Click Atomic Save: Writes students/{id},) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 521.0 Td (portalCredentials/{studentUsername}, portalCredentials/{parentUsername},) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 508.8 Td (guardians/{linkId}, and auditLogs/{logId} simultaneously!) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 486.6 Td (19.3 Tab 3: Faculty Management, Biometric Status & Payroll \(`M03`\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 472.6 Td (- Add/Edit Teacher modal with teacherUsername and teacherPassword provisioning, live) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 460.4 Td (128-D Biometric Status badge, and 1-click monthly salary disbursement) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 448.2 Td (\(payroll/{id}\).) Tj ET
+endstream
+endobj
+43 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 42 0 R >>
+endobj
+44 0 obj
+<< /Length 2655 >>
+stream
+0.04 0.08 0.22 rg
+0 772 612 70 re f
+0.00 0.90 1.00 rg
+0 769 612 3 re f
+BT /F2 9 Tf 0.70 0.88 1.00 rg 36 822 Td (WAQAR COMPUTER INSTITUTE ERP  |  UNIFIED MOBILE APP & LIQUID GLASS WEBSITE PRD) Tj ET
+BT /F2 12 Tf 1 1 1 rg 36 798 Td (PAGE 20: WEBSITE WORKSPACE 2 \(`/operations`\) - ATTENDANCE, EXAMS, FEES & LEDGER) Tj ET
+BT /F1 8 Tf 0.75 0.82 0.96 rg 36 780 Td (Project ID: gen-lang-client-0309263247  |  DB: ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1) Tj ET
+0.92 0.94 0.98 rg
+0 0 612 32 re f
+0.15 0.22 0.42 rg
+BT /F2 8.5 Tf 36 12 Td (Page 20 of 25   |   Waqar Computer Institute ERP Architecture & Code Logic Blueprint) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 742.0 Td (20.1 Tab 1: Batch Attendance & QR Scanner \(`M06`\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 728.0 Td (- Select Batch + Date \(DD-MM-YYYY\) -> Toggle PRESENT / ABSENT / LATE for all students) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 715.8 Td (in the batch or open the Webcam QR ID Scanner to mark attendance automatically as) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 703.6 Td (students hold up their ID cards.) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 681.4 Td (20.2 Tab 2: Fees, GST Receipts & Immutable SHA-256 Ledger \(`M09`\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 667.4 Td (- Collect Fee Modal: Select Student -> Enter Installment Amount \(INR \), Discount, Fine,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 655.2 Td (Payment Mode \(UPI, CASH, CARD, BANK_TRANSFER\) -> Generates Receipt RCPT-2026-XXXX,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 643.0 Td (updates students/{id}.paidFeePaise, and appends a new SHA-256 block to) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 630.8 Td (immutableLedger:) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 618.6 Td (- raw = "${sequenceIndex}|${prevEventHash}|FEE_PAID|${adminUid}|INR) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 606.4 Td (${amount}|${vectorClock}|${timestampMs}") Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 594.2 Td (- currentEventHash = SHA256\(raw\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 582.0 Td (- Chain Integrity Verifier Button: Runs verifyExternalMerkleChain\(\) in the browser) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 569.8 Td (to prove zero tampering across all historical fee receipts.) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 547.6 Td (20.3 Tab 3: Online Exams, Marksheets & Study Materials \(`M07`, `M08`, `M11`, `M12`\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 533.6 Td (- Create MCQ/Subjective Exams, publish grades to examResults, upload PDF study) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 521.4 Td (materials to materials, and broadcast instant institute notices to announcements.) Tj ET
+endstream
+endobj
+45 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 44 0 R >>
+endobj
+46 0 obj
+<< /Length 2841 >>
+stream
+0.04 0.08 0.22 rg
+0 772 612 70 re f
+0.00 0.90 1.00 rg
+0 769 612 3 re f
+BT /F2 9 Tf 0.70 0.88 1.00 rg 36 822 Td (WAQAR COMPUTER INSTITUTE ERP  |  UNIFIED MOBILE APP & LIQUID GLASS WEBSITE PRD) Tj ET
+BT /F2 12 Tf 1 1 1 rg 36 798 Td (PAGE 21: WEBSITE WORKSPACE 3 \(`/certificates` & `/verify`\) - QR DIPLOMA ENGINE) Tj ET
+BT /F1 8 Tf 0.75 0.82 0.96 rg 36 780 Td (Project ID: gen-lang-client-0309263247  |  DB: ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1) Tj ET
+0.92 0.94 0.98 rg
+0 0 612 32 re f
+0.15 0.22 0.42 rg
+BT /F2 8.5 Tf 36 12 Td (Page 21 of 25   |   Waqar Computer Institute ERP Architecture & Code Logic Blueprint) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 742.0 Td (21.1 Issuing a QR-Protected Diploma Certificate from the Website \(`M15`\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 728.0 Td (1. Admin selects an eligible student, confirms Course Name, Grade \(A+, A, B\),) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 715.8 Td (Percentage \(92%\), and Issue Date \(14-11-2026 -> ISO 2026-11-14\).) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 703.6 Td (2. Website generates Serial No WCI-CERT-2026-XXXXX and computes:) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 691.4 Td (- Canonical Verification Hash: SHA256: + first 16 uppercase hex chars of) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 679.2 Td (SHA-256\("serialNo|studentId|studentName|courseName|grade|issueDateIso|WCI-) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 667.0 Td (ISSUER-2026"\).) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 654.8 Td (- URL Signature \(sig\): First 16 uppercase hex chars of) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 642.6 Td (SHA-256\("serialNo|roll|studentName|courseName|grade|percentage|issueDateIso|Waqar"\).) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 630.4 Td (3. Saves document to Firestore certificates/{serialNo} and renders a print-ready) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 618.2 Td (Liquid Gold & Navy Official Diploma PDF with the embedded ISO/IEC 18004 QR code) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 606.0 Td (pointing to:) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 593.8 Td (https://waqar-institute-erp.web.app/verify?cert_id=WCI-CERT-2026-XXXXX&roll=...&sig=...) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 571.6 Td (21.2 Public Verification & Live QR Scanner Page \(`/verify`\)) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 557.6 Td (- Works automatically when scanned from Google Lens, iOS/Android Camera, or WhatsApp) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 545.4 Td (QR Scanner.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 533.2 Td (- Also includes an on-page "Open Camera QR Scanner" button so employers or verifiers) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 521.0 Td (visiting the website on a phone or laptop can scan a printed certificate directly) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 508.8 Td (inside the browser.) Tj ET
+endstream
+endobj
+47 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 46 0 R >>
+endobj
+48 0 obj
+<< /Length 2328 >>
+stream
+0.04 0.08 0.22 rg
+0 772 612 70 re f
+0.00 0.90 1.00 rg
+0 769 612 3 re f
+BT /F2 9 Tf 0.70 0.88 1.00 rg 36 822 Td (WAQAR COMPUTER INSTITUTE ERP  |  UNIFIED MOBILE APP & LIQUID GLASS WEBSITE PRD) Tj ET
+BT /F2 12 Tf 1 1 1 rg 36 798 Td (PAGE 22: WEBSITE WORKSPACE 4 \(`/security`\) - 10,000-USER CREDENTIAL MANAGER & RASP) Tj ET
+BT /F1 8 Tf 0.75 0.82 0.96 rg 36 780 Td (Project ID: gen-lang-client-0309263247  |  DB: ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1) Tj ET
+0.92 0.94 0.98 rg
+0 0 612 32 re f
+0.15 0.22 0.42 rg
+BT /F2 8.5 Tf 36 12 Td (Page 22 of 25   |   Waqar Computer Institute ERP Architecture & Code Logic Blueprint) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 742.0 Td (22.1 Managing 10,000+ Student, Teacher & Parent Credentials) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 728.0 Td (- Live Searchable Credential Table \(portalCredentials\):) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 715.8 Td (- Filter by Role \(ALL, STUDENT, TEACHER, PARENT, ADMIN\) or search by @username,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 703.6 Td (displayName, or linkedEntityId.) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 691.4 Td (- 1-Click Password Reset: Admin enters a new password \(min 6 chars\) -> Website hashes) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 679.2 Td (with PBKDF2-HMAC-SHA256 \(12,000 iter\) and updates portalCredentials/{username}.) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 667.0 Td (- Bulk CSV Provisioning Tool: Upload a CSV of 1,000-10,000 students) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 654.8 Td (\(enrollmentNo,fullName,courseName,batchName,phone,username,password\) -> Website) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 642.6 Td (processes them in Firestore batched writes \(500 docs/batch\) with client-side) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 630.4 Td (WebCrypto PBKDF2 hashing so all 10,000 logins are provisioned in under 30 seconds!) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 618.2 Td (- Active Device Sessions & Force-Logout \(sessions\):) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 606.0 Td (- Displays every logged-in device \(deviceName, platform, lastActiveTimestamp\) with a) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 593.8 Td ("Revoke & Force Logout" button that immediately terminates that user's session on) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 581.6 Td (their phone.) Tj ET
+endstream
+endobj
+49 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 48 0 R >>
+endobj
+50 0 obj
+<< /Length 2564 >>
+stream
+0.04 0.08 0.22 rg
+0 772 612 70 re f
+0.00 0.90 1.00 rg
+0 769 612 3 re f
+BT /F2 9 Tf 0.70 0.88 1.00 rg 36 822 Td (WAQAR COMPUTER INSTITUTE ERP  |  UNIFIED MOBILE APP & LIQUID GLASS WEBSITE PRD) Tj ET
+BT /F2 12 Tf 1 1 1 rg 36 798 Td (PAGE 23: END-TO-END SYNCHRONIZATION SEQUENCES & LATENCY BENCHMARKS) Tj ET
+BT /F1 8 Tf 0.75 0.82 0.96 rg 36 780 Td (Project ID: gen-lang-client-0309263247  |  DB: ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1) Tj ET
+0.92 0.94 0.98 rg
+0 0 612 32 re f
+0.15 0.22 0.42 rg
+BT /F2 8.5 Tf 36 12 Td (Page 23 of 25   |   Waqar Computer Institute ERP Architecture & Code Logic Blueprint) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 742.0 Td (23.1 Sequence 1: Admin Creates Student & Login on Website -> Student Logs In on Android A) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 728.0 Td (1. T = 0 ms: Admin clicks "Save & Issue Credentials" on Website /admin.) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 715.8 Td (2. T = 12 ms: Browser WebCrypto computes 12,000-iteration PBKDF2-HMAC-SHA256 hash) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 703.6 Td (\(passwordHash + passwordSalt\).) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 691.4 Td (3. T = 65 ms: Firestore commits students/{stuId} and portalCredentials/{username} in) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 679.2 Td (ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1.) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 667.0 Td (4. T = 80 ms: Student opens the WhatsApp-installed APK on their phone, enters) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 654.8 Td (@username and password, and taps Sign In.) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 642.6 Td (5. T = 140 ms: Android FirebaseAuthServiceProvider.signInToPortalWithCredentials) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 630.4 Td (fetches portalCredentials/{username}, verifies constant-time PBKDF2 hash in < 1 ms,) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 618.2 Td (binds sessions/single_dev_{username}, and opens the Student Portal showing the) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 606.0 Td (student's live batch, attendance, and fee balance!) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 583.8 Td (23.2 Scalability & Performance Benchmarks) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 569.8 Td (- Local Room v3 + SQLCipher 100,000-Record Benchmark \(Verified\): Batch insert of) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 557.6 Td (100,000 student records completes in ~1,750 ms and indexed B-tree page query) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 545.4 Td (\(idx_cached_students_batch_name\) executes in ~26 ms.) Tj ET
+endstream
+endobj
+51 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 50 0 R >>
+endobj
+52 0 obj
+<< /Length 2224 >>
+stream
+0.04 0.08 0.22 rg
+0 772 612 70 re f
+0.00 0.90 1.00 rg
+0 769 612 3 re f
+BT /F2 9 Tf 0.70 0.88 1.00 rg 36 822 Td (WAQAR COMPUTER INSTITUTE ERP  |  UNIFIED MOBILE APP & LIQUID GLASS WEBSITE PRD) Tj ET
+BT /F2 12 Tf 1 1 1 rg 36 798 Td (PAGE 24: DEPLOYMENT, CI/CD PIPELINE & FIREBASE HOSTING WORKFLOW) Tj ET
+BT /F1 8 Tf 0.75 0.82 0.96 rg 36 780 Td (Project ID: gen-lang-client-0309263247  |  DB: ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1) Tj ET
+0.92 0.94 0.98 rg
+0 0 612 32 re f
+0.15 0.22 0.42 rg
+BT /F2 8.5 Tf 36 12 Td (Page 24 of 25   |   Waqar Computer Institute ERP Architecture & Code Logic Blueprint) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 742.0 Td (24.1 Automated Deployment via GitHub Actions) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 728.0 Td (Your existing workflows \(/.github/workflows/android-release.yml and) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 715.8 Td (/.github/workflows/android-ci.yml\) already contain two synchronized jobs:) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 703.6 Td (1. Job 1 \(release / build-and-test\):) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 691.4 Td (- Installs JDK 21, Android SDK 36, CMake 3.22.1, and NDK 27.0.12077973.) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 679.2 Td (- Runs gradle :app:assembleRelease :app:bundleRelease -PenableNativeCxxBuild=true) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 667.0 Td (--stacktrace to produce the signed Release APK with compiled C++20 .so security) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 654.8 Td (libraries \(libwaqar_native_security.so\).) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 642.6 Td (2. Job 2 \(deploy-firebase-hosting\):) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 630.4 Td (- Deploys the entire firebase/hosting-prod/ directory to Firebase Hosting) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 618.2 Td (\(projectId: gen-lang-client-0309263247, channelId: live\) whenever) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 606.0 Td (FIREBASE_SERVICE_ACCOUNT or FIREBASE_TOKEN is configured in GitHub Secrets \(or via) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 593.8 Td (npx firebase-tools deploy --only hosting,firestore:rules --project gen-lang-) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 581.6 Td (client-0309263247\).) Tj ET
+endstream
+endobj
+53 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 52 0 R >>
+endobj
+54 0 obj
+<< /Length 2380 >>
+stream
+0.04 0.08 0.22 rg
+0 772 612 70 re f
+0.00 0.90 1.00 rg
+0 769 612 3 re f
+BT /F2 9 Tf 0.70 0.88 1.00 rg 36 822 Td (WAQAR COMPUTER INSTITUTE ERP  |  UNIFIED MOBILE APP & LIQUID GLASS WEBSITE PRD) Tj ET
+BT /F2 12 Tf 1 1 1 rg 36 798 Td (PAGE 25: MASTER IMPLEMENTATION CHECKLIST & GO-LIVE VERIFICATION) Tj ET
+BT /F1 8 Tf 0.75 0.82 0.96 rg 36 780 Td (Project ID: gen-lang-client-0309263247  |  DB: ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1) Tj ET
+0.92 0.94 0.98 rg
+0 0 612 32 re f
+0.15 0.22 0.42 rg
+BT /F2 8.5 Tf 36 12 Td (Page 25 of 25   |   Waqar Computer Institute ERP Architecture & Code Logic Blueprint) Tj ET
+0.06 0.20 0.52 rg
+BT /F2 10.5 Tf 36 742.0 Td (25.1 Pre-Launch Verification Checklist) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 728.0 Td (- [x] Database & Project Identity Preserved: gen-lang-client-0309263247 / ai-studio-) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 715.8 Td (android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1 shared across Android and Web.) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 703.6 Td (- [x] Identical Password Hashing: PBKDF2-HMAC-SHA256 \(12,000 iterations, 256-bit) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 691.4 Td (output, UTF-8 encoded 32-char hex salt\) verified across Kotlin and WebCrypto.) Tj ET
+0.10 0.12 0.18 rg
+BT /F2 8.8 Tf 36 679.2 Td (- [x] Sideload APK Compatibility: AppCheckHelper.kt uses) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 667.0 Td (DebugAppCheckProviderFactory so APKs distributed via WhatsApp/Telegram are never) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 654.8 Td (blocked by Google Play Store checks.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 642.6 Td (- [x] Teacher 128-D Live Blink Biometric Gate: Enforces First-Time 128-D Live Blink) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 630.4 Td (Enrollment and mandatory live blink verification on every login.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 618.2 Td (- [x] Native C++20 .so Release Compilation: -PenableNativeCxxBuild=true enabled in) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 606.0 Td (gradle.properties, app/build.gradle.kts, and GitHub Actions assembleRelease.) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 36 593.8 Td (- [x] ISO/IEC 18004 QR Certificate Verification: /verify portal validates both live) Tj ET
+0.10 0.12 0.18 rg
+BT /F1 8.8 Tf 44 581.6 Td (Firestore certificates/{cert_id} status and SHA-256 cryptographic signature \(sig\).) Tj ET
+endstream
+endobj
+55 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents 54 0 R >>
+endobj
+xref
+0 56
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000291 00000 n 
+0000000361 00000 n 
+0000000436 00000 n 
+0000000504 00000 n 
+0000005240 00000 n 
+0000005386 00000 n 
+0000013058 00000 n 
+0000013204 00000 n 
+0000017791 00000 n 
+0000017939 00000 n 
+0000024767 00000 n 
+0000024915 00000 n 
+0000031601 00000 n 
+0000031749 00000 n 
+0000036741 00000 n 
+0000036889 00000 n 
+0000045127 00000 n 
+0000045275 00000 n 
+0000048804 00000 n 
+0000048952 00000 n 
+0000053450 00000 n 
+0000053598 00000 n 
+0000061452 00000 n 
+0000061600 00000 n 
+0000069144 00000 n 
+0000069292 00000 n 
+0000072662 00000 n 
+0000072810 00000 n 
+0000076077 00000 n 
+0000076225 00000 n 
+0000081108 00000 n 
+0000081256 00000 n 
+0000084981 00000 n 
+0000085129 00000 n 
+0000088135 00000 n 
+0000088283 00000 n 
+0000094381 00000 n 
+0000094529 00000 n 
+0000097017 00000 n 
+0000097165 00000 n 
+0000100450 00000 n 
+0000100598 00000 n 
+0000103306 00000 n 
+0000103454 00000 n 
+0000106348 00000 n 
+0000106496 00000 n 
+0000108877 00000 n 
+0000109025 00000 n 
+0000111642 00000 n 
+0000111790 00000 n 
+0000114067 00000 n 
+0000114215 00000 n 
+0000116648 00000 n 
+trailer
+<< /Size 56 /Root 1 0 R >>
+startxref
+116796
+%%EOF

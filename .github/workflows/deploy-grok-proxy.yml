@@ -1,0 +1,128 @@
+name: Deploy Grok AI Tutor & Zero-Trust Cloud Functions — Firebase
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main", "develop" ]
+    paths:
+      - 'functions/**'
+      - 'firebase.json'
+      - '.github/workflows/deploy-grok-proxy.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firebase-functions-deploy-gen-lang-client-0309263247
+  cancel-in-progress: false
+
+jobs:
+  deploy-grok-ai-tutor-proxy:
+    name: Env Injection & Deploy streamInstituteAiTutor
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: functions/package-lock.json
+
+      - name: Install & Validate Cloud Functions Dependencies
+        working-directory: functions
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            npm install --no-audit --no-fund
+          fi
+          node -c index.js
+
+      - name: Verify Firebase Project & Required GitHub Secrets
+        id: check_secrets
+        env:
+          HAS_GROK_KEY: ${{ secrets.GROK_API_KEY != '' || secrets.XAI_API_KEY != '' }}
+          HAS_GROQ_KEY: ${{ secrets.GROQ_API_KEY != '' }}
+          HAS_CF_GATEWAY: ${{ secrets.CF_AI_GATEWAY_URL != '' }}
+          HAS_CF_TOKEN: ${{ secrets.CF_AI_TOKEN != '' }}
+          HAS_PRIMARY_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
+          HAS_PROJECT_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GEN_LANG_CLIENT_0309263247 != '' }}
+        run: |
+          if [ ! -f "firebase.json" ] || [ ! -f ".firebaserc" ]; then
+            echo "::error::Missing firebase.json or .firebaserc in repository root."
+            exit 1
+          fi
+
+          if ( [ "$HAS_GROK_KEY" != "true" ] && [ "$HAS_GROQ_KEY" != "true" ] ) || ( [ "$HAS_PRIMARY_SA" != "true" ] && [ "$HAS_PROJECT_SA" != "true" ] ); then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+              echo "::error::Missing required GitHub Repository Secrets. Please set GROK_API_KEY (or GROQ_API_KEY) and FIREBASE_SERVICE_ACCOUNT in Settings -> Secrets and variables -> Actions."
+              exit 1
+            else
+              echo "::notice title=Cloud Function Deploy Skipped::Set GROK_API_KEY, GROQ_API_KEY, CF_AI_GATEWAY_URL, CF_AI_TOKEN, and FIREBASE_SERVICE_ACCOUNT in GitHub Repository Secrets to deploy streamInstituteAiTutor automatically."
+              exit 0
+            fi
+          fi
+
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+      - name: Authenticate Service Account, Write Temporary functions/.env & Deploy Cloud Functions
+        if: steps.check_secrets.outputs.ready == 'true'
+        env:
+          GROK_API_KEY: ${{ secrets.GROK_API_KEY || secrets.XAI_API_KEY }}
+          GROK_API_URL: ${{ secrets.GROK_API_URL }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          CF_AI_GATEWAY_URL: ${{ secrets.CF_AI_GATEWAY_URL }}
+          CF_AI_TOKEN: ${{ secrets.CF_AI_TOKEN }}
+          ADMIN_BOOTSTRAP_PASSWORD: ${{ secrets.ADMIN_BOOTSTRAP_PASSWORD }}
+          FIREBASE_SA_RAW: ${{ secrets.FIREBASE_SERVICE_ACCOUNT || secrets.FIREBASE_SERVICE_ACCOUNT_GEN_LANG_CLIENT_0309263247 }}
+          PROJECT_ID: gen-lang-client-0309263247
+        run: |
+          set -euo pipefail
+          SA_FILE="${RUNNER_TEMP}/firebase-service-account.json"
+          trap 'rm -f "$SA_FILE" functions/.env' EXIT
+
+          # Support either raw JSON or base64-encoded service account JSON
+          if printf '%s' "$FIREBASE_SA_RAW" | grep -q '"private_key"'; then
+            printf '%s' "$FIREBASE_SA_RAW" > "$SA_FILE"
+          else
+            printf '%s' "$FIREBASE_SA_RAW" | tr -d '\n\r ' | base64 -d > "$SA_FILE"
+          fi
+          chmod 600 "$SA_FILE"
+          export GOOGLE_APPLICATION_CREDENTIALS="$SA_FILE"
+
+          # Write temporary Firebase Functions .env (never logged, deleted automatically on EXIT)
+          umask 077
+          {
+            if [ -n "${GROK_API_KEY:-}" ]; then
+              printf 'GROK_API_KEY=%s\n' "$(printf '%s' "$GROK_API_KEY" | tr -d '\r\n')"
+            fi
+            if [ -n "${GROK_API_URL:-}" ]; then
+              printf 'GROK_API_URL=%s\n' "$(printf '%s' "$GROK_API_URL" | tr -d '\r\n')"
+            fi
+            if [ -n "${GROQ_API_KEY:-}" ]; then
+              printf 'GROQ_API_KEY=%s\n' "$(printf '%s' "$GROQ_API_KEY" | tr -d '\r\n')"
+            fi
+            if [ -n "${CF_AI_GATEWAY_URL:-}" ]; then
+              printf 'CF_AI_GATEWAY_URL=%s\n' "$(printf '%s' "$CF_AI_GATEWAY_URL" | tr -d '\r\n')"
+            fi
+            if [ -n "${CF_AI_TOKEN:-}" ]; then
+              printf 'CF_AI_TOKEN=%s\n' "$(printf '%s' "$CF_AI_TOKEN" | tr -d '\r\n')"
+            fi
+            if [ -n "${ADMIN_BOOTSTRAP_PASSWORD:-}" ]; then
+              printf 'ADMIN_BOOTSTRAP_PASSWORD=%s\n' "$(printf '%s' "$ADMIN_BOOTSTRAP_PASSWORD" | tr -d '\r\n')"
+            fi
+          } > functions/.env
+          chmod 600 functions/.env
+
+          # Deploy all six production Cloud Functions in asia-east1 without requiring Secret Manager API
+          npx --yes firebase-tools@latest deploy \
+            --only functions:streamInstituteAiTutor,functions:gradeExamSubmission,functions:issuePortalCustomToken,functions:startExamSession,functions:sealAuditChainEvent,functions:verifyAuditHashChain \
+            --project gen-lang-client-0309263247 \
+            --force \
+            --non-interactive

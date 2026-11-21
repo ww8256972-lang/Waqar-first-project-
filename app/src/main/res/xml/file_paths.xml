@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <cache-path name="exports" path="exports/" />
+    <cache-path name="ota_apks" path="ota_apks/" />
+    <files-path name="documents" path="documents/" />
+    <external-files-path name="external_files" path="." />
+    <cache-path name="cache_root" path="." />
+</paths>

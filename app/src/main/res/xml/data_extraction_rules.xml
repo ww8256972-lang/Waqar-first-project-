@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+   Sample data extraction rules file; uncomment and customize as necessary.
+   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
+   for details.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="database" path="waqar_institute_encrypted.db" />
+        <exclude domain="database" path="waqar_institute_encrypted.db-wal" />
+        <exclude domain="database" path="waqar_institute_encrypted.db-shm" />
+        <exclude domain="database" path="waqar_institute_local_v2.db" />
+        <exclude domain="database" path="waqar_institute_local_v2.db-wal" />
+        <exclude domain="database" path="waqar_institute_local_v2.db-shm" />
+        <exclude domain="database" path="waqar_institute_offline_erp.db" />
+        <exclude domain="database" path="waqar_institute_offline_erp.db-wal" />
+        <exclude domain="database" path="waqar_institute_offline_erp.db-shm" />
+        <exclude domain="sharedpref" path="wci_zero_trust_vault.prefs.xml" />
+        <exclude domain="sharedpref" path="wci_encrypted_session_store.xml" />
+        <exclude domain="sharedpref" path="wci_tink_vault_prefs.xml" />
+        <exclude domain="sharedpref" path="wci_local_erp_vault_prefs.xml" />
+        <exclude domain="sharedpref" path="wci_secure_sqlcipher_vault.xml" />
+        <exclude domain="sharedpref" path="wci_encrypted_exam_cache.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="database" path="waqar_institute_encrypted.db" />
+        <exclude domain="database" path="waqar_institute_encrypted.db-wal" />
+        <exclude domain="database" path="waqar_institute_encrypted.db-shm" />
+        <exclude domain="database" path="waqar_institute_local_v2.db" />
+        <exclude domain="database" path="waqar_institute_local_v2.db-wal" />
+        <exclude domain="database" path="waqar_institute_local_v2.db-shm" />
+        <exclude domain="database" path="waqar_institute_offline_erp.db" />
+        <exclude domain="database" path="waqar_institute_offline_erp.db-wal" />
+        <exclude domain="database" path="waqar_institute_offline_erp.db-shm" />
+        <exclude domain="sharedpref" path="wci_zero_trust_vault.prefs.xml" />
+        <exclude domain="sharedpref" path="wci_encrypted_session_store.xml" />
+        <exclude domain="sharedpref" path="wci_tink_vault_prefs.xml" />
+        <exclude domain="sharedpref" path="wci_local_erp_vault_prefs.xml" />
+        <exclude domain="sharedpref" path="wci_secure_sqlcipher_vault.xml" />
+        <exclude domain="sharedpref" path="wci_encrypted_exam_cache.xml" />
+    </device-transfer>
+</data-extraction-rules>

@@ -1,0 +1,1012 @@
+MASTER PROMPT — COMPLETE ENTERPRISE AUDIT REMEDIATION & SAFE REPAIR
+
+Waqar Computer Institute ERP | Firebase | Native Android | Security | Biometric | Realtime Sync
+
+You are acting as a Senior Android Architect, Firebase Security Engineer, Kotlin/Jetpack Compose Engineer, Database Migration Specialist, Biometric Integration Engineer, and Enterprise Application Reliability Engineer.
+
+Your task is to thoroughly inspect, repair, validate, and improve ALL previously identified critical, high, and medium-priority issues in my existing Waqar Computer Institute ERP application.
+
+This is an EXISTING, FULLY DEVELOPED PROJECT.
+
+You must repair the existing implementation without damaging, deleting, replacing, resetting, or unnecessarily redesigning any existing application component.
+
+---
+
+1. ABSOLUTE PROJECT PRESERVATION RULES
+
+Before changing anything:
+
+1. Inspect the entire existing project structure.
+2. Read the existing Kotlin, Java, C++, XML, Gradle, Firebase, Firestore, Room, GitHub Actions, Security, Biometric, Repository, ViewModel, and UI files.
+3. Identify existing implementations and dependencies.
+4. Create a precise remediation plan based on actual code.
+5. Preserve existing working features and architectural decisions.
+6. Reuse existing implementations wherever possible.
+7. Modify only files necessary to resolve verified issues.
+8. Do not replace complete files unnecessarily.
+9. Do not delete existing functions, classes, libraries, resources, or integrations simply because they appear unused.
+10. Do not create duplicate repositories, ViewModels, security engines, authentication services, or synchronization systems.
+
+Critical preservation requirements
+
+ABSOLUTELY DO NOT DAMAGE:
+
+- Existing Firebase project configuration.
+- Existing Firebase project ID.
+- Existing Firestore database.
+- Existing Firestore collections and documents.
+- Existing Firestore Security Rules.
+- Existing Firebase Storage files.
+- Existing Firebase Cloud Functions.
+- Existing Firebase indexes.
+- Existing Room database.
+- Existing Room entities, DAOs, migrations, and stored records.
+- Existing SQLCipher encryption configuration.
+- Existing Kotlin/Jetpack Compose application.
+- Existing C++20/JNI security engines.
+- Existing security libraries and future security-library implementations.
+- Existing biometric-related components.
+- Existing AI Tutor functionality.
+- Existing student, teacher, admin, and parent portals.
+- Existing application navigation.
+- Existing UI/UX design, animations, themes, colors, typography, layouts, and screen structure.
+- Existing GitHub repositories, branches, workflows, build configurations, and release configurations.
+- Existing signing configuration and application ID.
+
+Do not migrate Firebase projects.
+
+Do not change the Firestore database ID.
+
+Do not reset or recreate the database.
+
+Do not perform destructive migrations.
+
+Do not replace the native Android application with a WebView, website, PWA, or another application architecture.
+
+The application MUST remain a native Android application using Kotlin and Jetpack Compose.
+
+---
+
+2. ADMIN-CREATED STUDENT AND TEACHER CREDENTIALS — CROSS-DEVICE LOGIN
+
+Audit and repair:
+
+- FirebaseAuthServiceProvider.signInToPortalWithCredentials
+- PortalAuthRepository.fetchPortalCredentialCrossDevice
+- InstituteRepository.savePortalCredential
+- InstituteRepository.saveStudent
+- InstituteRepository.saveStaffMember
+- PortalLoginViewModel
+- InstituteViewModel.authenticateWithRoleCredentials
+- Existing portal credential provisioning and authentication services.
+
+Required behavior
+
+When Admin creates a student or teacher account:
+
+1. The account must be provisioned correctly in Firebase.
+2. Username, role, linked entity ID, credential metadata, and authentication identity must remain consistent.
+3. The account must work on another Android device after successful provisioning.
+4. Authentication must use authoritative server-side data.
+5. Password verification must remain secure.
+6. No local-only credential should be treated as a globally valid account.
+7. No account should be marked provisioned before the server confirms successful creation.
+8. No student or teacher should receive credentials that are not yet usable.
+9. Admin must receive a clear success or failure result.
+10. Failed provisioning must be retried safely or explicitly reported.
+
+Provisioning race-condition repair
+
+Remove the existing dangerous fire-and-forget behavior wherever it causes account provisioning to happen asynchronously without a reliable completion signal.
+
+Review:
+
+- Coroutine lifecycle.
+- Provisioning order.
+- Existing six-second timeout.
+- Cancellation behavior.
+- Partial writes.
+- Duplicate account creation.
+- Retry behavior.
+- Firebase authentication state.
+- Firestore credential document consistency.
+
+Implement a reliable provisioning state machine:
+
+PENDING → PROVISIONING → PROVISIONED
+
+or
+
+PENDING → PROVISIONING → FAILED
+
+Requirements:
+
+- Use idempotent provisioning.
+- Use appropriate server-side transactions or secure backend operations.
+- Avoid duplicate accounts.
+- Never report success before confirmed provisioning.
+- Never expose passwords or password hashes in logs.
+- Handle network failures and timeout errors correctly.
+- Preserve existing user IDs and linked entity IDs.
+
+Do not weaken password hashing or authentication security.
+
+---
+
+3. STRICT SINGLE-DEVICE SESSION MANAGEMENT
+
+Repair existing single-device login enforcement.
+
+Requirements:
+
+- One active device/session per account.
+- When the same account successfully logs in on another device, the previous session must be revoked.
+- Previous device must lose access to protected data and operations.
+- Old session must not continue submitting attendance, exams, fees, or profile updates.
+- Session validation must use authoritative server-side state.
+- Revocation must be checked at appropriate security boundaries.
+- Do not rely only on local SharedPreferences flags.
+- Do not expose session secrets.
+- Handle offline state safely.
+- Avoid unnecessary session checks that freeze or slow the UI.
+- Preserve existing logout and logout-all-devices functionality.
+
+Do not claim instant revocation if the device is offline. Implement practical, secure, server-authoritative revocation.
+
+---
+
+4. FIREBASE APP CHECK — SIDeloaded APK COMPATIBILITY
+
+The application is distributed through manually shared Android APK files, including WhatsApp and Telegram.
+
+Audit:
+
+- Firebase App Check configuration.
+- Play Integrity integration.
+- Recaptcha integration.
+- Debug App Check provider.
+- Existing Firebase Authentication configuration.
+- Firestore and Storage enforcement.
+- GitHub Actions release APK configuration.
+
+Requirements:
+
+- Ensure legitimate sideloaded APK installations can authenticate and access permitted Firebase services.
+- Do not blindly enforce Play Integrity if it prevents legitimate sideloaded APK users from accessing Firebase.
+- Do not disable all App Check protection as a shortcut.
+- Select and implement a suitable App Check strategy compatible with the actual distribution model.
+- Debug tokens must never be embedded in production APKs.
+- Production credentials must not be committed to GitHub.
+- Keep Firebase Security Rules independently strict.
+- Document the actual App Check configuration and deployment requirements.
+- Do not claim App Check is working unless configuration and runtime behavior are verified.
+
+---
+
+5. REALTIME ADMIN → STUDENT / TEACHER / PARENT DATA SYNCHRONIZATION
+
+Audit and repair:
+
+- InstituteViewModel.startRealtimeStreamsIfNeeded()
+- InstituteViewModel.recomputeRoleScopedData()
+- InstituteRepository realtime observers.
+- Student profile streams.
+- Teacher profile streams.
+- Parent/student linked records.
+- Attendance listeners.
+- Fees listeners.
+- Exam and result listeners.
+- Batch and course listeners.
+- Announcement listeners.
+- Certificate listeners.
+- Material listeners.
+
+Required behavior
+
+When Admin changes:
+
+- Student profile.
+- Student photo.
+- Student course.
+- Student batch.
+- Teacher profile.
+- Teacher photo.
+- Teacher assigned batches.
+- Fee records.
+- Attendance.
+- Exam schedules.
+- Exam results.
+- Certificates.
+- Announcements.
+- Learning materials.
+
+The correct student, teacher, and parent portals must receive updated data automatically.
+
+Requirements:
+
+- Correct user-to-entity mapping.
+- Correct role-based access.
+- Correct student-to-parent mapping.
+- Correct teacher-to-batch mapping.
+- No cross-user data leakage.
+- No stale profile state.
+- No duplicate listeners.
+- No unnecessary listener recreation.
+- Proper listener lifecycle.
+- Proper error handling.
+- Loading states and retry states.
+- Correct behavior after logout and account switching.
+
+Teacher batch-scoping repair
+
+Fix cases where students are missing from teacher portals because of:
+
+- Missing batchName.
+- Missing courseName.
+- Inconsistent capitalization.
+- Whitespace differences.
+- Incorrect linked IDs.
+- Incomplete assignments.
+
+Use stable IDs as the authoritative relationship wherever possible.
+
+Do not rely exclusively on display names for security or record matching.
+
+Do not automatically expose unassigned students to every teacher.
+
+Preserve teacher-specific access restrictions.
+
+---
+
+6. TEACHER ATTENDANCE — COMPLETE REALTIME REPAIR
+
+Audit:
+
+- TeacherBiometricGateOverlay.
+- TeacherAttendanceSyncManager.
+- InstituteRepository.observeTeacherAttendance().
+- InstituteViewModel.observeAttendance().
+- InstituteViewModel.startRealtimeStreamsIfNeeded().
+- Existing attendance collection.
+- Existing teacherAttendance collection.
+- Existing attendance synchronization logic.
+- Existing idempotent sync system.
+
+Required behavior
+
+When a teacher successfully passes the approved biometric verification process:
+
+1. Attendance must be recorded as PRESENT.
+2. The record must be written to the correct Firebase document.
+3. The record must be idempotent.
+4. Duplicate attendance must not be created.
+5. Teacher must see their attendance status.
+6. Admin must see teacher attendance.
+7. Attendance must update automatically in realtime.
+8. The UI must show accurate pending/success/failure status.
+9. A network failure must not silently discard attendance.
+10. Failed attendance synchronization must be recoverable.
+
+Synchronization repair
+
+Fix the existing runCatching around attendance network operations wherever errors are swallowed.
+
+Implement reliable synchronization using the existing synchronization architecture.
+
+Requirements:
+
+- Persistent pending attendance queue.
+- Safe retry with exponential backoff.
+- Network-aware retry.
+- Idempotency key.
+- Server-side duplicate prevention.
+- Clear synchronization state.
+- No duplicate PRESENT records.
+- No false success messages.
+- No unauthorized attendance writes.
+- Proper WorkManager integration if appropriate.
+- Correct Firestore security rules.
+
+Repair the missing teacherAttendance realtime collection observer if it is required by the existing architecture.
+
+Avoid unnecessary duplicate attendance collections or destructive schema changes.
+
+---
+
+7. CRITICAL BIOMETRIC SECURITY — REMOVE FAIL-OPEN AUTO-ENROLLMENT
+
+Audit and repair:
+
+- FaceBiometricVerificationEngine.kt
+- TeacherBiometricGateManager.kt
+- TeacherBiometricGateOverlay.
+- PortalShellScreen.kt.
+- Existing face enrollment logic.
+- Existing teacher photo upload logic.
+- Existing face enrollment keys.
+- Existing ML Kit integration.
+- Existing biometric verification and attendance flow.
+
+Critical vulnerabilities to fix
+
+The existing audit identified:
+
+- Automatic enrollment when enrolledVector is null.
+- Potential self-enrollment by the first live person.
+- Firestore enrollment retrieval timeout.
+- Incorrect or inconsistent enrollment lookup keys.
+- Hardcoded fallback linkedEntityId = "teacher".
+- Potential verification success despite missing enrollment.
+- Incorrect enrollment persistence behavior.
+
+Required strict fail-closed behavior
+
+When an Admin-approved enrollment is expected:
+
+- Missing enrollment = DENY.
+- Enrollment retrieval failure = DENY.
+- Enrollment timeout = DENY.
+- Corrupted enrollment = DENY.
+- Invalid vector = DENY.
+- No face detected = DENY.
+- Multiple ambiguous faces = DENY.
+- Enrollment identity mismatch = DENY.
+- Missing linked teacher ID = DENY.
+- Invalid session = DENY.
+
+Never automatically enroll a teacher from the login camera.
+
+Never use a random live face as an enrollment reference.
+
+Never bypass verification because Firestore is unavailable.
+
+Never allow a default teacher identity.
+
+Enrollment flow
+
+Implement a controlled enrollment process:
+
+1. Admin-authorized teacher enrollment.
+2. Teacher identity and linked entity verification.
+3. Explicit enrollment consent.
+4. Camera capture under controlled conditions.
+5. Quality checks.
+6. Secure biometric template creation using a genuine, properly integrated face-recognition model.
+7. Enrollment persistence.
+8. Enrollment confirmation.
+9. Verification testing.
+10. Secure template update and deletion procedures.
+
+Use the actual existing architecture wherever possible.
+
+---
+
+8. FACE RECOGNITION MODEL — HONEST IMPLEMENTATION
+
+The existing audit indicates that:
+
+extract128DFacialEmbedding()
+
+uses handcrafted ML Kit geometric landmark ratios rather than a genuine MobileFaceNet deep-learning embedding model.
+
+Do not misrepresent geometric facial landmarks as MobileFaceNet.
+
+Do not claim biometric-grade identity verification without an actual validated recognition model and appropriate testing.
+
+Requirements:
+
+- Inspect whether a genuine TFLite recognition model exists.
+- Inspect model files, loading logic, input normalization, output dimensions, and inference pipeline.
+- Inspect MobileFaceNetCosineMatcher.cpp.
+- Verify whether the C++ matcher is genuinely connected to the model.
+- Verify whether JNI calls are actually executed.
+- Remove misleading naming only if necessary and without breaking compatibility.
+- If the genuine model is absent, report this honestly.
+- Do not fabricate model files.
+- Do not generate fake embeddings.
+- Do not invent biometric accuracy percentages.
+- Do not claim 100% recognition accuracy.
+
+If implementing a genuine model:
+
+- Use a legitimate model with appropriate licensing.
+- Use secure and consent-based enrollment.
+- Use proper face alignment and preprocessing.
+- Use normalized embeddings.
+- Use a validated similarity threshold rather than an arbitrary threshold.
+- Handle camera quality, lighting, and face pose.
+- Include false acceptance and false rejection considerations.
+- Provide a secure manual attendance fallback.
+- Protect biometric data and minimize retention.
+- Provide enrollment removal and re-enrollment mechanisms.
+
+Biometric verification must never be represented as equivalent to Aadhaar authentication or government-grade identity verification.
+
+---
+
+9. BIOMETRIC FIRESTORE ENROLLMENT LOOKUP REPAIR
+
+Audit:
+
+- FaceBiometricVerificationEngine.kt enrollment fetch.
+- Existing 1500ms timeout.
+- saveStaffMember enrollment key generation.
+- PortalShellScreen.kt linkedEntityId.
+- TeacherBiometricGateManager.kt.
+- Existing Firestore enrollment documents.
+
+Requirements:
+
+- Use one canonical teacher UID / linkedEntityId.
+- Use a stable enrollment document ID.
+- Eliminate inconsistent cleanKeys lookup behavior.
+- Eliminate ambiguous username-based enrollment matching.
+- Avoid relying on only the first three possible lookup keys.
+- Use an appropriate network timeout.
+- Avoid UI blocking.
+- Do not interpret timeout as successful verification.
+- Do not interpret missing enrollment as automatic enrollment.
+- Handle unavailable enrollment service explicitly.
+- Verify enrollment belongs to the authenticated teacher.
+- Preserve existing valid enrollment records.
+- Migrate old keys safely if necessary.
+- Never delete valid enrollment data during migration.
+
+---
+
+10. REMOVE HARDCODED DEFAULT TEACHER PASSWORD
+
+Audit:
+
+InstituteViewModel.kt around the reported default password "123456".
+
+Requirements:
+
+- Remove hardcoded default teacher passwords.
+- Never create accounts with predictable credentials.
+- Never silently replace an empty password with a default.
+- Never log plaintext passwords.
+- Never expose password hashes.
+- Admin must explicitly create or securely reset credentials.
+- Use secure password validation.
+- Preserve existing valid accounts.
+- Provide a secure recovery or reset process.
+- Existing teachers must not be locked out unnecessarily.
+- Do not reset all teacher passwords.
+
+---
+
+11. LOGIN CAPTCHA AND UNUSED AUTHENTICATION INTEGRATIONS
+
+Audit:
+
+- PortalLoginViewModel.kt.
+- RecaptchaInvisibleManager.kt.
+- Google Recaptcha dependencies.
+- Existing login screen.
+- InstituteViewModel.authenticateWithRoleCredentials.
+- Existing authentication architecture.
+
+Requirements:
+
+- Identify whether CAPTCHA is actually connected to the login flow.
+- Identify dead or unused CAPTCHA implementations.
+- Do not delete libraries before confirming usage.
+- Do not leave misleading security UI.
+- If CAPTCHA is required, integrate it into the actual authentication flow.
+- If it is not required, remove only the verified unused code and dependency.
+- Preserve authentication security.
+- Preserve existing UI/UX.
+
+Do not introduce CAPTCHA loops, unnecessary login delays, or false security indicators.
+
+---
+
+12. NATIVE C++ / JNI SECURITY ENGINE VALIDATION
+
+Audit:
+
+- ZeroCopyIpcRingEngine.cpp.
+- PolymorphicShieldEngine.cpp.
+- TamperTrapDaemon.cpp.
+- MobileFaceNetCosineMatcher.cpp.
+- Existing JNI registration.
+- Existing Kotlin native bridges.
+- Existing externalNativeBuild configuration.
+- Existing GitHub Actions NDK setup.
+- Existing ENABLE_NATIVE_CXX configuration.
+
+Requirements:
+
+- Verify whether each native library is actually compiled.
+- Verify whether each native function is actually called.
+- Verify JNI method names and signatures.
+- Verify nativeLoaded state.
+- Verify fallback behavior.
+- Verify architecture compatibility.
+- Verify C++ compilation.
+- Verify Android packaging of native libraries.
+- Verify runtime loading on an actual Android device where possible.
+
+Do not claim native security protection is active merely because C++ files exist.
+
+Do not enable native features that crash the app.
+
+Do not remove existing C++ security libraries without a verified reason.
+
+If NDK is unavailable, clearly report native verification as NOT VERIFIED.
+
+---
+
+13. FIREBASE RULES AND DATA SECURITY
+
+Inspect the existing Firestore Security Rules and Firebase Storage Rules.
+
+Requirements:
+
+- Preserve existing collections.
+- Preserve valid existing permissions.
+- Enforce least privilege.
+- Enforce authenticated access.
+- Enforce Admin, Teacher, Student, and Parent roles correctly.
+- Validate linked entity ownership.
+- Prevent students from accessing other students' records.
+- Prevent teachers from accessing unauthorized batches.
+- Prevent unauthorized attendance changes.
+- Prevent unauthorized exam/result modifications.
+- Prevent users from changing their own role.
+- Prevent privilege escalation.
+- Protect biometric enrollment documents.
+- Protect credential documents.
+- Prevent public reads of sensitive data.
+- Validate request fields and document ownership.
+- Avoid broad allow read/write rules.
+- Keep password hashes and secret material inaccessible to clients.
+- Preserve existing Firestore indexes.
+
+Use backend-only access for sensitive operations whenever appropriate.
+
+Do not publish new rules without checking compatibility with existing application features.
+
+Run Firestore Emulator tests where available.
+
+---
+
+14. DATABASE AND ROOM PRESERVATION
+
+Preserve:
+
+- Existing Room database.
+- Existing Room entities.
+- Existing DAOs.
+- Existing database version.
+- Existing migration history.
+- Existing SQLCipher configuration.
+- Existing Firestore collections.
+- Existing local records.
+- Existing synchronization metadata.
+
+Requirements:
+
+- No database reset.
+- No destructive migration.
+- No destructive fallback.
+- No deletion of user records.
+- No duplicate entity creation.
+- No unnecessary database version increase.
+- No migration that drops existing tables.
+- No allowMainThreadQueries.
+- Maintain proper indexes.
+- Maintain pagination.
+- Maintain 100,000-record scalability where applicable.
+- Keep local and remote data consistent.
+- Preserve offline behavior.
+
+If a migration is necessary:
+
+- Create a backward-safe migration.
+- Preserve all existing records.
+- Test old-to-new migration.
+- Test rollback/recovery behavior where supported.
+- Never use destructive migration fallback.
+- Document exactly what changed.
+
+---
+
+15. FIRESTORE QUERY LIMITS AND 100K RECORD SCALABILITY
+
+Audit every existing query using:
+
+- limit(500).
+- orderBy(createdAt).
+- Pagination.
+- Missing createdAt.
+- Batch writes.
+- Role-scoped queries.
+- Student lists.
+- Attendance lists.
+- Fee lists.
+- Exam results.
+- Teacher rosters.
+
+Requirements:
+
+- Do not load all 100,000 records into memory.
+- Use cursor-based pagination.
+- Use appropriate Firestore indexes.
+- Use stable document IDs.
+- Handle missing createdAt fields safely.
+- Do not silently omit older records.
+- Do not remove query limits without a scalable replacement.
+- Avoid N+1 queries.
+- Avoid excessive listeners.
+- Avoid duplicate network requests.
+- Use efficient batch operations.
+- Respect Firestore batch limits.
+- Provide loading and pagination states.
+- Preserve current UI behavior.
+
+Test scalability with realistic generated test data, not fake production records.
+
+Do not insert benchmark records into the real Firebase database.
+
+---
+
+16. EXISTING LIBRARIES — NO DESTRUCTIVE CLEANUP
+
+Inspect every existing security, networking, biometric, AI, database, and UI dependency.
+
+Examples include:
+
+- Firebase libraries.
+- App Check libraries.
+- Play Integrity libraries.
+- Recaptcha libraries.
+- ML Kit.
+- Agora SDK.
+- SQLCipher.
+- Android Keystore.
+- Existing security libraries.
+- Existing C++ libraries.
+- Existing encryption implementations.
+- Existing monitoring libraries.
+- Existing synchronization libraries.
+
+Requirements:
+
+- Do not blindly remove dependencies.
+- Do not remove Agora because it appears large.
+- Do not remove security libraries because they appear unused.
+- Verify actual references and functionality.
+- Verify dependency scopes.
+- Verify debug-only libraries.
+- Verify release APK inclusion.
+- Verify JNI dependencies.
+- Verify transitive dependencies.
+- Verify licensing where applicable.
+
+If a library is genuinely unused:
+
+1. Explain why.
+2. Check whether it is required by another feature.
+3. Check whether it is planned for future implementation.
+4. Remove only when safe.
+5. Preserve any required replacement functionality.
+
+Do not fabricate new libraries or pretend that dependencies provide capabilities they do not.
+
+---
+
+17. UI/UX — STRICT ZERO-DAMAGE REQUIREMENT
+
+The existing application UI/UX must remain intact.
+
+DO NOT:
+
+- Redesign the application.
+- Replace the existing dashboard.
+- Change portal navigation.
+- Remove existing screens.
+- Change the theme.
+- Change existing colors.
+- Change typography.
+- Remove animations.
+- Change layout structure.
+- Replace icons.
+- Remove profile components.
+- Remove student/teacher/admin/parent portals.
+- Simplify screens by deleting features.
+- Replace Compose UI with Web UI.
+- Modify welcome screen unnecessarily.
+- Change the login experience unnecessarily.
+
+Only make minimal UI changes where required for:
+
+- Accurate loading states.
+- Provisioning status.
+- Biometric failure messages.
+- Attendance synchronization status.
+- Session revocation notifications.
+- Secure enrollment confirmation.
+- Error recovery.
+
+Use existing design system, components, typography, colors, and animation patterns.
+
+Any UI changes must be additive, minimal, consistent, and backward-compatible.
+
+---
+
+18. GITHUB ACTIONS — SAFE BUILD AND RELEASE
+
+Inspect existing:
+
+- .github/workflows/android-ci.yml
+- .github/workflows/android-release.yml
+- Existing build scripts.
+- Gradle wrapper.
+- JDK configuration.
+- Android SDK configuration.
+- NDK configuration.
+- Firebase configuration.
+- Release signing configuration.
+
+Requirements:
+
+- Preserve existing workflows.
+- Preserve workflow names and triggers unless necessary.
+- Preserve existing secrets.
+- Preserve existing release artifact behavior.
+- Do not remove existing steps.
+- Do not replace working workflow files unnecessarily.
+- Do not commit private signing keys.
+- Do not expose passwords or tokens.
+- Do not use fake Firebase credentials.
+- Ensure required NDK components are available if native compilation is enabled.
+- Ensure Kotlin and C++ compilation are validated.
+- Ensure release APK is generated correctly.
+- Ensure native .so files are packaged if required.
+- Ensure App Check configuration matches APK distribution.
+- Ensure build failures are reported accurately.
+
+Do not claim a successful release build without an actual successful build.
+
+---
+
+19. TESTING — REQUIRED BEFORE FINAL COMPLETION
+
+Run available tests and add targeted tests for verified bugs.
+
+Authentication tests
+
+- Admin creates student credentials.
+- Admin creates teacher credentials.
+- Cross-device login.
+- Provisioning race.
+- Provisioning timeout.
+- Duplicate provisioning.
+- Incorrect password.
+- Password reset.
+- Session revocation.
+- Role isolation.
+
+Biometric tests
+
+- Valid enrollment.
+- Missing enrollment.
+- Enrollment timeout.
+- Invalid enrollment.
+- Incorrect linkedEntityId.
+- Missing teacher UID.
+- No face detected.
+- Enrollment mismatch.
+- Camera failure.
+- Verification failure.
+- No automatic enrollment.
+- Network failure.
+
+Attendance tests
+
+- Successful teacher attendance.
+- Duplicate attendance prevention.
+- Network failure.
+- Retry queue.
+- Offline-to-online recovery.
+- Admin realtime attendance.
+- Teacher realtime attendance.
+- Attendance authorization.
+- Session revoked during attendance operation.
+
+Realtime tests
+
+- Admin student update.
+- Admin teacher update.
+- Fee update.
+- Attendance update.
+- Batch assignment update.
+- Exam schedule update.
+- Exam result update.
+- Certificate update.
+- Parent-linked student update.
+
+Database tests
+
+- Room migration.
+- Data preservation.
+- Pagination.
+- 100,000-record benchmark.
+- Existing synchronization tests.
+
+Build tests
+
+- Kotlin compilation.
+- Compose compilation.
+- Unit tests.
+- Firestore emulator tests.
+- C++ compilation.
+- JNI validation.
+- APK packaging.
+- GitHub Actions CI.
+
+Do not skip failing tests silently.
+
+Do not change expected results simply to make tests pass.
+
+Do not use fake production data.
+
+---
+
+20. IMPLEMENTATION STRATEGY
+
+Follow this sequence:
+
+PHASE 1 — FULL CODE INSPECTION
+
+Inspect all relevant existing files and dependencies.
+
+PHASE 2 — VERIFIED BUG LIST
+
+Create a precise list of:
+
+- Confirmed vulnerabilities.
+- Confirmed bugs.
+- Missing integrations.
+- Dead code.
+- Unverified components.
+- Existing correct implementations.
+
+PHASE 3 — MINIMAL SAFE PATCH PLAN
+
+Explain:
+
+- Which files need modification.
+- Why each file needs modification.
+- What existing behavior must be preserved.
+- Whether database migration is required.
+- Whether Firebase deployment is required.
+- Whether new dependencies are required.
+
+PHASE 4 — IMPLEMENTATION
+
+Fix all confirmed issues in the existing project.
+
+Do not stop after writing a plan.
+
+Do not merely provide recommendations.
+
+Do not create fake implementations.
+
+Do not leave TODO placeholders.
+
+Do not replace real functionality with mock functionality.
+
+PHASE 5 — VALIDATION
+
+Run all available tests and builds.
+
+Fix regressions introduced by your own changes.
+
+PHASE 6 — FINAL REPORT
+
+Provide an accurate completion report.
+
+---
+
+21. ABSOLUTE PROHIBITIONS
+
+NEVER:
+
+- Delete Firebase databases.
+- Delete Firestore collections.
+- Delete Firebase Storage data.
+- Delete existing Room records.
+- Delete migration history.
+- Reset the database.
+- Disable security rules.
+- Disable authentication.
+- Disable session enforcement.
+- Allow automatic biometric enrollment during login.
+- Allow biometric verification when enrollment is unavailable.
+- Restore default passwords.
+- Add fake users to production.
+- Add fake attendance.
+- Add fake biometric data.
+- Add fake security libraries.
+- Add fake native implementations.
+- Add fake AI features.
+- Claim tests passed when they did not run.
+- Claim C++ verification when NDK is unavailable.
+- Claim MobileFaceNet integration without a genuine model.
+- Claim biometric accuracy without validation.
+- Damage the existing UI/UX.
+- Remove existing future libraries.
+- Rewrite the entire application.
+- Replace Firebase with Supabase.
+- Replace native Android with WebView.
+- Modify unrelated application features.
+
+---
+
+22. FINAL REQUIRED OUTPUT
+
+After completing implementation, provide:
+
+1. Total files inspected.
+2. Total files modified.
+3. Exact file paths modified.
+4. Each confirmed issue fixed.
+5. Authentication improvements.
+6. Cross-device provisioning improvements.
+7. Session enforcement improvements.
+8. Realtime synchronization improvements.
+9. Teacher attendance improvements.
+10. Biometric security improvements.
+11. Biometric model status.
+12. Firebase App Check compatibility status.
+13. Firestore Security Rules status.
+14. Room/database preservation status.
+15. Native C++/JNI build status.
+16. GitHub Actions build status.
+17. Unit test results.
+18. Emulator test results.
+19. Release APK build result.
+20. Any remaining limitations.
+21. Any deployment steps that require my explicit action.
+
+For each issue, clearly classify it:
+
+- FIXED AND TESTED
+- FIXED BUT NOT FULLY VERIFIED
+- NOT VERIFIED
+- BLOCKED
+- REQUIRES MANUAL CONFIGURATION
+
+Do not report everything as completed if any part remains unverified.
+
+FINAL EXECUTION INSTRUCTION
+
+Start by inspecting the existing project.
+
+Then fix every verified issue listed above in the existing codebase.
+
+Preserve all existing databases, Firebase resources, future libraries, security implementations, GitHub workflows, and UI/UX.
+
+Make the smallest safe changes necessary.
+
+Complete the actual implementation and testing rather than only writing a report.
+
+If a change risks data loss, security regression, or breaking an existing feature, stop that specific change, explain the risk, and implement a safe alternative.
+
+The priority order is:
+
+1. Data preservation.
+2. Security.
+3. Correct authentication.
+4. Reliable realtime synchronization.
+5. Correct attendance.
+6. Biometric fail-closed behavior.
+7. Database integrity.
+8. Existing feature compatibility.
+9. UI/UX preservation.
+10. Performance and scalability.
+
+Begin now.

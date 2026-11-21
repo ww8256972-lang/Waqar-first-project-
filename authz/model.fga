@@ -1,0 +1,42 @@
+model
+  schema 1.1
+
+type user
+
+type institute
+  relations
+    define admin: [user]
+    define staff: [user]
+
+type course
+  relations
+    define institute: [institute]
+    define instructor: [user]
+    define enrolled: [user]
+    define can_view_content: instructor or enrolled or admin from institute
+    define can_edit_content: instructor or admin from institute
+
+type batch
+  relations
+    define institute: [institute]
+    define course: [course]
+    define teacher: [user]
+    define student: [user]
+    define can_mark_attendance: teacher or admin from institute
+    define can_view_roster: teacher or student or admin from institute
+
+type student_profile
+  relations
+    define institute: [institute]
+    define batch: [batch]
+    define owner: [user]
+    define guardian: [user]
+    define can_view: owner or guardian or teacher from batch or admin from institute
+    define can_edit: admin from institute
+
+type fee_record
+  relations
+    define institute: [institute]
+    define profile: [student_profile]
+    define can_view: owner from profile or guardian from profile or admin from institute
+    define can_edit: admin from institute

@@ -1,0 +1,17 @@
+name: sec-authz-model-test
+on:
+  pull_request:
+    paths:
+      - 'authz/**'
+  push:
+    branches:
+      - main
+    paths:
+      - 'authz/**'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: OpenFGA model tests
+        run: docker run --rm -v "$PWD/authz:/w" -w /w openfga/cli:v0.8.2 model test --tests model.fga.yaml

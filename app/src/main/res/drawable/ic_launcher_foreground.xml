@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Outer Neon Hexagonal Shield -->
+    <path
+        android:pathData="M54,22 L80,36 L80,68 L54,84 L28,68 L28,36 Z"
+        android:strokeWidth="2.5">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="28"
+                android:startY="22"
+                android:endX="80"
+                android:endY="84"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FFA970FF" />
+                <item android:offset="0.5" android:color="#FFFF4ECD" />
+                <item android:offset="1.0" android:color="#FF00E1FF" />
+            </gradient>
+        </aapt:attr>
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="28"
+                android:startY="22"
+                android:endX="80"
+                android:endY="84"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#26A970FF" />
+                <item android:offset="1.0" android:color="#1900E1FF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- Stylized 'W' Monogram for Waqar Computer Institute -->
+    <path
+        android:pathData="M35,40 L41,40 L46,61 L54,44 L62,61 L67,40 L73,40 L65,70 L59,70 L54,56 L49,70 L43,70 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="35"
+                android:startY="40"
+                android:endX="73"
+                android:endY="70"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FFFFFFFF" />
+                <item android:offset="0.6" android:color="#FFE2D4FF" />
+                <item android:offset="1.0" android:color="#FF00E1FF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- Top Academic Node Dot -->
+    <path
+        android:pathData="M54,29 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0"
+        android:fillColor="#FFFF4ECD" />
+</vector>

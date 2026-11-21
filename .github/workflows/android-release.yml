@@ -1,0 +1,268 @@
+name: Android Release APK & GitHub OTA — Waqar Computer Institute
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+env:
+  JAVA_TOOL_OPTIONS: "-Dfile.encoding=UTF-8 -Djava.awt.headless=true"
+
+jobs:
+  release:
+    name: Build Signed Release APK & Publish GitHub Release OTA
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: 11076708
+          packages: 'cmdline-tools;latest platform-tools'
+          accept-android-sdk-licenses: true
+
+      - name: Accept SDK Licenses & Install Required Android SDK Packages
+        run: |
+          export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
+          export ANDROID_HOME="$ANDROID_SDK_ROOT"
+          echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}" >> "$GITHUB_ENV"
+          echo "ANDROID_HOME=${ANDROID_HOME}" >> "$GITHUB_ENV"
+          SDKMANAGER="${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER="$(which sdkmanager)"
+          fi
+          yes | "$SDKMANAGER" --sdk_root="$ANDROID_SDK_ROOT" --licenses > /dev/null || true
+          "$SDKMANAGER" --sdk_root="$ANDROID_SDK_ROOT" \
+            "platform-tools" \
+            "platforms;android-36" \
+            "platforms;android-36.1" \
+            "build-tools;36.0.0" \
+            "cmake;3.22.1" \
+            "ndk;27.0.12077973"
+
+      - name: Set up Gradle 9.3.1 with Caching
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.3.1'
+          cache-read-only: false
+
+      - name: Prepare Fail-Closed Release Signing Keystore & Firebase Config
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+          CI_EXPECTED_CERT_SHA256: ${{ secrets.EXPECTED_CERT_SHA256 }}
+          CI_EXPECTED_DEX_CRC32: ${{ secrets.EXPECTED_DEX_CRC32 }}
+          CI_AGORA_APP_ID: ${{ secrets.AGORA_APP_ID }}
+          CI_EXAM_ANSWER_HMAC_PEPPER: ${{ secrets.EXAM_ANSWER_HMAC_PEPPER }}
+          CI_EXAM_GRADING_ENDPOINT_URL: ${{ secrets.EXAM_GRADING_ENDPOINT_URL }}
+          CI_PORTAL_AUTH_TOKEN_ENDPOINT_URL: ${{ secrets.PORTAL_AUTH_TOKEN_ENDPOINT_URL }}
+          CI_GROK_API_KEY: ${{ secrets.GROK_API_KEY || secrets.XAI_API_KEY }}
+          CI_GROK_API_URL: ${{ secrets.GROK_API_URL }}
+          CI_AI_PROXY_ENDPOINT_URL: ${{ secrets.AI_PROXY_ENDPOINT_URL }}
+          AUTO_GITHUB_OTA_OWNER: ${{ github.repository_owner }}
+          AUTO_GITHUB_OTA_REPO: ${{ github.event.repository.name }}
+        run: |
+          set -euo pipefail
+          if [ -z "$RELEASE_KEYSTORE_BASE64" ] || [ -z "$RELEASE_STORE_PASSWORD" ] || [ -z "$RELEASE_KEY_PASSWORD" ]; then
+            echo "::error::Missing required Release signing secrets (RELEASE_KEYSTORE_BASE64, STORE_PASSWORD, KEY_PASSWORD). Aborting fail-closed — ephemeral key generation is prohibited for production releases."
+            exit 1
+          fi
+
+          if [ ! -f debug.keystore ] && [ -f debug.keystore.base64 ]; then
+            base64 -d debug.keystore.base64 > debug.keystore
+          fi
+          if [ -n "$GOOGLE_SERVICES_JSON_BASE64" ]; then
+            echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 -d > app/google-services.json
+            touch .ci_decoded_google_services
+          fi
+
+          echo "$RELEASE_KEYSTORE_BASE64" | base64 -d > my-upload-key.jks
+          EFF_STORE_PASS="$RELEASE_STORE_PASSWORD"
+          EFF_KEY_PASS="$RELEASE_KEY_PASSWORD"
+
+          echo "KEYSTORE_PATH=${GITHUB_WORKSPACE}/my-upload-key.jks" >> "$GITHUB_ENV"
+          echo "STORE_PASSWORD=${EFF_STORE_PASS}" >> "$GITHUB_ENV"
+          echo "KEY_PASSWORD=${EFF_KEY_PASS}" >> "$GITHUB_ENV"
+
+          CERT_SHA256="$(keytool -list -v -keystore my-upload-key.jks -alias upload -storepass "$EFF_STORE_PASS" 2>/dev/null | sed -n 's/.*SHA256:[[:space:]]*//Ip' | head -n 1 | tr -d ':\r\n ' | tr '[:upper:]' '[:lower:]')"
+          if [ -z "$CERT_SHA256" ]; then
+            CERT_SHA256="$(keytool -list -v -keystore my-upload-key.jks -storepass "$EFF_STORE_PASS" 2>/dev/null | sed -n 's/.*SHA256:[[:space:]]*//Ip' | head -n 1 | tr -d ':\r\n ' | tr '[:upper:]' '[:lower:]')"
+          fi
+          if [ -z "$CERT_SHA256" ] && [ -n "$CI_EXPECTED_CERT_SHA256" ]; then
+            CERT_SHA256="$(echo "$CI_EXPECTED_CERT_SHA256" | tr -d ':\r\n ' | tr '[:upper:]' '[:lower:]')"
+          fi
+          if [ -z "$CERT_SHA256" ]; then
+            echo "::error::Failed to extract SHA-256 certificate pin from production keystore."
+            exit 1
+          fi
+
+          EFF_DEX_CRC32="${CI_EXPECTED_DEX_CRC32:-AUTO_BASELINE}"
+          EFF_HMAC_PEPPER="${CI_EXAM_ANSWER_HMAC_PEPPER:-WCI_EXAM_BLIND_PEPPER_2026_V1}"
+          EFF_GRADING_URL="${CI_EXAM_GRADING_ENDPOINT_URL:-https://asia-east1-gen-lang-client-0309263247.cloudfunctions.net/gradeExamSubmission}"
+          EFF_PORTAL_TOKEN_URL="${CI_PORTAL_AUTH_TOKEN_ENDPOINT_URL:-https://asia-east1-gen-lang-client-0309263247.cloudfunctions.net/issuePortalCustomToken}"
+          EFF_OTA_OWNER="${AUTO_GITHUB_OTA_OWNER:-ww8256972}"
+          EFF_OTA_REPO="${AUTO_GITHUB_OTA_REPO:-Waqar-first-project-}"
+          EFF_AGORA_ID="${CI_AGORA_APP_ID:-802667ef48b4460784c048aaf9bfe8e1}"
+          EFF_GROK_KEY="${CI_GROK_API_KEY:-}"
+          EFF_GROK_URL="${CI_GROK_API_URL:-https://api.x.ai/v1/chat/completions}"
+          EFF_AI_PROXY_URL="${CI_AI_PROXY_ENDPOINT_URL:-https://asia-east1-gen-lang-client-0309263247.cloudfunctions.net/streamInstituteAiTutor}"
+
+          {
+            echo "EXPECTED_CERT_SHA256=${CERT_SHA256}"
+            echo "EXPECTED_DEX_CRC32=${EFF_DEX_CRC32}"
+            echo "EXAM_ANSWER_HMAC_PEPPER=${EFF_HMAC_PEPPER}"
+            echo "EXAM_GRADING_ENDPOINT_URL=${EFF_GRADING_URL}"
+            echo "PORTAL_AUTH_TOKEN_ENDPOINT_URL=${EFF_PORTAL_TOKEN_URL}"
+            echo "GITHUB_OTA_OWNER=${EFF_OTA_OWNER}"
+            echo "GITHUB_OTA_REPO=${EFF_OTA_REPO}"
+            echo "AGORA_APP_ID=${EFF_AGORA_ID}"
+            echo "AI_PROXY_ENDPOINT_URL=${EFF_AI_PROXY_URL}"
+            echo "GROK_API_URL=${EFF_GROK_URL}"
+          } >> "$GITHUB_ENV"
+
+          {
+            printf "AGORA_APP_ID=%s\n" "${EFF_AGORA_ID}"
+            printf "AGORA_TEMP_TOKEN=%s\n" "AGORA_TEMP_TOKEN_DEFAULT_VALUE"
+            printf "EXPECTED_CERT_SHA256=%s\n" "${CERT_SHA256}"
+            printf "EXPECTED_DEX_CRC32=%s\n" "${EFF_DEX_CRC32}"
+            printf "EXAM_ANSWER_HMAC_PEPPER=%s\n" "${EFF_HMAC_PEPPER}"
+            printf "EXAM_GRADING_ENDPOINT_URL=%s\n" "${EFF_GRADING_URL}"
+            printf "PORTAL_AUTH_TOKEN_ENDPOINT_URL=%s\n" "${EFF_PORTAL_TOKEN_URL}"
+            printf "AI_PROXY_ENDPOINT_URL=%s\n" "${EFF_AI_PROXY_URL}"
+            printf "GROK_API_URL=%s\n" "${EFF_GROK_URL}"
+            if [ -n "$EFF_GROK_KEY" ]; then
+              printf "GROK_API_KEY=%s\n" "${EFF_GROK_KEY}"
+            fi
+            printf "GITHUB_OTA_OWNER=%s\n" "${EFF_OTA_OWNER}"
+            printf "GITHUB_OTA_REPO=%s\n" "${EFF_OTA_REPO}"
+          } > .env
+
+      - name: Validate Project Configuration
+        run: |
+          gradle help --stacktrace
+
+      - name: Build Signed Release APK (WhatsApp / GitHub OTA)
+        run: |
+          gradle :app:assembleRelease -PenableNativeCxxBuild=true --stacktrace
+
+      - name: Verify Signed Release APK & Compute SHA-256 Checksum
+        id: apk_checksum
+        run: |
+          APK_PATH="app/build/outputs/apk/release/app-release.apk"
+          if [ ! -f "$APK_PATH" ]; then
+            echo "::error::Expected signed release APK not found at $APK_PATH"
+            exit 1
+          fi
+          APK_SHA256="$(sha256sum "$APK_PATH" | awk '{print $1}')"
+          echo "apk_sha256=${APK_SHA256}" >> "$GITHUB_OUTPUT"
+          ls -lh "$APK_PATH"
+          echo "SHA256: ${APK_SHA256}"
+
+      - name: Upload Signed Release APK Artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: waqar-institute-release-apk
+          path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish GitHub Release for In-App OTA Updater
+        if: success() && startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: app/build/outputs/apk/release/app-release.apk
+          generate_release_notes: true
+          body: |
+            Waqar Computer Institute ERP — Signed Release APK (WhatsApp & GitHub OTA)
+            SHA256: ${{ steps.apk_checksum.outputs.apk_sha256 }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cleanup Decoded Keystores, Firebase Config & Secrets
+        if: always()
+        run: |
+          for secret_file in my-upload-key.jks debug.keystore .env; do
+            if [ -f "$secret_file" ]; then
+              shred -u "$secret_file" 2>/dev/null || rm -f "$secret_file"
+            fi
+          done
+          if [ -f ".ci_decoded_google_services" ]; then
+            shred -u app/google-services.json 2>/dev/null || rm -f app/google-services.json
+            rm -f .ci_decoded_google_services
+          fi
+          echo "Sensitive build keystores and decoded credentials cleaned from runner."
+
+  deploy-firebase-hosting:
+    name: Deploy Verification Portal to Firebase Hosting
+    needs: release
+    if: success()
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: firebase-hosting-deploy-gen-lang-client-0309263247
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Verify Firebase Hosting Configuration & Credentials
+        id: check_hosting
+        env:
+          HAS_PRIMARY_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT != '' }}
+          HAS_PROJECT_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_GEN_LANG_CLIENT_0309263247 != '' }}
+          HAS_FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN != '' }}
+        run: |
+          if [ ! -f "firebase.json" ] || [ ! -f ".firebaserc" ]; then
+            echo "ERROR: Missing firebase.json or .firebaserc."
+            exit 1
+          fi
+          if [ ! -f "firebase/hosting-prod/verify/index.html" ] || [ ! -f "firebase/hosting-prod/404.html" ]; then
+            echo "ERROR: Missing Certificate Verification Portal production files in firebase/hosting-prod."
+            exit 1
+          fi
+          if grep -rnE "AUTH_FLOW_TEST_COOKIE_NAME|<title>Cookie check</title>" firebase/hosting-prod/; then
+            echo "ERROR: Template or cookie-check HTML detected inside firebase/hosting-prod. Aborting Hosting deployment."
+            exit 1
+          fi
+          if [ "$HAS_PRIMARY_SA" = "true" ] || [ "$HAS_PROJECT_SA" = "true" ]; then
+            echo "auth_mode=service_account" >> "$GITHUB_OUTPUT"
+          elif [ "$HAS_FIREBASE_TOKEN" = "true" ]; then
+            echo "auth_mode=firebase_token" >> "$GITHUB_OUTPUT"
+          else
+            echo "auth_mode=none" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Firebase Hosting Secret Not Configured::Skipping live Firebase Hosting deployment because FIREBASE_SERVICE_ACCOUNT, FIREBASE_SERVICE_ACCOUNT_GEN_LANG_CLIENT_0309263247, or FIREBASE_TOKEN is not set in GitHub Repository Secrets."
+          fi
+
+      - name: Deploy to Firebase Hosting (Service Account)
+        if: steps.check_hosting.outputs.auth_mode == 'service_account'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT || secrets.FIREBASE_SERVICE_ACCOUNT_GEN_LANG_CLIENT_0309263247 }}
+          channelId: live
+          projectId: gen-lang-client-0309263247
+
+      - name: Deploy to Firebase Hosting (CLI Token)
+        if: steps.check_hosting.outputs.auth_mode == 'firebase_token'
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          npx --yes firebase-tools deploy --only hosting --project gen-lang-client-0309263247 --non-interactive

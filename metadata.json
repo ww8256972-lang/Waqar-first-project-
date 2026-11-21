@@ -1,0 +1,6 @@
+{
+  "name": "Waqar Institute",
+  "description": "Native Android management application for Waqar Computer Institute with Admin, Teacher, Student, and Parent portals, Firestore cloud sync, and Gemini AI Tutor.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
