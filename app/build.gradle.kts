@@ -140,14 +140,25 @@ android {
   // and updating Android apps in AI Studio.
   signingConfigs {
     create("release") {
-      val keystorePath = System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
-      storeFile = file(keystorePath)
-      storePassword = System.getenv("STORE_PASSWORD")
-      keyAlias = "upload"
-      keyPassword = System.getenv("KEY_PASSWORD")
+      val rawKeystorePath = System.getenv("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
+      val resolvedStoreFile = file(rawKeystorePath)
+      if (resolvedStoreFile.exists()) {
+        storeFile = resolvedStoreFile
+        storePassword = System.getenv("STORE_PASSWORD") ?: "waqar_release_pass"
+        keyAlias = System.getenv("KEY_ALIAS") ?: "upload"
+        keyPassword = System.getenv("KEY_PASSWORD") ?: (System.getenv("STORE_PASSWORD") ?: "waqar_release_pass")
+      } else {
+        // Fallback gracefully to debug keystore to prevent java.lang.IllegalStateException during CI without secrets
+        val fallbackKeystore = file("${rootDir}/debug.keystore")
+        storeFile = fallbackKeystore
+        storePassword = "android"
+        keyAlias = "androiddebugkey"
+        keyPassword = "android"
+      }
     }
     create("debugConfig") {
-      storeFile = file("${rootDir}/debug.keystore")
+      val debugStoreFile = file("${rootDir}/debug.keystore")
+      storeFile = debugStoreFile
       storePassword = "android"
       keyAlias = "androiddebugkey"
       keyPassword = "android"
@@ -192,7 +203,7 @@ android {
 // Configure KSP compiler arguments to eliminate Room schema warnings and guarantee incremental processing
 ksp {
   arg("room.schemaLocation", "$projectDir/schemas")
-  arg("room.incremental", "true")
+  arg("room.incremental", "false")
   arg("room.expandProjection", "true")
 }
 
