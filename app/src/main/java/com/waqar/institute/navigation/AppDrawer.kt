@@ -2,6 +2,7 @@ package com.waqar.institute.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.VerifiedUser
@@ -86,7 +87,7 @@ object AppDrawer {
         title = TITLE_ADAPTIVE_LEARNING,
         shortLabel = SHORT_LABEL_ADAPTIVE_LEARNING,
         category = "Academics",
-        icon = androidx.compose.material.icons.filled.AutoAwesome,
+        icon = Icons.Default.AutoAwesome,
         accentStart = WciColors.PurpleVibrant,
         accentEnd = WciColors.Info
     )

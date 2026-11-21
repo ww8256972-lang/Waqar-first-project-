@@ -210,7 +210,7 @@ fun ReportsInventorySupportModuleScreen(
                     }
                 }
             }
-            else -> {
+            2 -> {
                 item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -1153,7 +1153,7 @@ fun SecurityBackupSettingsModuleScreen(
                     }
                 }
             }
-            else -> {
+            2 -> {
                 // 1. Portal Language Card (Strict English Standard)
                 item {
                     GlassCard(

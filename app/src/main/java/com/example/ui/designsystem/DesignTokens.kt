@@ -183,6 +183,10 @@ object WciColors {
         @androidx.compose.runtime.Composable
         get() = if (LocalIsDarkTheme.current) Color(0xFF121A45).copy(alpha = 0.85f) else Color(0xFFF8FAFC)
 
+    val borderMedium: Color
+        @androidx.compose.runtime.Composable
+        get() = if (LocalIsDarkTheme.current) GlassBorderSubtle else LightBorderSubtle
+
     val glassBorderSubtleColor: Color
         @androidx.compose.runtime.Composable
         get() = if (LocalIsDarkTheme.current) GlassBorderSubtle else Color(0x260F172A)

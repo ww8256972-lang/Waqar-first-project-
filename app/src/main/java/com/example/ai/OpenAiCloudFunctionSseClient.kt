@@ -20,10 +20,26 @@ object OpenAiCloudFunctionSseClient {
     const val LAST_RESORT_EXHAUSTED_REASON = GrokCloudFunctionSseClient.LAST_RESORT_EXHAUSTED_REASON
     const val LAST_RESORT_ELIGIBLE_FLAG = GrokCloudFunctionSseClient.LAST_RESORT_ELIGIBLE_FLAG
 
-    typealias GroqAndCloudflareExhaustedException = GrokCloudFunctionSseClient.GroqAndCloudflareExhaustedException
-    typealias ProxySecurityViolationException = GrokCloudFunctionSseClient.ProxySecurityViolationException
-    typealias ProxyRateLimitException = GrokCloudFunctionSseClient.ProxyRateLimitException
-    typealias CloudFunctionNotDeployedException = GrokCloudFunctionSseClient.CloudFunctionNotDeployedException
+    class GroqAndCloudflareExhaustedException(
+        val reason: String = LAST_RESORT_EXHAUSTED_REASON,
+        message: String = "Grok API and upstream AI quotas are exhausted."
+    ) : IllegalStateException(message)
+
+    class ProxySecurityViolationException(
+        val category: String = "PROXY_VIOLATION",
+        message: String = "Security policy violation"
+    ) : SecurityException(message)
+
+    class ProxyRateLimitException(
+        val retryAfterSeconds: Int = 60,
+        message: String = "AI proxy rate-limit exceeded."
+    ) : IllegalStateException(message)
+
+    class CloudFunctionNotDeployedException(
+        val endpointUrl: String = DEFAULT_CLOUD_FUNCTION_SSE_URL,
+        message: String = "Firebase Cloud Function not deployed."
+    ) : IllegalStateException(message)
+
     typealias SseFrame = GrokCloudFunctionSseClient.SseFrame
 
     fun parseSseDataLine(rawLine: String): GrokCloudFunctionSseClient.SseFrame =
