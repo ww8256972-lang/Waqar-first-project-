@@ -4,6 +4,8 @@ import kotlinx.coroutines.flow.Flow
 import org.json.JSONObject
 import org.lsposed.lsparanoid.Obfuscate
 
+typealias SseFrame = GrokCloudFunctionSseClient.SseFrame
+
 /**
  * Backward compatibility delegation to [GrokCloudFunctionSseClient].
  * OpenAI has been completely removed in favor of Grok API and zero-trust Cloud Functions.
@@ -39,8 +41,6 @@ object OpenAiCloudFunctionSseClient {
         val endpointUrl: String = DEFAULT_CLOUD_FUNCTION_SSE_URL,
         message: String = "Firebase Cloud Function not deployed."
     ) : IllegalStateException(message)
-
-    typealias SseFrame = GrokCloudFunctionSseClient.SseFrame
 
     fun parseSseDataLine(rawLine: String): GrokCloudFunctionSseClient.SseFrame =
         GrokCloudFunctionSseClient.parseSseDataLine(rawLine)
