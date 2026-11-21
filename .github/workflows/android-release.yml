@@ -3,6 +3,9 @@ name: Android Release APK & GitHub OTA — Waqar Computer Institute
 on:
   workflow_dispatch:
   push:
+    branches:
+      - 'master'
+      - 'main'
     tags:
       - 'v*'
 

@@ -1,10 +1,22 @@
 name: sec-gateway-ci
 on:
-  pull_request:
+  push:
+    branches:
+      - master
+      - main
     paths:
       - 'security-gateway/**'
       - 'shared-crypto/**'
       - 'enclave/**'
+  pull_request:
+    branches:
+      - master
+      - main
+    paths:
+      - 'security-gateway/**'
+      - 'shared-crypto/**'
+      - 'enclave/**'
+  workflow_dispatch:
 jobs:
   test:
     runs-on: ubuntu-latest

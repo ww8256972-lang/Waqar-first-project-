@@ -1,9 +1,20 @@
 name: sec-android-module
 on:
-  pull_request:
+  push:
+    branches:
+      - master
+      - main
     paths:
       - 'security/**'
       - 'shared-crypto/**'
+  pull_request:
+    branches:
+      - master
+      - main
+    paths:
+      - 'security/**'
+      - 'shared-crypto/**'
+  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest

@@ -1,13 +1,18 @@
 name: sec-authz-model-test
 on:
-  pull_request:
-    paths:
-      - 'authz/**'
   push:
     branches:
+      - master
       - main
     paths:
       - 'authz/**'
+  pull_request:
+    branches:
+      - master
+      - main
+    paths:
+      - 'authz/**'
+  workflow_dispatch:
 jobs:
   test:
     runs-on: ubuntu-latest

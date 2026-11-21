@@ -3,7 +3,7 @@ name: Deploy Grok AI Tutor & Zero-Trust Cloud Functions — Firebase
 on:
   workflow_dispatch:
   push:
-    branches: [ "main", "develop" ]
+    branches: [ "main", "master", "develop" ]
     paths:
       - 'functions/**'
       - 'firebase.json'
