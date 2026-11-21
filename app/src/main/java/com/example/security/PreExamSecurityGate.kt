@@ -131,7 +131,12 @@ object PreExamSecurityGate {
         val deviceIds = android.view.InputDevice.getDeviceIds()
         for (id in deviceIds) {
             val dev = android.view.InputDevice.getDevice(id) ?: continue
-            if (dev.isExternal && !dev.isVirtual) {
+            val isExt = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                dev.isExternal
+            } else {
+                !dev.isVirtual
+            }
+            if (isExt && !dev.isVirtual) {
                 val sources = dev.sources
                 val isExternalInput = (sources and android.view.InputDevice.SOURCE_KEYBOARD != 0) ||
                     (sources and android.view.InputDevice.SOURCE_MOUSE != 0) ||
