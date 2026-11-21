@@ -227,11 +227,9 @@ class ExhaustiveSecurityAndIntegrationAuditTest {
         val dummyStudent = StudentRecord(
             id = "stu_101",
             fullName = "Ananya Verma",
-            rollNumber = "101",
             enrollmentNo = "WCI101",
             courseName = "ADCA",
             attendancePercent = 88,
-            admissionDate = "2026-01-10",
             photoUri = ""
         )
         val dummyCourse = CourseRecord(
@@ -252,9 +250,8 @@ class ExhaustiveSecurityAndIntegrationAuditTest {
             studentName = "Ananya Verma",
             marksObtained = 46,
             totalMarks = 50,
-            percentage = 92,
-            grade = "A+",
-            submittedAtMs = 1760000000000L
+            exactPercentage = 92.0,
+            grade = "A+"
         )
 
         val state = InstituteUiState(
