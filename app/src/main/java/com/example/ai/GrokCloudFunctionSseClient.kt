@@ -40,29 +40,29 @@ object GrokCloudFunctionSseClient {
     const val LAST_RESORT_EXHAUSTED_REASON = "GROQ_AND_CLOUDFLARE_EXHAUSTED"
     const val LAST_RESORT_ELIGIBLE_FLAG = "GEMINI_FREE_LAST_RESORT"
 
-    class GroqAndCloudflareExhaustedException(
+    open class GroqAndCloudflareExhaustedException(
         val reason: String = LAST_RESORT_EXHAUSTED_REASON,
         message: String = "Grok API and upstream AI quotas are exhausted."
     ) : IllegalStateException(message)
 
-    class ProxySecurityViolationException(
+    open class ProxySecurityViolationException(
         val strikeCount: Int,
         val locked: Boolean,
         val lockedUntilMs: Long,
         override val message: String
     ) : SecurityException(message)
 
-    class ProxyIpBannedException(
+    open class ProxyIpBannedException(
         val blockedUntilMs: Long,
         override val message: String
     ) : SecurityException(message)
 
-    class ProxyRateLimitException(
+    open class ProxyRateLimitException(
         val retryAfterSeconds: Long,
         override val message: String
     ) : IllegalStateException(message)
 
-    class CloudFunctionNotDeployedException(
+    open class CloudFunctionNotDeployedException(
         override val message: String = "AI proxy Cloud Function unavailable on Spark Plan."
     ) : IllegalStateException(message)
 

@@ -34,6 +34,11 @@ object OpenAiCloudFunctionSseClient {
         message: String = "Security policy violation"
     ) : GrokCloudFunctionSseClient.ProxySecurityViolationException(strikeCount, locked, lockedUntilMs, message)
 
+    class ProxyIpBannedException(
+        blockedUntilMs: Long = 0L,
+        message: String = "IP banned by AI security gateway"
+    ) : GrokCloudFunctionSseClient.ProxyIpBannedException(blockedUntilMs, message)
+
     class ProxyRateLimitException(
         retryAfterSeconds: Long = 60L,
         message: String = "AI proxy rate-limit exceeded."
