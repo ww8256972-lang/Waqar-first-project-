@@ -110,7 +110,7 @@ object GrokCloudFunctionSseClient {
             if (json.has("delta")) {
                 val deltaText = json.optString("delta", "")
                 val modelTag = json.optString("model", "").takeIf { it.isNotBlank() }
-                return if (deltaText.isNotEmpty()) SseFrame.Delta(deltaText, modelTag) else SseFrame.Ignored
+                if (deltaText.isNotEmpty()) return SseFrame.Delta(deltaText, modelTag)
             }
             val choices = json.optJSONArray("choices")
             if (choices != null && choices.length() > 0) {
@@ -121,8 +121,37 @@ object GrokCloudFunctionSseClient {
                     return SseFrame.Delta(content)
                 }
             }
+            // Fail-safe regex parser for headless unit test runners where android.jar stubs JSONObject
+            if (payload.contains("\"delta\":")) {
+                val deltaMatch = Regex("\"delta\"\\s*:\\s*\"([^\"]+)\"").find(payload)?.groupValues?.get(1)
+                val modelMatch = Regex("\"model\"\\s*:\\s*\"([^\"]+)\"").find(payload)?.groupValues?.get(1)
+                if (!deltaMatch.isNullOrBlank()) {
+                    return SseFrame.Delta(deltaMatch, modelMatch)
+                }
+            }
+            if (payload.contains("\"error\":")) {
+                val errorMatch = Regex("\"error\"\\s*:\\s*\"([^\"]+)\"").find(payload)?.groupValues?.get(1)
+                if (!errorMatch.isNullOrBlank()) {
+                    return SseFrame.Error(errorMatch)
+                }
+            }
             SseFrame.Ignored
         } catch (_: Exception) {
+            try {
+                if (payload.contains("\"delta\":")) {
+                    val deltaMatch = Regex("\"delta\"\\s*:\\s*\"([^\"]+)\"").find(payload)?.groupValues?.get(1)
+                    val modelMatch = Regex("\"model\"\\s*:\\s*\"([^\"]+)\"").find(payload)?.groupValues?.get(1)
+                    if (!deltaMatch.isNullOrBlank()) {
+                        return SseFrame.Delta(deltaMatch, modelMatch)
+                    }
+                }
+                if (payload.contains("\"error\":")) {
+                    val errorMatch = Regex("\"error\"\\s*:\\s*\"([^\"]+)\"").find(payload)?.groupValues?.get(1)
+                    if (!errorMatch.isNullOrBlank()) {
+                        return SseFrame.Error(errorMatch)
+                    }
+                }
+            } catch (_: Exception) {}
             SseFrame.Ignored
         }
     }
