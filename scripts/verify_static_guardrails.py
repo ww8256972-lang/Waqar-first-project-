@@ -30,6 +30,7 @@ IGNORE_DIRS = {
     "build",
     ".idea",
     ".gemini",
+    ".agent",
     "scratch",
     "node_modules",
     "dist",

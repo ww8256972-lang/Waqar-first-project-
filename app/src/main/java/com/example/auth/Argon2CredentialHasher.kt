@@ -27,6 +27,8 @@ object Argon2CredentialHasher {
     private const val SALT_LENGTH_BYTES = 16   // 128-bit CSPRNG salt
     private const val LEGACY_PBKDF2_ITERATIONS = 65_536
     const val WEB_PARITY_PBKDF2_ITERATIONS = 12_000
+    /** Matches PBKDF2_HARDENED_ITERATIONS in Cloud Functions issuePortalCustomToken (120k rounds). */
+    private const val HARDENED_CLOUD_PBKDF2_ITERATIONS = 120_000
     private const val LEGACY_PBKDF2_BITS = 256
 
     private val secureRandom = SecureRandom()
@@ -167,10 +169,20 @@ object Argon2CredentialHasher {
                 if (match12k) {
                     true
                 } else {
-                    val spec65k = PBEKeySpec(passwordChars, saltBytes, LEGACY_PBKDF2_ITERATIONS, LEGACY_PBKDF2_BITS)
-                    val hash65kHex = skf.generateSecret(spec65k).encoded.joinToString("") { "%02x".format(it) }
-                    spec65k.clearPassword()
-                    MessageDigest.isEqual(targetBytes, hash65kHex.toByteArray(Charsets.UTF_8))
+                    // 120k hardened cloud PBKDF2 (issued by Cloud Functions issuePortalCustomToken)
+                    val spec120k = PBEKeySpec(passwordChars, saltBytes, HARDENED_CLOUD_PBKDF2_ITERATIONS, LEGACY_PBKDF2_BITS)
+                    val hash120kHex = skf.generateSecret(spec120k).encoded.joinToString("") { "%02x".format(it) }
+                    spec120k.clearPassword()
+                    val match120k = MessageDigest.isEqual(targetBytes, hash120kHex.toByteArray(Charsets.UTF_8))
+                    if (match120k) {
+                        true
+                    } else {
+                        // 65k legacy PBKDF2 fallback
+                        val spec65k = PBEKeySpec(passwordChars, saltBytes, LEGACY_PBKDF2_ITERATIONS, LEGACY_PBKDF2_BITS)
+                        val hash65kHex = skf.generateSecret(spec65k).encoded.joinToString("") { "%02x".format(it) }
+                        spec65k.clearPassword()
+                        MessageDigest.isEqual(targetBytes, hash65kHex.toByteArray(Charsets.UTF_8))
+                    }
                 }
             }.getOrDefault(false)
             verifiedDigestCache[cacheKey] = matched

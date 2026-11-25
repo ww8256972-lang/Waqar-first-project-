@@ -923,7 +923,7 @@ class FirebaseAuthServiceProvider(
             val existingLocal = InstituteRepository.getCachedCredentialLocally(cleanUsername)
             if (existingLocal != null && (existingLocal.isAdmin || existingLocal.supportsRole(PortalRole.ADMIN))) {
                 val chkChars = cleanPassword.toCharArray()
-                val passwordValid = try {
+                var passwordValid = try {
                     Argon2CredentialHasher.verifyPasswordConstantTime(
                         passwordChars = chkChars,
                         storedEncodedHash = existingLocal.passwordHash,
@@ -931,6 +931,19 @@ class FirebaseAuthServiceProvider(
                     )
                 } finally {
                     Arrays.fill(chkChars, '\u0000')
+                }
+                // Fallback: check pbkdf2ParityHash (12k-iteration parity) if primary hash didn't match
+                if (!passwordValid && !existingLocal.pbkdf2ParityHash.isNullOrBlank() && !existingLocal.pbkdf2ParitySalt.isNullOrBlank()) {
+                    val parityChars = cleanPassword.toCharArray()
+                    passwordValid = try {
+                        Argon2CredentialHasher.verifyPasswordConstantTime(
+                            passwordChars = parityChars,
+                            storedEncodedHash = existingLocal.pbkdf2ParityHash,
+                            legacySaltHex = existingLocal.pbkdf2ParitySalt
+                        )
+                    } finally {
+                        Arrays.fill(parityChars, '\u0000')
+                    }
                 }
                 if (passwordValid) {
                     val resolvedUid = currentFirebaseUser?.uid ?: "cred_$cleanUsername"
@@ -1165,7 +1178,7 @@ class FirebaseAuthServiceProvider(
             val effectiveRole = selectedRole
 
             val passwordCharsCopy = cleanPassword.toCharArray()
-            val passwordValid = try {
+            var passwordValid = try {
                 Argon2CredentialHasher.verifyPasswordConstantTime(
                     passwordChars = passwordCharsCopy,
                     storedEncodedHash = existingCred.passwordHash,
@@ -1173,6 +1186,19 @@ class FirebaseAuthServiceProvider(
                 )
             } finally {
                 Arrays.fill(passwordCharsCopy, '\u0000')
+            }
+            // Fallback: check pbkdf2ParityHash (12k-iteration parity) if primary hash didn't match
+            if (!passwordValid && !existingCred.pbkdf2ParityHash.isNullOrBlank() && !existingCred.pbkdf2ParitySalt.isNullOrBlank()) {
+                val parityChars = cleanPassword.toCharArray()
+                passwordValid = try {
+                    Argon2CredentialHasher.verifyPasswordConstantTime(
+                        passwordChars = parityChars,
+                        storedEncodedHash = existingCred.pbkdf2ParityHash,
+                        legacySaltHex = existingCred.pbkdf2ParitySalt
+                    )
+                } finally {
+                    Arrays.fill(parityChars, '\u0000')
+                }
             }
 
             if (!passwordValid) {

@@ -432,13 +432,13 @@
 
     // Firebase App Configuration (Derived from active project blueprint)
     const firebaseConfig = {
-      projectId: "ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1",
-      authDomain: "ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1.firebaseapp.html",
-      storageBucket: "ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1.appspot.com"
+      projectId: "gen-lang-client-0309263247",
+      authDomain: "gen-lang-client-0309263247.firebaseapp.com",
+      storageBucket: "gen-lang-client-0309263247.appspot.com"
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    const db = getFirestore(app, "ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1");
 
     const urlParams = new URLSearchParams(window.location.search);
     const regNo = (urlParams.get("regNo") || urlParams.get("reg") || urlParams.get("id") || "").trim();
@@ -524,7 +524,21 @@
       const certActionContainer = document.getElementById("cert-action-container");
       if (isIssued) {
         certDesc.innerText = `Official ISO Certificate Issued & Digitally Signed`;
-        certActionContainer.innerHTML = `<a href="${data.certificateUrl || '#'}" target="_blank" class="btn-action">View Certificate</a>`;
+        // Safe DOM construction — prevent XSS from unescaped certificateUrl
+        const certLink = document.createElement('a');
+        const certUrl = data.certificateUrl || '#';
+        try {
+          const urlObj = new URL(certUrl, window.location.origin);
+          if (!['https:', 'http:'].includes(urlObj.protocol)) throw new Error('blocked');
+          certLink.setAttribute('href', urlObj.href);
+        } catch (_) {
+          certLink.setAttribute('href', '#');
+        }
+        certLink.setAttribute('target', '_blank');
+        certLink.className = 'btn-action';
+        certLink.textContent = 'View Certificate';
+        certActionContainer.textContent = '';
+        certActionContainer.appendChild(certLink);
       } else {
         certDesc.innerText = `Syllabus in progress. Certificate unlocks upon exam completion.`;
         certActionContainer.innerHTML = `<span style="font-size: 11.5px; color: #fbbf24; font-weight: 700;">IN PROGRESS</span>`;

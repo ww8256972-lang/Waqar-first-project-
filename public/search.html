@@ -348,13 +348,13 @@
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
-      projectId: "ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1",
-      authDomain: "ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1.firebaseapp.com",
-      storageBucket: "ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1.appspot.com"
+      projectId: "gen-lang-client-0309263247",
+      authDomain: "gen-lang-client-0309263247.firebaseapp.com",
+      storageBucket: "gen-lang-client-0309263247.appspot.com"
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    const db = getFirestore(app, "ai-studio-android-waqarins-b07db193-f2b2-469a-b782-7cb127ebd6a1");
 
     const form = document.getElementById("search-form");
     const inputRegNo = document.getElementById("input-regno");
@@ -446,14 +446,34 @@
         const isIssued = String(data.certificateStatus).toUpperCase() === "ISSUED";
         const badgeWrapper = document.getElementById("res-cert-badge-wrapper");
         if (isIssued) {
-          badgeWrapper.innerHTML = `
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-              <span class="badge-status badge-issued">✓ Certificate Issued</span>
-              <a href="${data.certificateUrl || '#'}" target="_blank" style="color: var(--accent-cyan); font-size: 13px; font-weight: 700; text-decoration: none;">Download / Verify Certificate →</a>
-            </div>
-          `;
+          // Safe DOM construction — prevent XSS from unescaped certificateUrl
+          badgeWrapper.textContent = '';
+          const wrapper = document.createElement('div');
+          wrapper.style.cssText = 'display: flex; align-items: center; justify-content: space-between; gap: 8px;';
+          const badge = document.createElement('span');
+          badge.className = 'badge-status badge-issued';
+          badge.textContent = '✓ Certificate Issued';
+          const certLink = document.createElement('a');
+          const certUrl = data.certificateUrl || '#';
+          try {
+            const urlObj = new URL(certUrl, window.location.origin);
+            if (!['https:', 'http:'].includes(urlObj.protocol)) throw new Error('blocked');
+            certLink.setAttribute('href', urlObj.href);
+          } catch (_) {
+            certLink.setAttribute('href', '#');
+          }
+          certLink.setAttribute('target', '_blank');
+          certLink.style.cssText = 'color: var(--accent-cyan); font-size: 13px; font-weight: 700; text-decoration: none;';
+          certLink.textContent = 'Download / Verify Certificate →';
+          wrapper.appendChild(badge);
+          wrapper.appendChild(certLink);
+          badgeWrapper.appendChild(wrapper);
         } else {
-          badgeWrapper.innerHTML = `<span class="badge-status badge-pending">⚡ Certificate Pending / In-Progress</span>`;
+          const pendingBadge = document.createElement('span');
+          pendingBadge.className = 'badge-status badge-pending';
+          pendingBadge.textContent = '⚡ Certificate Pending / In-Progress';
+          badgeWrapper.textContent = '';
+          badgeWrapper.appendChild(pendingBadge);
         }
 
         resultCard.style.display = "block";

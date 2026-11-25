@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.viewmodel.InstituteUiState
 import com.example.ui.designsystem.JetBrainsMono
+import androidx.compose.ui.platform.LocalContext
 import com.example.ui.designsystem.ShimmerButton
 import com.example.ui.designsystem.WciColors
 import com.example.viewmodel.InstituteViewModel
@@ -40,6 +41,7 @@ fun StudentProjectSyncScreen(
     state: InstituteUiState,
     viewModel: InstituteViewModel
 ) {
+    val context = LocalContext.current
     var syncedProjects by remember {
         mutableStateOf(
             listOf(
@@ -82,7 +84,11 @@ fun StudentProjectSyncScreen(
                     ShimmerButton(
                         text = if (isSyncingNow) "Syncing with Lab PC…" else "Sync from Assigned Lab PC",
                         onClick = {
+                            // TODO: Wire to actual lab PC sync service
                             isSyncingNow = true
+                            android.widget.Toast.makeText(
+                                context, "Lab PC sync coming soon!", android.widget.Toast.LENGTH_SHORT
+                            ).show()
                             isSyncingNow = false
                         },
                         modifier = Modifier.fillMaxWidth()
@@ -121,7 +127,12 @@ fun StudentProjectSyncScreen(
                         Text(project.lastSyncTimestamp, fontSize = 11.sp, color = WciColors.accentCyan)
                     }
                     Button(
-                        onClick = { },
+                        onClick = {
+                            // TODO: Wire to code viewer / IDE integration
+                            android.widget.Toast.makeText(
+                                context, "Code viewer coming soon!", android.widget.Toast.LENGTH_SHORT
+                            ).show()
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = WciColors.IndigoAccent)
                     ) {
                         Icon(Icons.Default.Code, contentDescription = null, modifier = Modifier.size(16.dp))

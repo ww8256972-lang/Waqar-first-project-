@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.viewmodel.InstituteUiState
 import com.example.ui.designsystem.JetBrainsMono
+import androidx.compose.ui.platform.LocalContext
 import com.example.ui.designsystem.ShimmerButton
 import com.example.ui.designsystem.WciColors
 import com.example.viewmodel.InstituteViewModel
@@ -41,6 +42,7 @@ fun StudentCareerMatchScreen(
     state: InstituteUiState,
     viewModel: InstituteViewModel
 ) {
+    val context = LocalContext.current
     val jobs = remember {
         listOf(
             JobOpening("Junior Python Developer", "Tech Mahindra", "Lucknow / Remote", "3.6 - 4.5 LPA", 94, "Python, SQL & Git"),
@@ -144,7 +146,12 @@ fun StudentCareerMatchScreen(
                     Text("Salary: ${job.salaryLpa} • Key Skill: ${job.requiredSkill}", fontSize = 11.5.sp, color = WciColors.accentCyan)
                     Spacer(modifier = Modifier.height(10.dp))
                     Button(
-                        onClick = { },
+                        onClick = {
+                            // TODO: Wire to actual portfolio submission flow
+                            android.widget.Toast.makeText(
+                                context, "Portfolio submission coming soon!", android.widget.Toast.LENGTH_SHORT
+                            ).show()
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = WciColors.EmeraldAction),
                         modifier = Modifier.fillMaxWidth()
                     ) {
