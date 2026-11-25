@@ -905,19 +905,9 @@ class FirebaseAuthServiceProvider(
         val isPermittedAdminCandidate = cleanUsername in setOf("admin", "waqar", "waqar_admin") || isBootstrappedOwner
         val deviceFp = SessionFingerprintManager.captureCurrentDeviceFingerprint(activityContext)
 
-        // 0a. Instant Offline/Online Admin Portal Authentication via Encrypted Argon2id Store
+        // 0a. Instant Offline/Online Admin Portal Authentication via Encrypted Argon2id Store & Local Cache
         if (selectedRole == PortalRole.ADMIN) {
             val adminCtx = context ?: activityContext
-            val localPassChars = cleanPassword.toCharArray()
-            val adminVerify = try {
-                AdminEncryptedCredentialStore.verifyAdminCredentialsInstant(
-                    context = adminCtx,
-                    rawUsername = cleanUsername,
-                    passwordChars = localPassChars
-                )
-            } finally {
-                Arrays.fill(localPassChars, '\u0000')
-            }
 
             // Reject previous rotated Admin username immediately once customized
             val prevAdminUser = AdminEncryptedCredentialStore.getPreviousAdminUsername(adminCtx)
@@ -929,75 +919,109 @@ class FirebaseAuthServiceProvider(
                 throw SecurityException("Admin username '$cleanUsername' was replaced in Settings. Please sign in with the updated Admin username.")
             }
 
-            if (adminVerify is AdminEncryptedCredentialStore.AdminVerifyResult.Verified) {
-                val resolvedUid = currentFirebaseUser?.uid ?: "cred_$cleanUsername"
-                val existingLocal = InstituteRepository.getCachedCredentialLocally(cleanUsername)
-                val matchesExistingLocalIfPresent = existingLocal == null || run {
-                    val chkChars = cleanPassword.toCharArray()
-                    try {
-                        Argon2CredentialHasher.verifyPasswordConstantTime(
-                            passwordChars = chkChars,
-                            storedEncodedHash = existingLocal.passwordHash,
-                            legacySaltHex = existingLocal.passwordSalt
-                        )
-                    } finally {
-                        Arrays.fill(chkChars, '\u0000')
-                    }
+            // 0a.1: Check cached local admin credential if present
+            val existingLocal = InstituteRepository.getCachedCredentialLocally(cleanUsername)
+            if (existingLocal != null && (existingLocal.isAdmin || existingLocal.supportsRole(PortalRole.ADMIN))) {
+                val chkChars = cleanPassword.toCharArray()
+                val passwordValid = try {
+                    Argon2CredentialHasher.verifyPasswordConstantTime(
+                        passwordChars = chkChars,
+                        storedEncodedHash = existingLocal.passwordHash,
+                        legacySaltHex = existingLocal.passwordSalt
+                    )
+                } finally {
+                    Arrays.fill(chkChars, '\u0000')
                 }
-                if (matchesExistingLocalIfPresent) {
-                    val displayName = existingLocal?.displayName?.ifBlank { "Waqar Khan (Admin)" }
-                        ?: currentFirebaseUser?.displayName
-                        ?: "Waqar Khan (Admin)"
+                if (passwordValid) {
+                    val resolvedUid = currentFirebaseUser?.uid ?: "cred_$cleanUsername"
+                    val displayName = existingLocal.displayName.ifBlank { "Waqar Khan (Admin)" }
                     val session = AuthenticatedPortalSession(
                         firebaseUser = currentFirebaseUser,
                         sessionUid = resolvedUid,
                         role = PortalRole.ADMIN,
                         username = cleanUsername,
                         displayName = displayName,
-                        linkedEntityId = existingLocal?.linkedEntityId?.ifBlank { "ADMIN_ROOT" } ?: "ADMIN_ROOT",
+                        linkedEntityId = existingLocal.linkedEntityId.ifBlank { "ADMIN_ROOT" },
                         deviceFingerprint = deviceFp
                     )
                     ioScope.launch {
                         runCatching {
-                            val syncedCred = existingLocal ?: run {
-                                val argonDigest = Argon2CredentialHasher.hashPasswordArgon2id(cleanPassword.toCharArray())
-                                val pbkdf2Parity = Argon2CredentialHasher.hashPasswordPbkdf2WebParity(cleanPassword.toCharArray())
-                                PortalCredential(
-                                    username = cleanUsername,
-                                    passwordHash = argonDigest.encodedHash,
-                                    passwordSalt = argonDigest.saltBase64,
-                                    role = PortalRole.ADMIN.key,
-                                    linkedEntityId = "ADMIN_ROOT",
-                                    displayName = displayName,
-                                    assignedByUid = resolvedUid,
-                                    active = true,
-                                    isAdmin = true,
-                                    portalRoles = listOf(PortalRole.ADMIN.key),
-                                    createdAt = Timestamp(Date(System.currentTimeMillis() - 1000L)),
-                                    pbkdf2ParityHash = pbkdf2Parity.hashHex,
-                                    pbkdf2ParitySalt = pbkdf2Parity.saltHex
-                                )
-                            }
-                            InstituteRepository.cacheCredentialLocally(syncedCred)
-                            if (adminVerify.isCustomized && auth.currentUser != null) {
-                                portalAuthRepository.provisionCredentialWithRoleFlags(syncedCred)
-                            }
                             logSecurityAuditEvent(
                                 actorUid = resolvedUid,
                                 actorName = displayName,
                                 eventType = "ADMIN_INSTANT_LOGIN_SUCCESS",
                                 severity = "INFO",
-                                details = "Authenticated Admin '$cleanUsername' via Argon2id Keystore Vault (fp=$deviceFp)"
+                                details = "Authenticated Admin '$cleanUsername' via Cached Credential (fp=$deviceFp)"
                             )
                             sealSessionInKeystore(activityContext, session)
                         }
                     }
                     return@runCatching session
+                } else {
+                    throw SecurityException("Invalid username or password for Admin portal.")
                 }
+            }
+
+            // 0a.2: Check AdminEncryptedCredentialStore
+            val localPassChars = cleanPassword.toCharArray()
+            val adminVerify = try {
+                AdminEncryptedCredentialStore.verifyAdminCredentialsInstant(
+                    context = adminCtx,
+                    rawUsername = cleanUsername,
+                    passwordChars = localPassChars
+                )
+            } finally {
+                Arrays.fill(localPassChars, '\u0000')
+            }
+
+            if (adminVerify is AdminEncryptedCredentialStore.AdminVerifyResult.Verified) {
+                val resolvedUid = currentFirebaseUser?.uid ?: "cred_$cleanUsername"
+                val displayName = currentFirebaseUser?.displayName ?: "Waqar Khan (Admin)"
+                val session = AuthenticatedPortalSession(
+                    firebaseUser = currentFirebaseUser,
+                    sessionUid = resolvedUid,
+                    role = PortalRole.ADMIN,
+                    username = cleanUsername,
+                    displayName = displayName,
+                    linkedEntityId = "ADMIN_ROOT",
+                    deviceFingerprint = deviceFp
+                )
+                ioScope.launch {
+                    runCatching {
+                        val argonDigest = Argon2CredentialHasher.hashPasswordArgon2id(cleanPassword.toCharArray())
+                        val pbkdf2Parity = Argon2CredentialHasher.hashPasswordPbkdf2WebParity(cleanPassword.toCharArray())
+                        val syncedCred = PortalCredential(
+                            username = cleanUsername,
+                            passwordHash = argonDigest.encodedHash,
+                            passwordSalt = argonDigest.saltBase64,
+                            role = PortalRole.ADMIN.key,
+                            linkedEntityId = "ADMIN_ROOT",
+                            displayName = displayName,
+                            assignedByUid = resolvedUid,
+                            active = true,
+                            isAdmin = true,
+                            portalRoles = listOf(PortalRole.ADMIN.key),
+                            createdAt = Timestamp(Date(System.currentTimeMillis() - 1000L)),
+                            pbkdf2ParityHash = pbkdf2Parity.hashHex,
+                            pbkdf2ParitySalt = pbkdf2Parity.saltHex
+                        )
+                        InstituteRepository.cacheCredentialLocally(syncedCred)
+                        if (adminVerify.isCustomized && auth.currentUser != null) {
+                            portalAuthRepository.provisionCredentialWithRoleFlags(syncedCred)
+                        }
+                        logSecurityAuditEvent(
+                            actorUid = resolvedUid,
+                            actorName = displayName,
+                            eventType = "ADMIN_INSTANT_LOGIN_SUCCESS",
+                            severity = "INFO",
+                            details = "Authenticated Admin '$cleanUsername' via Argon2id Keystore Vault (fp=$deviceFp)"
+                        )
+                        sealSessionInKeystore(activityContext, session)
+                    }
+                }
+                return@runCatching session
             } else if (adminVerify is AdminEncryptedCredentialStore.AdminVerifyResult.PasswordMismatch) {
                 throw SecurityException("Invalid username or password for Admin portal.")
-            } else if (adminVerify is AdminEncryptedCredentialStore.AdminVerifyResult.NotConfigured) {
-                throw SecurityException("Admin credentials not configured. Please complete First-Run Admin Setup before signing in as Admin.")
             }
         }
 
