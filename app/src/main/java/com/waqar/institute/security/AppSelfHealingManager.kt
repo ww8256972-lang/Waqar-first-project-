@@ -50,9 +50,9 @@ object AppSelfHealingManager {
         healCycleCounter += 1
         if (!nativeLoaded) {
             return KernelIntegrityStatus(
-                isSegmentIntact = true,
-                crc32SignatureHex = "0x574349",
-                dbiTimingAnomalyDetected = false,
+                isSegmentIntact = false,
+                crc32SignatureHex = "0x0",
+                dbiTimingAnomalyDetected = true,
                 polymorphicHealCycleCount = healCycleCounter
             )
         }
